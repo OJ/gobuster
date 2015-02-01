@@ -36,8 +36,28 @@ Yes, you're probably correct. Feel free to :
 * `-x=<extensions>` - list of extensions to check for, if any.
 
 ### Examples
+Command line might look like this:
 ```
 $ ./gobuster -u=https://mysite.com/path/to/folder '-c=session=123456' -t=50 -w=common-files.txt -x=.php,.html
+```
+Sample run goes like this:
+```
+./gobuster -w=words.txt -u=http://buffered.io/ -x=.html -v=true                                                ◼
+Gobuster v0.2 (OJ Reeves @TheColonial)
+======================================
+[+] Url          : http://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : words.txt
+[+] Status codes : 301,302,307,200,204
+[+] Extensions   : .html
+[+] Dislpay all  : true
+======================================
+Found: /index (200)
+Found: /index.html (200)
+Result: /posts (404)
+Found: /contact (200)
+Result: /contact.html (404)
+Result: /posts.html (404)
 ```
 
 ### License

@@ -10,7 +10,7 @@ Because I wanted:
 1. ... something that didn't have a fat Java GUI (console FTW).
 1. ... to build something that just worked on the command line.
 1. ... something that did not do recursive brute force.
-1. ... something that allowed me to brute for folders and multiple extensions at once.
+1. ... something that allowed me to brute force folders and multiple extensions at once.
 1. ... something that compiled to native on multiple platforms.
 1. ... something that was faster than an interpreted script (such as Python).
 1. ... something that didn't require a runtime.

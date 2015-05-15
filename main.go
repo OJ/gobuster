@@ -16,6 +16,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -23,14 +24,24 @@ import (
 	"sync"
 )
 
+// A single result which comes from an individual web
+// request.
+type Result struct {
+	Entity string
+	Status int
+}
+
+type PrintResultFunc func(s *State, r *Result)
+type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
+
 // Shim type for "set"
 type IntSet struct {
 	set map[int]bool
 }
 
-// Contains settings that are read in from the command
+// Contains State that are read in from the command
 // line when the program is invoked.
-type Settings struct {
+type State struct {
 	Threads     int
 	Wordlist    string
 	Url         string
@@ -39,13 +50,10 @@ type Settings struct {
 	StatusCodes IntSet
 	ShowAll     bool
 	UseSlash    bool
-}
-
-// A single result which comes from an individual web
-// request.
-type Result struct {
-	Uri    string
-	Status int
+	Mode        string
+	Printer     PrintResultFunc
+	Processor   ProcessorFunc
+	Client      *http.Client
 }
 
 // Add an element to a set
@@ -101,75 +109,96 @@ func GoGet(client *http.Client, url, uri, cookie string) *int {
 
 // Parse all the command line options into a settings
 // instance for future use.
-func ParseCmdLine() *Settings {
+func ParseCmdLine() *State {
 	var extensions string
 	var codes string
+	valid := true
 
-	s := Settings{StatusCodes: IntSet{set: map[int]bool{}}}
+	s := State{StatusCodes: IntSet{set: map[int]bool{}}}
 
 	// Set up the variables we're interested in parsing.
 	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
+	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
-	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes")
-	flag.StringVar(&s.Url, "u", "", "The target URL")
-	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests")
-	flag.StringVar(&extensions, "x", "", "File extension(s) to search for")
-	flag.BoolVar(&s.ShowAll, "v", false, "Show all results (not just positives)")
-	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request")
+	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
+	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
+	flag.BoolVar(&s.ShowAll, "v", false, "Show all results (not just positives, dir mode only)")
+	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
 
+	switch strings.ToLower(s.Mode) {
+	case "dir":
+		s.Printer = PrintDirResult
+		s.Processor = ProcessDirEntry
+	case "dns":
+		s.Printer = PrintDnsResult
+		s.Processor = ProcessDnsEntry
+	default:
+		fmt.Println("Mode (-m): Invalid value:", s.Mode)
+		valid = false
+	}
+
 	if s.Threads < 0 {
-		fmt.Println("Threads (-t): Invalid value", s.Threads)
-		return nil
+		fmt.Println("Threads (-t): Invalid value:", s.Threads)
+		valid = false
 	}
 
 	if s.Wordlist == "" {
 		fmt.Println("WordList (-w): Must be specified")
-		return nil
-	}
-
-	if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-		fmt.Println("Wordlist (-w): File does not exist", s.Wordlist)
-		return nil
+		valid = false
+	} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
+		fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+		valid = false
 	}
 
 	if s.Url == "" {
-		fmt.Println("Url (-u): Must be specified")
-		return nil
+		fmt.Println("Url/Domain (-u): Must be specified")
+		valid = false
 	}
 
-	if strings.HasSuffix(s.Url, "/") == false {
-		s.Url = s.Url + "/"
-	}
+	if s.Mode == "dir" {
+		if strings.HasSuffix(s.Url, "/") == false {
+			s.Url = s.Url + "/"
+		}
 
-	// extensions are comma seaprated
-	if extensions != "" {
-		s.Extensions = strings.Split(extensions, ",")
-	}
+		// extensions are comma seaprated
+		if extensions != "" {
+			s.Extensions = strings.Split(extensions, ",")
+		}
 
-	// status codes are comma seaprated
-	if codes != "" {
-		for _, c := range strings.Split(codes, ",") {
-			i, err := strconv.Atoi(c)
-			if err != nil {
-				panic("Invalid status code given")
+		// status codes are comma seaprated
+		if codes != "" {
+			for _, c := range strings.Split(codes, ",") {
+				i, err := strconv.Atoi(c)
+				if err != nil {
+					panic("Invalid status code given")
+				}
+				s.StatusCodes.Add(i)
 			}
-			s.StatusCodes.Add(i)
+		}
+
+		if valid {
+			s.Client = &http.Client{}
+			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
+				fmt.Println("[-] Unable to connect:", s.Url)
+				valid = false
+			}
 		}
 	}
 
-	client := &http.Client{}
-	if GoGet(client, s.Url, "", s.Cookies) == nil {
-		fmt.Println("Url (-u): Unable to connect", s.Url)
+	if valid {
+		return &s
 	}
 
-	return &s
+	return nil
 }
 
 // Process the busting of the website with the given
 // set of settings from the command line.
-func Process(s *Settings) {
+func Process(s *State) {
 	wordlist, err := os.Open(s.Wordlist)
 	if err != nil {
 		panic("Failed to open wordlist")
@@ -184,13 +213,6 @@ func Process(s *Settings) {
 	wg := new(sync.WaitGroup)
 	wg.Add(s.Threads)
 
-	client := &http.Client{}
-
-	suffix := ""
-	if s.UseSlash {
-		suffix = "/"
-	}
-
 	// Create goroutines for each of the number of threads
 	// specified.
 	for i := 0; i < s.Threads; i++ {
@@ -203,26 +225,8 @@ func Process(s *Settings) {
 					break
 				}
 
-				// Try the DIR first
-				dirResp := GoGet(client, s.Url, word+suffix, s.Cookies)
-				if dirResp != nil {
-					resultChan <- Result{
-						Uri:    word + suffix,
-						Status: *dirResp,
-					}
-				}
-
-				// Follow up with files using each ext.
-				for ext := range s.Extensions {
-					file := word + s.Extensions[ext]
-					fileResp := GoGet(client, s.Url, file, s.Cookies)
-					if fileResp != nil {
-						resultChan <- Result{
-							Uri:    file,
-							Status: *fileResp,
-						}
-					}
-				}
+				// Mode-specific processing
+				s.Processor(s, word, resultChan)
 			}
 
 			// Indicate to the wait group that the thread
@@ -235,15 +239,7 @@ func Process(s *Settings) {
 	// appear from the worker threads.
 	go func() {
 		for r := range resultChan {
-			if s.StatusCodes.Contains(r.Status) {
-				// Only print results out if we find something
-				// meaningful.
-				fmt.Printf("Found: /%s (%d)\n", r.Uri, r.Status)
-			} else if s.ShowAll {
-				// Print out other results if the user wants to
-				// see them.
-				fmt.Printf("Result: /%s (%d)\n", r.Uri, r.Status)
-			}
+			s.Printer(s, &r)
 		}
 	}()
 
@@ -265,38 +261,96 @@ func Process(s *Settings) {
 	close(resultChan)
 }
 
+func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
+	subdomain := word + "." + s.Url
+	_, err := net.LookupHost(subdomain)
+
+	if err == nil {
+		resultChan <- Result{
+			Entity: subdomain,
+		}
+	}
+}
+
+func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
+	suffix := ""
+	if s.UseSlash {
+		suffix = "/"
+	}
+
+	// Try the DIR first
+	dirResp := GoGet(s.Client, s.Url, word+suffix, s.Cookies)
+	if dirResp != nil {
+		resultChan <- Result{
+			Entity: word + suffix,
+			Status: *dirResp,
+		}
+	}
+
+	// Follow up with files using each ext.
+	for ext := range s.Extensions {
+		file := word + s.Extensions[ext]
+		fileResp := GoGet(s.Client, s.Url, file, s.Cookies)
+		if fileResp != nil {
+			resultChan <- Result{
+				Entity: file,
+				Status: *fileResp,
+			}
+		}
+	}
+}
+
+func PrintDnsResult(s *State, r *Result) {
+	fmt.Printf("Found: %s\n", r.Entity)
+}
+
+func PrintDirResult(s *State, r *Result) {
+	if s.StatusCodes.Contains(r.Status) {
+		// Only print results out if we find something
+		// meaningful.
+		fmt.Printf("Found: /%s (%d)\n", r.Entity, r.Status)
+	} else if s.ShowAll {
+		// Print out other results if the user wants to
+		// see them.
+		fmt.Printf("Result: /%s (%d)\n", r.Entity, r.Status)
+	}
+}
+
 func main() {
-	fmt.Println("Gobuster v0.2 (OJ Reeves @TheColonial)")
-	fmt.Println("======================================")
+	fmt.Println("\n=====================================================")
+	fmt.Println("Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("              (DNS support by Peleus     @0x42424242)")
+	fmt.Println("=====================================================")
 
-	settings := ParseCmdLine()
+	state := ParseCmdLine()
 
-	if settings == nil {
-		return
+	if state != nil {
+		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
+		fmt.Printf("[+] Threads      : %d\n", state.Threads)
+		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
+
+		if state.Mode == "dir" {
+			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
+
+			if state.Cookies != "" {
+				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
+			}
+
+			if len(state.Extensions) > 0 {
+				fmt.Printf("[+] Extensions   : %s\n", strings.Join(state.Extensions, ","))
+			}
+
+			if state.UseSlash {
+				fmt.Printf("[+] Add Slash    : true\n")
+			}
+
+			if state.ShowAll {
+				fmt.Printf("[+] Dislpay all  : true\n")
+			}
+		}
+		fmt.Println("=====================================================")
+		Process(state)
 	}
 
-	fmt.Printf("[+] Url          : %s\n", settings.Url)
-	fmt.Printf("[+] Threads      : %d\n", settings.Threads)
-	fmt.Printf("[+] Wordlist     : %s\n", settings.Wordlist)
-	fmt.Printf("[+] Status codes : %s\n", settings.StatusCodes.Stringify())
-
-	if settings.Cookies != "" {
-		fmt.Printf("[+] Cookies      : %s\n", settings.Cookies)
-	}
-
-	if len(settings.Extensions) > 0 {
-		fmt.Printf("[+] Extensions   : %s\n", strings.Join(settings.Extensions, ","))
-	}
-
-	if settings.UseSlash {
-		fmt.Printf("[+] Add Slash    : true\n")
-	}
-
-	if settings.ShowAll {
-		fmt.Printf("[+] Dislpay all  : true\n")
-	}
-
-	fmt.Println("======================================")
-
-	Process(settings)
+	fmt.Println("=====================================================\n")
 }

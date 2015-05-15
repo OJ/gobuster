@@ -54,6 +54,7 @@ $ ./gobuster -w words.txt -u http://buffered.io/ -x .html -v true
 Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
+[+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : words.txt
@@ -92,6 +93,7 @@ $ ./gobuster -m dns -w subdomains.txt -u google.com
 Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
+[+] Mode         : dns
 [+] Url/Domain   : google.com
 [+] Threads      : 10
 [+] Wordlist     : subdomains.txt

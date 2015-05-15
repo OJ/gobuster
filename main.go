@@ -325,6 +325,7 @@ func main() {
 	state := ParseCmdLine()
 
 	if state != nil {
+		fmt.Printf("[+] Mode         : %s\n", state.Mode)
 		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
 		fmt.Printf("[+] Threads      : %d\n", state.Threads)
 		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)

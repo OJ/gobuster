@@ -26,11 +26,12 @@ Yes, you're probably correct. Feel free to :
 
 ### Common Command line options
 
+* `-m <mode>      `- which mode to use, either `dir` or `dns` (default: `dir`)
 * `-u <url/domain>`- full URL (including scheme), or base domain name.
 * `-t <threads>`   - number of threads to run (default: `10`).
 * `-w <wordlist>`  - path to the wordlist used for brute forcing.
 
-### Command line options for 'dir' mode
+### Command line options for `dir` mode
 
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-f <true|false>`   - set to `true` if you want to append `/` for directory brute forces.
@@ -40,7 +41,7 @@ Yes, you're probably correct. Feel free to :
 
 ### Examples
 
-#### 'dir' mode
+#### `dir` mode
 
 Command line might look like this:
 ```
@@ -79,7 +80,7 @@ Result: /warez.html (404)
 Found: /index.html (200)
 ```
 
-#### 'dns' mode
+#### `dns` mode
 
 Command line might look like this:
 ```

@@ -1,4 +1,4 @@
-Gobuster v0.3 (OJ Reeves @TheColonial)
+Gobuster v0.4 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -26,17 +26,17 @@ Yes, you're probably correct. Feel free to :
 
 ### Common Command line options
 
-* `-m <mode>      `- which mode to use, either `dir` or `dns` (default: `dir`)
-* `-u <url/domain>`- full URL (including scheme), or base domain name.
-* `-t <threads>`   - number of threads to run (default: `10`).
-* `-w <wordlist>`  - path to the wordlist used for brute forcing.
+* `-m <mode>`       - which mode to use, either `dir` or `dns` (default: `dir`)
+* `-u <url/domain>` - full URL (including scheme), or base domain name.
+* `-t <threads>`    - number of threads to run (default: `10`).
+* `-w <wordlist>`   - path to the wordlist used for brute forcing.
+* `-v`              - verbose output (show error codes, and IP addresses).
 
 ### Command line options for `dir` mode
 
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-f <true|false>`   - set to `true` if you want to append `/` for directory brute forces.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
-* `-v <true|false>`   - verbose output (show error codes).
 * `-x <extensions>`   - list of extensions to check for, if any.
 
 ### Examples
@@ -49,10 +49,10 @@ $ ./gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w c
 ```
 Sample run goes like this:
 ```
-$ ./gobuster -w words.txt -u http://buffered.io/ -x .html -v true
+$ ./gobuster -w words.txt -u http://buffered.io/ -x .html -v
 
 =====================================================
-Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -86,12 +86,12 @@ Command line might look like this:
 ```
 $ ./gobuster -m dns -u mysite.com -t 50 -w common-names.txt
 ```
-Sample run goes like this:
+Normal sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com              
+$ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -99,24 +99,57 @@ Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)
 [+] Threads      : 10
 [+] Wordlist     : subdomains.txt
 =====================================================
-Found: www.google.com
-Found: chrome.google.com
 Found: m.google.com
 Found: admin.google.com
 Found: mobile.google.com
+Found: www.google.com
 Found: search.google.com
+Found: chrome.google.com
 Found: ns1.google.com
 Found: store.google.com
-Found: directory.google.com
-Found: cse.google.com
 Found: wap.google.com
 Found: support.google.com
-Found: music.google.com
+Found: directory.google.com
 Found: translate.google.com
 Found: news.google.com
-Found: local.google.com
+Found: music.google.com
 Found: mail.google.com
 Found: blog.google.com
+Found: cse.google.com
+Found: local.google.com
+=====================================================
+```
+Verbse sample run goes like this:
+```
+$ ./gobuster -m dns -w subdomains.txt -u google.com -v
+
+=====================================================
+Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : google.com
+[+] Threads      : 10
+[+] Wordlist     : subdomains.txt
+=====================================================
+Found: chrome.google.com [2404:6800:4006:801::200e, 216.58.220.110]
+Found: m.google.com [216.58.220.107, 2404:6800:4006:801::200b]
+Found: www.google.com [74.125.237.179, 74.125.237.177, 74.125.237.178, 74.125.237.180, 74.125.237.176, 2404:6800:4006:801::2004]
+Found: search.google.com [2404:6800:4006:801::200e, 216.58.220.110]
+Found: admin.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: store.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: mobile.google.com [216.58.220.107, 2404:6800:4006:801::200b]
+Found: ns1.google.com [216.239.32.10]
+Found: directory.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: translate.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: cse.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: local.google.com [2404:6800:4006:801::200e, 216.58.220.110]
+Found: music.google.com [2404:6800:4006:801::200e, 216.58.220.110]
+Found: wap.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: blog.google.com [216.58.220.105, 2404:6800:4006:801::2009]
+Found: support.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: news.google.com [216.58.220.110, 2404:6800:4006:801::200e]
+Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 =====================================================
 ```
 

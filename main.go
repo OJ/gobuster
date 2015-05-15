@@ -29,6 +29,7 @@ import (
 type Result struct {
 	Entity string
 	Status int
+	Extra  string
 }
 
 type PrintResultFunc func(s *State, r *Result)
@@ -48,7 +49,7 @@ type State struct {
 	Cookies     string
 	Extensions  []string
 	StatusCodes IntSet
-	ShowAll     bool
+	Verbose     bool
 	UseSlash    bool
 	Mode        string
 	Printer     PrintResultFunc
@@ -124,7 +125,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
-	flag.BoolVar(&s.ShowAll, "v", false, "Show all results (not just positives, dir mode only)")
+	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -263,12 +264,16 @@ func Process(s *State) {
 
 func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	subdomain := word + "." + s.Url
-	_, err := net.LookupHost(subdomain)
+	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		resultChan <- Result{
+		result := Result{
 			Entity: subdomain,
 		}
+		if s.Verbose {
+			result.Extra = strings.Join(ips, ", ")
+		}
+		resultChan <- result
 	}
 }
 
@@ -301,7 +306,11 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	fmt.Printf("Found: %s\n", r.Entity)
+	if s.Verbose {
+		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
+	} else {
+		fmt.Printf("Found: %s\n", r.Entity)
+	}
 }
 
 func PrintDirResult(s *State, r *Result) {
@@ -309,7 +318,7 @@ func PrintDirResult(s *State, r *Result) {
 		// Only print results out if we find something
 		// meaningful.
 		fmt.Printf("Found: /%s (%d)\n", r.Entity, r.Status)
-	} else if s.ShowAll {
+	} else if s.Verbose {
 		// Print out other results if the user wants to
 		// see them.
 		fmt.Printf("Result: /%s (%d)\n", r.Entity, r.Status)
@@ -318,7 +327,7 @@ func PrintDirResult(s *State, r *Result) {
 
 func main() {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.3 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
 
@@ -345,8 +354,8 @@ func main() {
 				fmt.Printf("[+] Add Slash    : true\n")
 			}
 
-			if state.ShowAll {
-				fmt.Printf("[+] Dislpay all  : true\n")
+			if state.Verbose {
+				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
 		fmt.Println("=====================================================")

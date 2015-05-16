@@ -39,6 +39,20 @@ Yes, you're probably correct. Feel free to :
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>`   - list of extensions to check for, if any.
 
+### Building
+
+Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
+
+#### Compiling
+```
+gobuster$ go build
+```
+This will create a `gobuster` binary for you.
+#### Running as a script
+```
+gobuster$ go run main.go <parameters>
+```
+
 ### Examples
 
 #### `dir` mode
@@ -61,7 +75,7 @@ Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
 [+] Wordlist     : words.txt
 [+] Status codes : 200,204,301,302,307
 [+] Extensions   : .html
-[+] Dislpay all  : true
+[+] Verbose      : true
 =====================================================
 Result: /download (404)
 Result: /2006 (404)
@@ -119,7 +133,7 @@ Found: cse.google.com
 Found: local.google.com
 =====================================================
 ```
-Verbse sample run goes like this:
+Verbose sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com -v
 
@@ -131,6 +145,7 @@ Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
 [+] Url/Domain   : google.com
 [+] Threads      : 10
 [+] Wordlist     : subdomains.txt
+[+] Verbose      : true
 =====================================================
 Found: chrome.google.com [2404:6800:4006:801::200e, 216.58.220.110]
 Found: m.google.com [216.58.220.107, 2404:6800:4006:801::200b]

@@ -14,6 +14,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net"
@@ -182,7 +183,13 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
-			s.Client = &http.Client{}
+			s.Client = &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: true,
+					},
+				},
+			}
 			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
@@ -327,7 +334,7 @@ func PrintDirResult(s *State, r *Result) {
 
 func main() {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.5 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
 

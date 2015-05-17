@@ -1,4 +1,4 @@
-Gobuster v0.4 (OJ Reeves @TheColonial)
+Gobuster v0.5 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -66,7 +66,7 @@ Sample run goes like this:
 $ ./gobuster -w words.txt -u http://buffered.io/ -x .html -v
 
 =====================================================
-Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.5 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -105,7 +105,7 @@ Normal sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.5 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -138,7 +138,7 @@ Verbose sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com -v
 
 =====================================================
-Gobuster v0.4 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.5 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns

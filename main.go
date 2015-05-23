@@ -218,8 +218,10 @@ func Process(s *State) {
 
 	// Use a wait group for waiting for all threads
 	// to finish
-	wg := new(sync.WaitGroup)
-	wg.Add(s.Threads)
+	processorGroup := new(sync.WaitGroup)
+	processorGroup.Add(s.Threads)
+	printerGroup := new(sync.WaitGroup)
+	printerGroup.Add(1)
 
 	// Create goroutines for each of the number of threads
 	// specified.
@@ -239,7 +241,7 @@ func Process(s *State) {
 
 			// Indicate to the wait group that the thread
 			// has finished.
-			wg.Done()
+			processorGroup.Done()
 		}()
 	}
 
@@ -249,6 +251,7 @@ func Process(s *State) {
 		for r := range resultChan {
 			s.Printer(s, &r)
 		}
+		printerGroup.Done()
 	}()
 
 	defer wordlist.Close()
@@ -258,15 +261,16 @@ func Process(s *State) {
 	for scanner.Scan() {
 		word := scanner.Text()
 
-		// Skipe "comment" lines
+		// Skip "comment" lines
 		if strings.HasPrefix(word, "#") == false {
 			wordChan <- word
 		}
 	}
 
 	close(wordChan)
-	wg.Wait()
+	processorGroup.Wait()
 	close(resultChan)
+	printerGroup.Wait()
 }
 
 func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
@@ -334,7 +338,7 @@ func PrintDirResult(s *State, r *Result) {
 
 func main() {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.5 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.6 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
 

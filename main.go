@@ -15,11 +15,11 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
-	"errors"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -60,6 +60,15 @@ type State struct {
 	Client         *http.Client
 }
 
+type RedirectHandler struct {
+	Transport http.RoundTripper
+	State     *State
+}
+
+type RedirectError struct {
+	StatusCode int
+}
+
 // Add an element to a set
 func (set *IntSet) Add(i int) bool {
 	_, found := set.set[i]
@@ -83,8 +92,8 @@ func (set *IntSet) Stringify() string {
 }
 
 // Make a request to the given URL.
-func MakeRequest(client *http.Client, url, cookie string) *int {
-	req, err := http.NewRequest("GET", url, nil)
+func MakeRequest(client *http.Client, fullUrl, cookie string) *int {
+	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
 		return nil
@@ -97,6 +106,11 @@ func MakeRequest(client *http.Client, url, cookie string) *int {
 	resp, err := client.Do(req)
 
 	if err != nil {
+		if ue, ok := err.(*url.Error); ok {
+			if re, ok := ue.Err.(*RedirectError); ok {
+				return &re.StatusCode
+			}
+		}
 		return nil
 	}
 
@@ -186,19 +200,7 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
-			s.Client = &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: true,
-					},
-				},
-			}
-
-			if !s.FollowRedirect {
-				s.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-					return errors.New("Ignoring redirect")
-				}
-			}
+			s.Client = &http.Client{Transport: &RedirectHandler{State: &s}}
 
 			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
@@ -344,6 +346,39 @@ func PrintDirResult(s *State, r *Result) {
 		// see them.
 		fmt.Printf("Result: /%s (%d)\n", r.Entity, r.Status)
 	}
+}
+
+func (e *RedirectError) Error() string {
+	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
+}
+
+func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	t := rh.Transport
+
+	if t == nil {
+		t = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+
+	if rh.State.FollowRedirect {
+		return t.RoundTrip(req)
+	}
+
+	resp, err = t.RoundTrip(req)
+	if err != nil {
+		return resp, err
+	}
+
+	switch resp.StatusCode {
+	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther,
+		http.StatusNotModified, http.StatusUseProxy, http.StatusTemporaryRedirect:
+		return nil, &RedirectError{StatusCode: resp.StatusCode}
+	}
+
+	return resp, err
 }
 
 func main() {

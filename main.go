@@ -200,7 +200,15 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
-			s.Client = &http.Client{Transport: &RedirectHandler{State: &s}}
+			s.Client = &http.Client{
+				Transport: &RedirectHandler{
+					State: &s,
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
+				}}
 
 			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
@@ -353,21 +361,11 @@ func (e *RedirectError) Error() string {
 }
 
 func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	t := rh.Transport
-
-	if t == nil {
-		t = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		}
-	}
-
 	if rh.State.FollowRedirect {
-		return t.RoundTrip(req)
+		return rh.Transport.RoundTrip(req)
 	}
 
-	resp, err = t.RoundTrip(req)
+	resp, err = rh.Transport.RoundTrip(req)
 	if err != nil {
 		return resp, err
 	}

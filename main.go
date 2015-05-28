@@ -15,6 +15,7 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -44,18 +45,19 @@ type IntSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Threads     int
-	Wordlist    string
-	Url         string
-	Cookies     string
-	Extensions  []string
-	StatusCodes IntSet
-	Verbose     bool
-	UseSlash    bool
-	Mode        string
-	Printer     PrintResultFunc
-	Processor   ProcessorFunc
-	Client      *http.Client
+	Threads        int
+	Wordlist       string
+	Url            string
+	Cookies        string
+	Extensions     []string
+	StatusCodes    IntSet
+	Verbose        bool
+	UseSlash       bool
+	FollowRedirect bool
+	Mode           string
+	Printer        PrintResultFunc
+	Processor      ProcessorFunc
+	Client         *http.Client
 }
 
 // Add an element to a set
@@ -127,6 +129,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
+	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -190,6 +193,13 @@ func ParseCmdLine() *State {
 					},
 				},
 			}
+
+			if !s.FollowRedirect {
+				s.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return errors.New("Ignoring redirect")
+				}
+			}
+
 			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
@@ -338,7 +348,7 @@ func PrintDirResult(s *State, r *Result) {
 
 func main() {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.6 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
 
@@ -363,6 +373,10 @@ func main() {
 
 			if state.UseSlash {
 				fmt.Printf("[+] Add Slash    : true\n")
+			}
+
+			if state.FollowRedirect {
+				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
 			if state.Verbose {

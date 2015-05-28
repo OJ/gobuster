@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -44,18 +45,28 @@ type IntSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Threads     int
-	Wordlist    string
-	Url         string
-	Cookies     string
-	Extensions  []string
-	StatusCodes IntSet
-	Verbose     bool
-	UseSlash    bool
-	Mode        string
-	Printer     PrintResultFunc
-	Processor   ProcessorFunc
-	Client      *http.Client
+	Threads        int
+	Wordlist       string
+	Url            string
+	Cookies        string
+	Extensions     []string
+	StatusCodes    IntSet
+	Verbose        bool
+	UseSlash       bool
+	FollowRedirect bool
+	Mode           string
+	Printer        PrintResultFunc
+	Processor      ProcessorFunc
+	Client         *http.Client
+}
+
+type RedirectHandler struct {
+	Transport http.RoundTripper
+	State     *State
+}
+
+type RedirectError struct {
+	StatusCode int
 }
 
 // Add an element to a set
@@ -81,8 +92,8 @@ func (set *IntSet) Stringify() string {
 }
 
 // Make a request to the given URL.
-func MakeRequest(client *http.Client, url, cookie string) *int {
-	req, err := http.NewRequest("GET", url, nil)
+func MakeRequest(client *http.Client, fullUrl, cookie string) *int {
+	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
 		return nil
@@ -95,6 +106,11 @@ func MakeRequest(client *http.Client, url, cookie string) *int {
 	resp, err := client.Do(req)
 
 	if err != nil {
+		if ue, ok := err.(*url.Error); ok {
+			if re, ok := ue.Err.(*RedirectError); ok {
+				return &re.StatusCode
+			}
+		}
 		return nil
 	}
 
@@ -127,6 +143,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
+	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -183,13 +200,8 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
-			s.Client = &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: true,
-					},
-				},
-			}
+			s.Client = &http.Client{Transport: &RedirectHandler{State: &s}}
+
 			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
@@ -336,9 +348,42 @@ func PrintDirResult(s *State, r *Result) {
 	}
 }
 
+func (e *RedirectError) Error() string {
+	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
+}
+
+func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	t := rh.Transport
+
+	if t == nil {
+		t = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+
+	if rh.State.FollowRedirect {
+		return t.RoundTrip(req)
+	}
+
+	resp, err = t.RoundTrip(req)
+	if err != nil {
+		return resp, err
+	}
+
+	switch resp.StatusCode {
+	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther,
+		http.StatusNotModified, http.StatusUseProxy, http.StatusTemporaryRedirect:
+		return nil, &RedirectError{StatusCode: resp.StatusCode}
+	}
+
+	return resp, err
+}
+
 func main() {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.6 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
 
@@ -363,6 +408,10 @@ func main() {
 
 			if state.UseSlash {
 				fmt.Printf("[+] Add Slash    : true\n")
+			}
+
+			if state.FollowRedirect {
+				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
 			if state.Verbose {

@@ -54,6 +54,7 @@ type State struct {
 	Verbose        bool
 	UseSlash       bool
 	FollowRedirect bool
+	Quiet          bool
 	Mode           string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
@@ -144,6 +145,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
+	flag.BoolVar(&s.Quiet, "q", false, "Only print found items.")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -348,7 +350,11 @@ func PrintDirResult(s *State, r *Result) {
 	if s.StatusCodes.Contains(r.Status) {
 		// Only print results out if we find something
 		// meaningful.
-		fmt.Printf("Found: /%s (%d)\n", r.Entity, r.Status)
+		if s.Quiet {
+			fmt.Printf("%s%s\n", s.Url, r.Entity)
+		} else {
+			fmt.Printf("Found: /%s (%d)\n", r.Entity, r.Status)
+		}
 	} else if s.Verbose {
 		// Print out other results if the user wants to
 		// see them.
@@ -379,13 +385,11 @@ func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, er
 	return resp, err
 }
 
-func main() {
+func Banner(state *State) {
 	fmt.Println("\n=====================================================")
 	fmt.Println("Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
-
-	state := ParseCmdLine()
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
@@ -417,8 +421,17 @@ func main() {
 			}
 		}
 		fmt.Println("=====================================================")
+	}
+}
+
+func main() {
+	state := ParseCmdLine()
+	if state.Quiet {
 		Process(state)
+	} else {
+		Banner(state)
+		Process(state)
+		fmt.Println("=====================================================")
 	}
 
-	fmt.Println("=====================================================\n")
 }

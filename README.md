@@ -1,4 +1,4 @@
-Gobuster v0.7 (OJ Reeves @TheColonial)
+Gobuster v0.8 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -30,13 +30,16 @@ Yes, you're probably correct. Feel free to :
 * `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-t <threads>` - number of threads to run (default: `10`).
 * `-w <wordlist>` - path to the wordlist used for brute forcing.
-* `-v` - verbose output (show error codes, and IP addresses).
+* `-v` - verbose output (show all results, and IP addresses).
 
 ### Command line options for `dir` mode
 
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-f` - append `/` for directory brute forces.
 * `-r` - follow redirects.
+* `-n` - "no status" mode, disables the output of the result's status code.
+* `-q` - disables banner/underline output.
+* `-e` - expand the results to include the full URL.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
 
@@ -62,12 +65,12 @@ Command line might look like this:
 ```
 $ ./gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
 ```
-Sample run goes like this:
+Default options looks like this:
 ```
-$ ./gobuster -w words.txt -u http://buffered.io/ -x .html -v
+$ ./gobuster -u http://buffered.io/ -w words.txt
 
 =====================================================
-Gobuster v0.6 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -75,24 +78,59 @@ Gobuster v0.6 (DIR support by OJ Reeves @TheColonial)
 [+] Threads      : 10
 [+] Wordlist     : words.txt
 [+] Status codes : 200,204,301,302,307
-[+] Extensions   : .html
+=====================================================
+/index (200)
+/posts (301)
+/contact (301)
+=====================================================
+```
+Default options with status codes disabled looks like this:
+```
+$ ./gobuster -u http://buffered.io/ -w words.txt -n
+
+=====================================================
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : words.txt
+[+] Status codes : 200,204,301,302,307
+[+] No status    : true
+=====================================================
+/index
+/posts
+/contact
+=====================================================
+```
+Verbose output looks like this:
+```
+$ ./gobuster -u http://buffered.io/ -w words.txt -v
+
+=====================================================
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : words.txt
+[+] Status codes : 200,204,301,302,307
 [+] Verbose      : true
 =====================================================
-Result: /download (404)
-Result: /2006 (404)
-Result: /news (404)
-Found: /index (200)
-Result: /crack (404)
-Result: /warez (404)
-Result: /serial (404)
-Result: /full (404)
-Result: /download.html (404)
-Result: /images (404)
-Result: /news.html (404)
-Result: /2006.html (404)
-Result: /crack.html (404)
-Result: /warez.html (404)
-Found: /index.html (200)
+Found : /index (200)
+Missed: /derp (404)
+Found : /posts (301)
+Found : /contact (301)
+=====================================================
+```
+Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
+```
+$ ./gobuster -u http://buffered.io/ -w words.txt -q -n -e
+http://buffered.io/posts
+http://buffered.io/contact
+http://buffered.io/index
 ```
 
 #### `dns` mode
@@ -106,7 +144,7 @@ Normal sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -139,7 +177,7 @@ Verbose sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com -v
 
 =====================================================
-Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns

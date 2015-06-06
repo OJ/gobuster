@@ -54,6 +54,9 @@ type State struct {
 	Verbose        bool
 	UseSlash       bool
 	FollowRedirect bool
+	Quiet          bool
+	NoStatus       bool
+	Expanded       bool
 	Mode           string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
@@ -144,6 +147,9 @@ func ParseCmdLine() *State {
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
+	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
+	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
+	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -345,14 +351,30 @@ func PrintDnsResult(s *State, r *Result) {
 }
 
 func PrintDirResult(s *State, r *Result) {
-	if s.StatusCodes.Contains(r.Status) {
-		// Only print results out if we find something
-		// meaningful.
-		fmt.Printf("Found: /%s (%d)\n", r.Entity, r.Status)
-	} else if s.Verbose {
-		// Print out other results if the user wants to
-		// see them.
-		fmt.Printf("Result: /%s (%d)\n", r.Entity, r.Status)
+	output := ""
+
+	// Prefix if we're in verbose mode
+	if s.Verbose {
+		if s.StatusCodes.Contains(r.Status) {
+			output += "Found : "
+		} else {
+			output += "Missed: "
+		}
+	}
+
+	if s.StatusCodes.Contains(r.Status) || s.Verbose {
+		if s.Expanded {
+			output += s.Url
+		} else {
+			output += "/"
+		}
+		output += r.Entity
+
+		if !s.NoStatus {
+			output += fmt.Sprintf(" (%d)", r.Status)
+		}
+
+		fmt.Println(output)
 	}
 }
 
@@ -379,13 +401,11 @@ func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, er
 	return resp, err
 }
 
-func main() {
+func Banner(state *State) {
 	fmt.Println("\n=====================================================")
-	fmt.Println("Gobuster v0.7 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	fmt.Println("=====================================================")
-
-	state := ParseCmdLine()
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
@@ -412,13 +432,30 @@ func main() {
 				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
+			if state.Expanded {
+				fmt.Printf("[+] Expanded     : true\n")
+			}
+
+			if state.NoStatus {
+				fmt.Printf("[+] No status    : true\n")
+			}
+
 			if state.Verbose {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
 		fmt.Println("=====================================================")
+	}
+}
+
+func main() {
+	state := ParseCmdLine()
+	if state.Quiet {
 		Process(state)
+	} else {
+		Banner(state)
+		Process(state)
+		fmt.Println("=====================================================")
 	}
 
-	fmt.Println("=====================================================\n")
 }

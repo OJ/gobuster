@@ -238,6 +238,8 @@ func Process(s *State) {
 		panic("Failed to open wordlist")
 	}
 
+	Banner(s)
+
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
 	resultChan := make(chan Result)
@@ -297,6 +299,7 @@ func Process(s *State) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
+	Ruler(s)
 }
 
 func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
@@ -401,11 +404,22 @@ func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, er
 	return resp, err
 }
 
+func Ruler(s *State) {
+	if !s.Quiet {
+		fmt.Println("=====================================================")
+	}
+}
+
 func Banner(state *State) {
-	fmt.Println("\n=====================================================")
+	if state.Quiet {
+		return
+	}
+
+	fmt.Println("")
+	Ruler(state)
 	fmt.Println("Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
-	fmt.Println("=====================================================")
+	Ruler(state)
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
@@ -444,21 +458,13 @@ func Banner(state *State) {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
-		fmt.Println("=====================================================")
+		Ruler(state)
 	}
 }
 
 func main() {
 	state := ParseCmdLine()
-	if state == nil {
-		return
-	}
-
-	if state.Quiet {
+	if state != nil {
 		Process(state)
-	} else {
-		Banner(state)
-		Process(state)
-		fmt.Println("=====================================================")
 	}
 }

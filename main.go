@@ -450,6 +450,10 @@ func Banner(state *State) {
 
 func main() {
 	state := ParseCmdLine()
+	if state == nil {
+		return
+	}
+
 	if state.Quiet {
 		Process(state)
 	} else {
@@ -457,5 +461,4 @@ func main() {
 		Process(state)
 		fmt.Println("=====================================================")
 	}
-
 }

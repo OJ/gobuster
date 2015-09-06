@@ -331,7 +331,12 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
+		if strings.HasPrefix(s.Extensions[ext], ".") == false {
+			file := word + "." s.Extensions[ext]
+		}
+		
 		file := word + s.Extensions[ext]
+		
 		fileResp := GoGet(s.Client, s.Url, file, s.Cookies)
 		if fileResp != nil {
 			resultChan <- Result{

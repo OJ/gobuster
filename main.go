@@ -36,6 +36,7 @@ type Result struct {
 
 type PrintResultFunc func(s *State, r *Result)
 type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
+type SetupFunc func(s *State) bool
 
 // Shim type for "set"
 type IntSet struct {
@@ -58,6 +59,7 @@ type State struct {
 	NoStatus       bool
 	Expanded       bool
 	Mode           string
+	Setup          SetupFunc
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
 	Client         *http.Client
@@ -158,9 +160,11 @@ func ParseCmdLine() *State {
 	case "dir":
 		s.Printer = PrintDirResult
 		s.Processor = ProcessDirEntry
+		s.Setup = SetupDir
 	case "dns":
 		s.Printer = PrintDnsResult
 		s.Processor = ProcessDnsEntry
+		s.Setup = SetupDns
 	default:
 		fmt.Println("Mode (-m): Invalid value:", s.Mode)
 		valid = false
@@ -240,6 +244,11 @@ func Process(s *State) {
 
 	Banner(s)
 
+	if s.Setup(s) == false {
+		Ruler(s)
+		return
+	}
+
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
 	resultChan := make(chan Result)
@@ -300,6 +309,20 @@ func Process(s *State) {
 	close(resultChan)
 	printerGroup.Wait()
 	Ruler(s)
+}
+
+func SetupDns(s *State) bool {
+	// Resolve a subdomain that probably shouldn't exist
+	_, err := net.LookupHost("bba1b18d-50f8-4f1d-8295-c861445ed7f5." + s.Url)
+	if err == nil {
+		fmt.Println("Wildcard DNS found.")
+		return false
+	}
+	return true
+}
+
+func SetupDir(s *State) bool {
+	return true
 }
 
 func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
@@ -458,6 +481,7 @@ func Banner(state *State) {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
+
 		Ruler(state)
 	}
 }

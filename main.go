@@ -445,6 +445,18 @@ func Banner(state *State) {
 			}
 		}
 		fmt.Println("=====================================================")
+
+		if state.Mode == "dns" {
+			fmt.Println("Checking for Wildcard")
+			_, err := net.LookupHost("chekingforwildcard." + state.Url)
+			if err == nil {
+				fmt.Println("[+] Wildcard Found, exit")
+				fmt.Println("=====================================================")
+				os.Exit(0)
+			}
+			fmt.Println("[+] Wildcard Not Found")
+			fmt.Println("=====================================================")
+		}
 	}
 }
 

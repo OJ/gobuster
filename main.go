@@ -361,6 +361,7 @@ func PrintDnsResult(s *State, r *Result, output_writer *bufio.Writer) {
 		fmt.Printf("Found: %s\n", r.Entity)
 	}
 	if s.Output != "" {
+		//Output in file
 		output_writer.WriteString(r.Entity + "\n")
 		output_writer.Flush()
 	}

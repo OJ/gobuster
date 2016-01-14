@@ -34,7 +34,7 @@ type Result struct {
 	Extra  string
 }
 
-type PrintResultFunc func(s *State, r *Result)
+type PrintResultFunc func(s *State, r *Result, output_writer *bufio.Writer)
 type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
 
 // Shim type for "set"
@@ -61,6 +61,7 @@ type State struct {
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
 	Client         *http.Client
+	Output         string
 }
 
 type RedirectHandler struct {
@@ -151,6 +152,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.StringVar(&s.Output, "o", "", "Output in files (dns mode only)")
 
 	flag.Parse()
 
@@ -176,6 +178,10 @@ func ParseCmdLine() *State {
 		valid = false
 	} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
 		fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+		valid = false
+	}
+	if s.Output == "" {
+		fmt.Println("Output file (-o): Must be specified")
 		valid = false
 	}
 
@@ -237,6 +243,12 @@ func Process(s *State) {
 	if err != nil {
 		panic("Failed to open wordlist")
 	}
+	output, err := os.Create(s.Output)
+	if err != nil {
+		panic("Failed to open output file")
+	}
+	defer output.Close()
+	output_writer := bufio.NewWriter(output)
 
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
@@ -275,7 +287,7 @@ func Process(s *State) {
 	// appear from the worker threads.
 	go func() {
 		for r := range resultChan {
-			s.Printer(s, &r)
+			s.Printer(s, &r, output_writer)
 		}
 		printerGroup.Done()
 	}()
@@ -342,15 +354,20 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 }
 
-func PrintDnsResult(s *State, r *Result) {
+func PrintDnsResult(s *State, r *Result, output_writer *bufio.Writer) {
 	if s.Verbose {
 		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
 		fmt.Printf("Found: %s\n", r.Entity)
 	}
+	if s.Output != "" {
+		output_writer.WriteString(r.Entity + "\n")
+		output_writer.Flush()
+	}
+
 }
 
-func PrintDirResult(s *State, r *Result) {
+func PrintDirResult(s *State, r *Result, output_writer *bufio.Writer) {
 	output := ""
 
 	// Prefix if we're in verbose mode

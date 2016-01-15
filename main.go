@@ -192,6 +192,11 @@ func ParseCmdLine() *State {
 		// extensions are comma seaprated
 		if extensions != "" {
 			s.Extensions = strings.Split(extensions, ",")
+			for i := range s.Extensions {
+				if s.Extensions[i][0] != '.' {
+					s.Extensions[i] = "." + s.Extensions[i]
+				}
+			}
 		}
 
 		// status codes are comma seaprated

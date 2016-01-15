@@ -58,6 +58,7 @@ type State struct {
 	NoStatus       bool
 	Expanded       bool
 	Mode           string
+	ProxyUrl       *url.URL
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
 	Client         *http.Client
@@ -133,6 +134,7 @@ func GoGet(client *http.Client, url, uri, cookie string) *int {
 func ParseCmdLine() *State {
 	var extensions string
 	var codes string
+	var proxy string
 	valid := true
 
 	s := State{StatusCodes: IntSet{set: map[int]bool{}}}
@@ -145,6 +147,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
+	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
@@ -211,10 +214,23 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
+			var proxyUrlFunc func(*http.Request) (*url.URL, error)
+			proxyUrlFunc = http.ProxyFromEnvironment
+
+			if proxy != "" {
+				proxyUrl, err := url.Parse(proxy)
+				if err != nil {
+					panic("Proxy URL is invalid")
+				}
+				s.ProxyUrl = proxyUrl
+				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+			}
+
 			s.Client = &http.Client{
 				Transport: &RedirectHandler{
 					State: &s,
 					Transport: &http.Transport{
+						Proxy: proxyUrlFunc,
 						TLSClientConfig: &tls.Config{
 							InsecureSkipVerify: true,
 						},
@@ -434,6 +450,10 @@ func Banner(state *State) {
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
+
+			if state.ProxyUrl != nil {
+				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)
+			}
 
 			if state.Cookies != "" {
 				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)

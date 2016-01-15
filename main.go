@@ -145,7 +145,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
-	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses")
+	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")

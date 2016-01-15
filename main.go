@@ -461,7 +461,7 @@ func Banner(state *State) {
 
 	fmt.Println("")
 	Ruler(state)
-	fmt.Println("Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	Ruler(state)
 

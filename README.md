@@ -1,4 +1,4 @@
-Gobuster v0.8 (OJ Reeves @TheColonial)
+Gobuster v0.9 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -42,6 +42,7 @@ Yes, you're probably correct. Feel free to :
 * `-e` - expand the results to include the full URL.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
+* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
 
 ### Building
 
@@ -70,7 +71,7 @@ Default options looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
 =====================================================
-Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -89,7 +90,7 @@ Default options with status codes disabled looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
 =====================================================
-Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -109,7 +110,7 @@ Verbose output looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
 =====================================================
-Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -144,7 +145,7 @@ Normal sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -177,7 +178,7 @@ Verbose sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com -v
 
 =====================================================
-Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns

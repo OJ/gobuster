@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"io/ioutil"
+	"unicode/utf8"
 )
 
 // A single result which comes from an individual web
@@ -98,11 +100,11 @@ func (set *IntSet) Stringify() string {
 }
 
 // Make a request to the given URL.
-func MakeRequest(client *http.Client, fullUrl, cookie string) *int {
+func MakeRequest(client *http.Client, fullUrl, cookie string) (*int, *string) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 
 	if cookie != "" {
@@ -114,20 +116,26 @@ func MakeRequest(client *http.Client, fullUrl, cookie string) *int {
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
 			if re, ok := ue.Err.(*RedirectError); ok {
-				return &re.StatusCode
+				return &re.StatusCode, nil
 			}
 		}
-		return nil
+		return nil, nil
 	}
 
 	defer resp.Body.Close()
 
-	return &resp.StatusCode
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil
+	}
+	length := strconv.Itoa(utf8.RuneCountInString(string(body)))
+
+	return &resp.StatusCode, &length
 }
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func GoGet(client *http.Client, url, uri, cookie string) *int {
+func GoGet(client *http.Client, url, uri, cookie string) (*int, *string) {
 	return MakeRequest(client, url+uri, cookie)
 }
 
@@ -241,7 +249,8 @@ func ParseCmdLine() *State {
 					},
 				}}
 
-			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
+			code, _ := GoGet(s.Client, s.Url, "", s.Cookies)
+			if code == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
 			}
@@ -368,22 +377,24 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Try the DIR first
-	dirResp := GoGet(s.Client, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := GoGet(s.Client, s.Url, word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: word + suffix,
 			Status: *dirResp,
+			Extra: *dirSize,
 		}
 	}
 
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp := GoGet(s.Client, s.Url, file, s.Cookies)
+		fileResp, fileSize := GoGet(s.Client, s.Url, file, s.Cookies)
 		if fileResp != nil {
 			resultChan <- Result{
 				Entity: file,
 				Status: *fileResp,
+				Extra: *fileSize,
 			}
 		}
 	}
@@ -418,8 +429,10 @@ func PrintDirResult(s *State, r *Result) {
 		output += r.Entity
 
 		if !s.NoStatus {
-			output += fmt.Sprintf(" (%d)", r.Status)
+			output += fmt.Sprintf(" (Code: %d)", r.Status)
 		}
+
+		output += " [Size: " + r.Extra + "]"
 
 		fmt.Println(output)
 	}

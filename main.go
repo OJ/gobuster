@@ -195,6 +195,10 @@ func ParseCmdLine() *State {
 		if strings.HasSuffix(s.Url, "/") == false {
 			s.Url = s.Url + "/"
 		}
+		
+		if strings.HasPrefix(s.Url, "http") == false {
+			s.Url = "http://" + s.Url
+		}
 
 		// extensions are comma seaprated
 		if extensions != "" {

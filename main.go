@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -24,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"io/ioutil"
 	"unicode/utf8"
 )
 
@@ -34,6 +34,7 @@ type Result struct {
 	Entity string
 	Status int
 	Extra  string
+	Size   *int64
 }
 
 type PrintResultFunc func(s *State, r *Result)
@@ -57,6 +58,7 @@ type State struct {
 	Verbose        bool
 	UseSlash       bool
 	FollowRedirect bool
+	IncludeLength  bool
 	Quiet          bool
 	NoStatus       bool
 	Expanded       bool
@@ -100,7 +102,7 @@ func (set *IntSet) Stringify() string {
 }
 
 // Make a request to the given URL.
-func MakeRequest(client *http.Client, fullUrl, cookie string) (*int, *string) {
+func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
@@ -111,7 +113,7 @@ func MakeRequest(client *http.Client, fullUrl, cookie string) (*int, *string) {
 		req.Header.Set("Cookie", cookie)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := s.Client.Do(req)
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
@@ -124,19 +126,27 @@ func MakeRequest(client *http.Client, fullUrl, cookie string) (*int, *string) {
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil
-	}
-	length := strconv.Itoa(utf8.RuneCountInString(string(body)))
+	var length *int64 = nil
 
-	return &resp.StatusCode, &length
+	if s.IncludeLength {
+		length = new(int64)
+		if resp.ContentLength <= 0 {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err == nil {
+				*length = int64(utf8.RuneCountInString(string(body)))
+			}
+		} else {
+			*length = resp.ContentLength
+		}
+	}
+
+	return &resp.StatusCode, length
 }
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func GoGet(client *http.Client, url, uri, cookie string) (*int, *string) {
-	return MakeRequest(client, url+uri, cookie)
+func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
+	return MakeRequest(s, url+uri, cookie)
 }
 
 // Parse all the command line options into a settings
@@ -163,6 +173,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
+	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -203,7 +214,7 @@ func ParseCmdLine() *State {
 		if strings.HasSuffix(s.Url, "/") == false {
 			s.Url = s.Url + "/"
 		}
-		
+
 		if strings.HasPrefix(s.Url, "http") == false {
 			s.Url = "http://" + s.Url
 		}
@@ -253,7 +264,7 @@ func ParseCmdLine() *State {
 					},
 				}}
 
-			code, _ := GoGet(s.Client, s.Url, "", s.Cookies)
+			code, _ := GoGet(&s, s.Url, "", s.Cookies)
 			if code == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
@@ -381,24 +392,25 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s.Client, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: word + suffix,
 			Status: *dirResp,
-			Extra: *dirSize,
+			Size:   dirSize,
 		}
 	}
 
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp, fileSize := GoGet(s.Client, s.Url, file, s.Cookies)
+		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+
 		if fileResp != nil {
 			resultChan <- Result{
 				Entity: file,
 				Status: *fileResp,
-				Extra: *fileSize,
+				Size:   fileSize,
 			}
 		}
 	}
@@ -433,10 +445,12 @@ func PrintDirResult(s *State, r *Result) {
 		output += r.Entity
 
 		if !s.NoStatus {
-			output += fmt.Sprintf(" (Code: %d)", r.Status)
+			output += fmt.Sprintf(" (Status: %d)", r.Status)
 		}
 
-		output += " [Size: " + r.Extra + "]"
+		if r.Size != nil {
+			output += fmt.Sprintf(" [Size: %d]", *r.Size)
+		}
 
 		fmt.Println(output)
 	}

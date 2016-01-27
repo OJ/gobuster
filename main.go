@@ -358,6 +358,12 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 			result.Extra = strings.Join(ips, ", ")
 		}
 		resultChan <- result
+	} else if s.Verbose {
+		result := Result {
+			Entity: subdomain,
+			Status: 404,
+		}
+		resultChan <- result
 	}
 }
 
@@ -390,7 +396,9 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	if s.Verbose {
+	if r.Status == 404 {
+		fmt.Printf("Missing: %s\n", r.Entity)
+	} else if s.Verbose {
 		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
 		fmt.Printf("Found: %s\n", r.Entity)

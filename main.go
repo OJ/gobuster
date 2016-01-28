@@ -59,6 +59,7 @@ type State struct {
 	UseSlash       bool
 	FollowRedirect bool
 	IncludeLength  bool
+	ShowIPs        bool
 	Quiet          bool
 	NoStatus       bool
 	Expanded       bool
@@ -168,7 +169,8 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
-	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses)")
+	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
+	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
@@ -378,8 +380,14 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 		result := Result{
 			Entity: subdomain,
 		}
-		if s.Verbose {
+		if s.ShowIPs {
 			result.Extra = strings.Join(ips, ", ")
+		}
+		resultChan <- result
+	} else if s.Verbose {
+		result := Result{
+			Entity: subdomain,
+			Status: 404,
 		}
 		resultChan <- result
 	}
@@ -417,7 +425,9 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	if s.Verbose {
+	if r.Status == 404 {
+		fmt.Printf("Missing: %s\n", r.Entity)
+	} else if s.ShowIPs {
 		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
 		fmt.Printf("Found: %s\n", r.Entity)

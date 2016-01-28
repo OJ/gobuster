@@ -1,4 +1,4 @@
-Gobuster v0.9 (OJ Reeves @TheColonial)
+Gobuster v1.0 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -30,13 +30,18 @@ Yes, you're probably correct. Feel free to :
 * `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-t <threads>` - number of threads to run (default: `10`).
 * `-w <wordlist>` - path to the wordlist used for brute forcing.
-* `-v` - verbose output (show all results, and IP addresses).
+* `-v` - verbose output (show all results).
+
+### Command line options for `dns` mode
+
+* `-i` - show all IP addresses for the result.
 
 ### Command line options for `dir` mode
 
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-f` - append `/` for directory brute forces.
 * `-r` - follow redirects.
+* `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
 * `-q` - disables banner/underline output.
 * `-e` - expand the results to include the full URL.
@@ -71,7 +76,7 @@ Default options looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
 =====================================================
-Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -80,9 +85,9 @@ Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
 [+] Wordlist     : words.txt
 [+] Status codes : 200,204,301,302,307
 =====================================================
-/index (200)
-/posts (301)
-/contact (301)
+/index (Status: 200)
+/posts (Status: 301)
+/contact (Status: 301)
 =====================================================
 ```
 Default options with status codes disabled looks like this:
@@ -90,7 +95,7 @@ Default options with status codes disabled looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
 =====================================================
-Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -110,7 +115,7 @@ Verbose output looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
 =====================================================
-Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -120,10 +125,27 @@ Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
 [+] Status codes : 200,204,301,302,307
 [+] Verbose      : true
 =====================================================
-Found : /index (200)
-Missed: /derp (404)
-Found : /posts (301)
-Found : /contact (301)
+Found : /index (Status: 200)
+Missed: /derp (Status: 404)
+Found : /posts (Status: 301)
+Found : /contact (Status: 301)
+=====================================================
+```
+Example showing content length:
+```
+=====================================================
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /tmp/words
+[+] Status codes : 301,302,307,200,204
+=====================================================
+/contact (Status: 301)
+/posts (Status: 301)
+/index (Status: 200) [Size: 61481]
 =====================================================
 ```
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
@@ -145,7 +167,7 @@ Normal sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -173,12 +195,12 @@ Found: cse.google.com
 Found: local.google.com
 =====================================================
 ```
-Verbose sample run goes like this:
+Show IP sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com -v
+$ ./gobuster -m dns -w subdomains.txt -u google.com -i
 
 =====================================================
-Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -211,3 +233,7 @@ Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 ### License
 
 See the LICENSE file.
+
+### Thanks
+
+See the THANKS file.

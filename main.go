@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -24,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 // A single result which comes from an individual web
@@ -32,6 +34,7 @@ type Result struct {
 	Entity string
 	Status int
 	Extra  string
+	Size   *int64
 }
 
 type PrintResultFunc func(s *State, r *Result)
@@ -55,6 +58,8 @@ type State struct {
 	Verbose        bool
 	UseSlash       bool
 	FollowRedirect bool
+	IncludeLength  bool
+	ShowIPs        bool
 	Quiet          bool
 	NoStatus       bool
 	Expanded       bool
@@ -98,37 +103,51 @@ func (set *IntSet) Stringify() string {
 }
 
 // Make a request to the given URL.
-func MakeRequest(client *http.Client, fullUrl, cookie string) *int {
+func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 
 	if cookie != "" {
 		req.Header.Set("Cookie", cookie)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := s.Client.Do(req)
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
 			if re, ok := ue.Err.(*RedirectError); ok {
-				return &re.StatusCode
+				return &re.StatusCode, nil
 			}
 		}
-		return nil
+		return nil, nil
 	}
 
 	defer resp.Body.Close()
 
-	return &resp.StatusCode
+	var length *int64 = nil
+
+	if s.IncludeLength {
+		length = new(int64)
+		if resp.ContentLength <= 0 {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err == nil {
+				*length = int64(utf8.RuneCountInString(string(body)))
+			}
+		} else {
+			*length = resp.ContentLength
+		}
+	}
+
+	return &resp.StatusCode, length
 }
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func GoGet(client *http.Client, url, uri, cookie string) *int {
-	return MakeRequest(client, url+uri, cookie)
+func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
+	return MakeRequest(s, url+uri, cookie)
 }
 
 // Parse all the command line options into a settings
@@ -150,11 +169,13 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
-	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors and IP addresses)")
+	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
+	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
+	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
@@ -194,6 +215,10 @@ func ParseCmdLine() *State {
 	if s.Mode == "dir" {
 		if strings.HasSuffix(s.Url, "/") == false {
 			s.Url = s.Url + "/"
+		}
+
+		if strings.HasPrefix(s.Url, "http") == false {
+			s.Url = "http://" + s.Url
 		}
 
 		// extensions are comma seaprated
@@ -241,7 +266,8 @@ func ParseCmdLine() *State {
 					},
 				}}
 
-			if GoGet(s.Client, s.Url, "", s.Cookies) == nil {
+			code, _ := GoGet(&s, s.Url, "", s.Cookies)
+			if code == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
 			}
@@ -354,8 +380,14 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 		result := Result{
 			Entity: subdomain,
 		}
-		if s.Verbose {
+		if s.ShowIPs {
 			result.Extra = strings.Join(ips, ", ")
+		}
+		resultChan <- result
+	} else if s.Verbose {
+		result := Result{
+			Entity: subdomain,
+			Status: 404,
 		}
 		resultChan <- result
 	}
@@ -368,29 +400,34 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Try the DIR first
-	dirResp := GoGet(s.Client, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: word + suffix,
 			Status: *dirResp,
+			Size:   dirSize,
 		}
 	}
 
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp := GoGet(s.Client, s.Url, file, s.Cookies)
+		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+
 		if fileResp != nil {
 			resultChan <- Result{
 				Entity: file,
 				Status: *fileResp,
+				Size:   fileSize,
 			}
 		}
 	}
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	if s.Verbose {
+	if r.Status == 404 {
+		fmt.Printf("Missing: %s\n", r.Entity)
+	} else if s.ShowIPs {
 		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
 		fmt.Printf("Found: %s\n", r.Entity)
@@ -418,7 +455,11 @@ func PrintDirResult(s *State, r *Result) {
 		output += r.Entity
 
 		if !s.NoStatus {
-			output += fmt.Sprintf(" (%d)", r.Status)
+			output += fmt.Sprintf(" (Status: %d)", r.Status)
+		}
+
+		if r.Size != nil {
+			output += fmt.Sprintf(" [Size: %d]", *r.Size)
 		}
 
 		fmt.Println(output)
@@ -461,7 +502,7 @@ func Banner(state *State) {
 
 	fmt.Println("")
 	Ruler(state)
-	fmt.Println("Gobuster v0.9 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	Ruler(state)
 

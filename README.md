@@ -39,6 +39,8 @@ Yes, you're probably correct. Feel free to :
 ### Command line options for `dir` mode
 
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
+* `-U <username>` - HTTP Authorization username (Only Basic Auth is supported for now)
+* `-P <password>` - HTTP Authorization password (Only Basic Auth is supported for now). If not supplied, you'll be prompted for it.
 * `-f` - append `/` for directory brute forces.
 * `-r` - follow redirects.
 * `-l` - show the length of the response.

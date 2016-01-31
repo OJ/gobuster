@@ -53,6 +53,8 @@ type State struct {
 	Wordlist       string
 	Url            string
 	Cookies        string
+	Username       string
+	Password       string
 	Extensions     []string
 	StatusCodes    IntSet
 	Verbose        bool
@@ -114,6 +116,10 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 		req.Header.Set("Cookie", cookie)
 	}
 
+	if s.Username != "" {
+		req.SetBasicAuth(s.Username, s.Password)
+	}
+
 	resp, err := s.Client.Do(req)
 
 	if err != nil {
@@ -167,6 +173,8 @@ func ParseCmdLine() *State {
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
+	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
@@ -240,6 +248,14 @@ func ParseCmdLine() *State {
 				}
 				s.StatusCodes.Add(i)
 			}
+		}
+
+		// prompt for password if needed
+		if valid && s.Username != "" && s.Password == "" {
+			print("Auth Password: ")
+			reader := bufio.NewReader(os.Stdin)
+			s.Password, _ = reader.ReadString('\n')
+			s.Password = s.Password[:len(s.Password)-1]
 		}
 
 		if valid {
@@ -507,44 +523,48 @@ func Banner(state *State) {
 	Ruler(state)
 
 	if state != nil {
-		fmt.Printf("[+] Mode         : %s\n", state.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
-		fmt.Printf("[+] Threads      : %d\n", state.Threads)
-		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
+		fmt.Printf("[+] Mode                    : %s\n", state.Mode)
+		fmt.Printf("[+] Url/Domain              : %s\n", state.Url)
+		fmt.Printf("[+] Threads                 : %d\n", state.Threads)
+		fmt.Printf("[+] Wordlist                : %s\n", state.Wordlist)
 
 		if state.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
+			fmt.Printf("[+] Status codes            : %s\n", state.StatusCodes.Stringify())
 
 			if state.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)
+				fmt.Printf("[+] Proxy                   : %s\n", state.ProxyUrl)
 			}
 
 			if state.Cookies != "" {
-				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
+				fmt.Printf("[+] Cookies                 : %s\n", state.Cookies)
+			}
+
+			if state.Username != "" {
+				fmt.Printf("[+] Basic Auth Username     : %s\n", state.Username)
 			}
 
 			if len(state.Extensions) > 0 {
-				fmt.Printf("[+] Extensions   : %s\n", strings.Join(state.Extensions, ","))
+				fmt.Printf("[+] Extensions              : %s\n", strings.Join(state.Extensions, ","))
 			}
 
 			if state.UseSlash {
-				fmt.Printf("[+] Add Slash    : true\n")
+				fmt.Printf("[+] Add Slash               : true\n")
 			}
 
 			if state.FollowRedirect {
-				fmt.Printf("[+] Follow Redir : true\n")
+				fmt.Printf("[+] Follow Redir            : true\n")
 			}
 
 			if state.Expanded {
-				fmt.Printf("[+] Expanded     : true\n")
+				fmt.Printf("[+] Expanded                : true\n")
 			}
 
 			if state.NoStatus {
-				fmt.Printf("[+] No status    : true\n")
+				fmt.Printf("[+] No status               : true\n")
 			}
 
 			if state.Verbose {
-				fmt.Printf("[+] Verbose      : true\n")
+				fmt.Printf("[+] Verbose                 : true\n")
 			}
 		}
 

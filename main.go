@@ -345,8 +345,8 @@ func Process(s *State) {
 	for scanner.Scan() {
 		word := scanner.Text()
 
-		// Skip "comment" lines
-		if strings.HasPrefix(word, "#") == false {
+		// Skip "comment" (starts with #), as well as empty lines
+		if (strings.HasPrefix(word, "#") == false) && (len(word) > 0) {
 			wordChan <- word
 		}
 	}

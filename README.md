@@ -48,6 +48,7 @@ Yes, you're probably correct. Feel free to :
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
+* `-a <user agent string>` - specify a user agent string to send in the request header
 
 ### Building
 

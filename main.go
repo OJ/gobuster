@@ -186,7 +186,6 @@ func ParseCmdLine() *State {
 		s.Processor = ProcessDirEntry
 		s.Setup = SetupDir
 	case "dns":
-		resolveHostName(s.Url)
 		s.Printer = PrintDnsResult
 		s.Processor = ProcessDnsEntry
 		s.Setup = SetupDns
@@ -211,6 +210,16 @@ func ParseCmdLine() *State {
 	if s.Url == "" {
 		fmt.Println("Url/Domain (-u): Must be specified")
 		valid = false
+	}
+
+	if s.Mode == "dns" {
+		if resolveHostName(s.Url) == 0 {
+
+		} else {
+			fmt.Println("[-] Could not validate base domain:", s.Url)
+			valid = false
+		}
+
 	}
 
 	if s.Mode == "dir" {
@@ -467,13 +476,12 @@ func PrintDirResult(s *State, r *Result) {
 	}
 }
 
-func resolveHostName(host string) {
+func resolveHostName(host string) int {
     addrs, _ := net.LookupIP(host)
     if len(addrs) > 0 {
-        return
+        return 0
     } else {
-        fmt.Printf("[!] Error : Could not validate base domain.\n")
-        os.Exit(0)
+        return 1
     }
 }
 

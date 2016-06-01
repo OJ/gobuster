@@ -186,6 +186,7 @@ func ParseCmdLine() *State {
 		s.Processor = ProcessDirEntry
 		s.Setup = SetupDir
 	case "dns":
+		resolveHostName(s.Url)
 		s.Printer = PrintDnsResult
 		s.Processor = ProcessDnsEntry
 		s.Setup = SetupDns
@@ -464,6 +465,16 @@ func PrintDirResult(s *State, r *Result) {
 
 		fmt.Println(output)
 	}
+}
+
+func resolveHostName(host string) {
+    addrs, _ := net.LookupIP(host)
+    if len(addrs) > 0 {
+        return
+    } else {
+        fmt.Printf("[!] Error : Could not validate base domain.\n")
+        os.Exit(0)
+    }
 }
 
 func (e *RedirectError) Error() string {

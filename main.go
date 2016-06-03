@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -29,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"unicode/utf8"
 )
 
@@ -265,11 +267,14 @@ func ParseCmdLine() *State {
 		// prompt for password if needed
 		if valid && s.Username != "" && s.Password == "" {
 			fmt.Printf("[?] Auth Password: ")
-			reader := bufio.NewReader(os.Stdin)
-			pass, err := reader.ReadString('\n')
+			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+
+			// print a newline to simulate the newline that was entered
+			// this means that formatting/printing after doesn't look bad.
+			fmt.Println("")
 
 			if err == nil {
-				s.Password = strings.TrimSpace(pass)
+				s.Password = string(passBytes)
 			} else {
 				panic("Auth username given but reading of password failed")
 			}

@@ -40,7 +40,6 @@ Yes, you're probably correct. Feel free to :
 
 * `-a <user agent string>` - specify a user agent string to send in the request header
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
-* `-e` - expand the results to include the full URL.
 * `-f` - append `/` for directory brute forces.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
@@ -49,6 +48,8 @@ Yes, you're probably correct. Feel free to :
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
+* `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
+* `-U <username>` - HTTP Authorization username (Basic Auth only).
 
 ### Building
 

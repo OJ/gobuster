@@ -51,27 +51,29 @@ type IntSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Threads        int
-	Wordlist       string
-	Url            string
+	Client         *http.Client
 	Cookies        string
-	UserAgent      string
+	Expanded       bool
 	Extensions     []string
-	StatusCodes    IntSet
-	Verbose        bool
-	UseSlash       bool
 	FollowRedirect bool
 	IncludeLength  bool
-	ShowIPs        bool
-	Quiet          bool
-	NoStatus       bool
-	Expanded       bool
 	Mode           string
-	ProxyUrl       *url.URL
-	Setup          SetupFunc
+	NoStatus       bool
+	Password       string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
-	Client         *http.Client
+	ProxyUrl       *url.URL
+	Quiet          bool
+	Setup          SetupFunc
+	ShowIPs        bool
+	StatusCodes    IntSet
+	Threads        int
+	Url            string
+	UseSlash       bool
+	UserAgent      string
+	Username       string
+	Verbose        bool
+	Wordlist       string
 }
 
 type RedirectHandler struct {
@@ -119,6 +121,10 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 
 	if s.UserAgent != "" {
 		req.Header.Set("User-Agent", s.UserAgent)
+	}
+
+	if s.Username != "" {
+		req.SetBasicAuth(s.Username, s.Password)
 	}
 
 	resp, err := s.Client.Do(req)
@@ -174,6 +180,8 @@ func ParseCmdLine() *State {
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
+	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
@@ -247,6 +255,19 @@ func ParseCmdLine() *State {
 					panic("Invalid status code given")
 				}
 				s.StatusCodes.Add(i)
+			}
+		}
+
+		// prompt for password if needed
+		if valid && s.Username != "" && s.Password == "" {
+			fmt.Printf("Auth Password: ")
+			reader := bufio.NewReader(os.Stdin)
+			pass, err := reader.ReadString('\n')
+
+			if err == nil {
+				s.Password = strings.TrimSpace(pass)
+			} else {
+				panic("Auth username given but reading of password failed")
 			}
 		}
 
@@ -543,6 +564,10 @@ func Banner(state *State) {
 
 			if state.UserAgent != "" {
 				fmt.Printf("[+] User-Agent   : %s\n", state.UserAgent)
+			}
+
+			if state.Username != "" {
+				fmt.Printf("[+] Auth User    : %s\n", state.Username)
 			}
 
 			if len(state.Extensions) > 0 {

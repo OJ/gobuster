@@ -362,9 +362,19 @@ func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
 	_, err := net.LookupHost("bba1b18d-50f8-4f1d-8295-c861445ed7f5." + s.Url)
 	if err == nil {
-		fmt.Println("Wildcard DNS found.")
+		fmt.Println("[-] Wildcard DNS found.")
 		return false
 	}
+
+	if !s.Quiet {
+		// Provide a warning if the base domain doesn't resolve (in case of typo)
+		_, err = net.LookupHost(s.Url)
+		if err != nil {
+			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
+			fmt.Println("[!] Unable to validate base domain:", s.Url)
+		}
+	}
+
 	return true
 }
 

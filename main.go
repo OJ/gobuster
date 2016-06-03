@@ -2,6 +2,8 @@ package main
 
 //----------------------------------------------------
 // Gobuster -- by OJ Reeves
+// Please see THANKS file for contributors.
+// Please see LICENSE file for license details.
 //
 // A crap attempt at building something that resembles
 // dirbuster or dirb using Go. The goal was to build
@@ -53,7 +55,7 @@ type State struct {
 	Wordlist       string
 	Url            string
 	Cookies        string
-	UserAgent	   string
+	UserAgent      string
 	Extensions     []string
 	StatusCodes    IntSet
 	Verbose        bool

@@ -2,6 +2,8 @@ package main
 
 //----------------------------------------------------
 // Gobuster -- by OJ Reeves
+// Please see THANKS file for contributors.
+// Please see LICENSE file for license details.
 //
 // A crap attempt at building something that resembles
 // dirbuster or dirb using Go. The goal was to build
@@ -53,6 +55,7 @@ type State struct {
 	Wordlist       string
 	Url            string
 	Cookies        string
+	UserAgent      string
 	Extensions     []string
 	StatusCodes    IntSet
 	Verbose        bool
@@ -114,6 +117,10 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 		req.Header.Set("Cookie", cookie)
 	}
 
+	if s.UserAgent != "" {
+		req.Header.Set("User-Agent", s.UserAgent)
+	}
+
 	resp, err := s.Client.Do(req)
 
 	if err != nil {
@@ -168,6 +175,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
+	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
@@ -531,6 +539,10 @@ func Banner(state *State) {
 
 			if state.Cookies != "" {
 				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
+			}
+
+			if state.UserAgent != "" {
+				fmt.Printf("[+] User-Agent   : %s\n", state.UserAgent)
 			}
 
 			if len(state.Extensions) > 0 {

@@ -1,4 +1,4 @@
-Gobuster v1.0 (OJ Reeves @TheColonial)
+Gobuster v1.1 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -79,7 +79,7 @@ Default options looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -98,7 +98,7 @@ Default options with status codes disabled looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -118,7 +118,7 @@ Verbose output looks like this:
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -137,7 +137,7 @@ Found : /contact (Status: 301)
 Example showing content length:
 ```
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dir
@@ -170,7 +170,7 @@ Normal sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -203,7 +203,7 @@ Show IP sample run goes like this:
 $ ./gobuster -m dns -w subdomains.txt -u google.com -i
 
 =====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
               (DNS support by Peleus     @0x42424242)
 =====================================================
 [+] Mode         : dns
@@ -230,6 +230,22 @@ Found: blog.google.com [216.58.220.105, 2404:6800:4006:801::2009]
 Found: support.google.com [216.58.220.110, 2404:6800:4006:801::200e]
 Found: news.google.com [216.58.220.110, 2404:6800:4006:801::200e]
 Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
+=====================================================
+```
+Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
+```
+$ ./gobuster -m dns -w subdomains.txt -u yp.to -i
+=====================================================
+Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : yp.to
+[+] Threads      : 10
+[+] Wordlist     : /tmp/test.txt
+=====================================================
+[!] Unable to validate base domain: yp.to
+Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
 

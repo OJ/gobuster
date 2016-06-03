@@ -2,8 +2,6 @@ package main
 
 //----------------------------------------------------
 // Gobuster -- by OJ Reeves
-// Please see THANKS file for contributors.
-// Please see LICENSE file for license details.
 //
 // A crap attempt at building something that resembles
 // dirbuster or dirb using Go. The goal was to build
@@ -12,6 +10,10 @@ package main
 // to native code is also appealing.
 //
 // Run: gobuster -h
+//
+// Please see THANKS file for contributors.
+// Please see LICENSE file for license details.
+//
 //----------------------------------------------------
 
 import (
@@ -188,13 +190,15 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
-	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
+	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
+
+	Banner(&s)
 
 	switch strings.ToLower(s.Mode) {
 	case "dir":
@@ -260,7 +264,7 @@ func ParseCmdLine() *State {
 
 		// prompt for password if needed
 		if valid && s.Username != "" && s.Password == "" {
-			fmt.Printf("Auth Password: ")
+			fmt.Printf("[?] Auth Password: ")
 			reader := bufio.NewReader(os.Stdin)
 			pass, err := reader.ReadString('\n')
 
@@ -318,7 +322,7 @@ func Process(s *State) {
 		panic("Failed to open wordlist")
 	}
 
-	Banner(s)
+	ShowConfig(s)
 
 	if s.Setup(s) == false {
 		Ruler(s)
@@ -541,9 +545,15 @@ func Banner(state *State) {
 
 	fmt.Println("")
 	Ruler(state)
-	fmt.Println("Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)")
+	fmt.Println("Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)")
 	fmt.Println("              (DNS support by Peleus     @0x42424242)")
 	Ruler(state)
+}
+
+func ShowConfig(state *State) {
+	if state.Quiet {
+		return
+	}
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
@@ -563,7 +573,7 @@ func Banner(state *State) {
 			}
 
 			if state.UserAgent != "" {
-				fmt.Printf("[+] User-Agent   : %s\n", state.UserAgent)
+				fmt.Printf("[+] User Agent   : %s\n", state.UserAgent)
 			}
 
 			if state.Username != "" {

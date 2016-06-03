@@ -343,10 +343,10 @@ func Process(s *State) {
 	// Lazy reading of the wordlist line by line
 	scanner := bufio.NewScanner(wordlist)
 	for scanner.Scan() {
-		word := scanner.Text()
+		word := strings.TrimSpace(scanner.Text())
 
 		// Skip "comment" (starts with #), as well as empty lines
-		if (strings.HasPrefix(word, "#") == false) && (len(word) > 0) {
+		if !strings.HasPrefix(word, "#") && len(word) > 0 {
 			wordChan <- word
 		}
 	}

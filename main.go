@@ -252,10 +252,15 @@ func ParseCmdLine() *State {
 
 		// prompt for password if needed
 		if valid && s.Username != "" && s.Password == "" {
-			print("Auth Password: ")
+			fmt.Printf("Auth Password: ")
 			reader := bufio.NewReader(os.Stdin)
-			s.Password, _ = reader.ReadString('\n')
-			s.Password = s.Password[:len(s.Password)-1]
+			pass, err := reader.ReadString('\n')
+
+			if err == nil {
+				s.Password = strings.TrimSpace(pass)
+			} else {
+				panic("Auth username given but reading of password failed")
+			}
 		}
 
 		if valid {
@@ -523,48 +528,48 @@ func Banner(state *State) {
 	Ruler(state)
 
 	if state != nil {
-		fmt.Printf("[+] Mode                    : %s\n", state.Mode)
-		fmt.Printf("[+] Url/Domain              : %s\n", state.Url)
-		fmt.Printf("[+] Threads                 : %d\n", state.Threads)
-		fmt.Printf("[+] Wordlist                : %s\n", state.Wordlist)
+		fmt.Printf("[+] Mode         : %s\n", state.Mode)
+		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
+		fmt.Printf("[+] Threads      : %d\n", state.Threads)
+		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
 
 		if state.Mode == "dir" {
-			fmt.Printf("[+] Status codes            : %s\n", state.StatusCodes.Stringify())
+			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
 
 			if state.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy                   : %s\n", state.ProxyUrl)
+				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)
 			}
 
 			if state.Cookies != "" {
-				fmt.Printf("[+] Cookies                 : %s\n", state.Cookies)
+				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
 			}
 
 			if state.Username != "" {
-				fmt.Printf("[+] Basic Auth Username     : %s\n", state.Username)
+				fmt.Printf("[+] Auth User    : %s\n", state.Username)
 			}
 
 			if len(state.Extensions) > 0 {
-				fmt.Printf("[+] Extensions              : %s\n", strings.Join(state.Extensions, ","))
+				fmt.Printf("[+] Extensions   : %s\n", strings.Join(state.Extensions, ","))
 			}
 
 			if state.UseSlash {
-				fmt.Printf("[+] Add Slash               : true\n")
+				fmt.Printf("[+] Add Slash    : true\n")
 			}
 
 			if state.FollowRedirect {
-				fmt.Printf("[+] Follow Redir            : true\n")
+				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
 			if state.Expanded {
-				fmt.Printf("[+] Expanded                : true\n")
+				fmt.Printf("[+] Expanded     : true\n")
 			}
 
 			if state.NoStatus {
-				fmt.Printf("[+] No status               : true\n")
+				fmt.Printf("[+] No status    : true\n")
 			}
 
 			if state.Verbose {
-				fmt.Printf("[+] Verbose                 : true\n")
+				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
 

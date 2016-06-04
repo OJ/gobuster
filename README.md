@@ -78,9 +78,7 @@ Default options looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -97,9 +95,7 @@ Default options with status codes disabled looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -117,9 +113,7 @@ Verbose output looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -136,15 +130,16 @@ Found : /contact (Status: 301)
 ```
 Example showing content length:
 ```
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+$ ./gobuster -u http://buffered.io/ -w words.txt -l
+
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /tmp/words
 [+] Status codes : 301,302,307,200,204
+[+] Show length  : true
 =====================================================
 /contact (Status: 301)
 /posts (Status: 301)
@@ -169,9 +164,7 @@ Normal sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -202,9 +195,7 @@ Show IP sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com -i
 
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -235,9 +226,8 @@ Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
 ```
 $ ./gobuster -m dns -w subdomains.txt -u yp.to -i
-=====================================================
-Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to

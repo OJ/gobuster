@@ -549,9 +549,7 @@ func Banner(state *State) {
 	}
 
 	fmt.Println("")
-	Ruler(state)
-	fmt.Println("Gobuster v1.1 (DIR support by OJ Reeves @TheColonial)")
-	fmt.Println("              (DNS support by Peleus     @0x42424242)")
+	fmt.Println("Gobuster v1.1                OJ Reeves (@TheColonial)")
 	Ruler(state)
 }
 
@@ -579,6 +577,10 @@ func ShowConfig(state *State) {
 
 			if state.UserAgent != "" {
 				fmt.Printf("[+] User Agent   : %s\n", state.UserAgent)
+			}
+
+			if state.IncludeLength {
+				fmt.Printf("[+] Show length  : true\n")
 			}
 
 			if state.Username != "" {

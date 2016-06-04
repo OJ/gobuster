@@ -1,7 +1,7 @@
-averagesecurityguy
-g0tmi1k
-justinsteven
-kevinnz
-peleus
-UID1K
-viaMorgoth
+@0x42424242 - initial DNS support
+@averagesecurityguy - quiet mode support
+@g0tmi1k - content length, wordlist and command line parsing fixes
+@justinsteven - HTTP basic auth support
+@kevinnz - custom user agent support
+@viaMorgoth - base domain validation for DNS mode
+@UID1K - DNS wildcard check support

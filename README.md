@@ -1,4 +1,4 @@
-Gobuster v1.0 (OJ Reeves @TheColonial)
+Gobuster v1.1 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -27,10 +27,10 @@ Yes, you're probably correct. Feel free to :
 ### Common Command line options
 
 * `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
-* `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-t <threads>` - number of threads to run (default: `10`).
-* `-w <wordlist>` - path to the wordlist used for brute forcing.
+* `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-v` - verbose output (show all results).
+* `-w <wordlist>` - path to the wordlist used for brute forcing.
 
 ### Command line options for `dns` mode
 
@@ -38,16 +38,18 @@ Yes, you're probably correct. Feel free to :
 
 ### Command line options for `dir` mode
 
+* `-a <user agent string>` - specify a user agent string to send in the request header
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-f` - append `/` for directory brute forces.
-* `-r` - follow redirects.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
+* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
 * `-q` - disables banner/underline output.
-* `-e` - expand the results to include the full URL.
+* `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
-* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
+* `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
+* `-U <username>` - HTTP Authorization username (Basic Auth only).
 
 ### Building
 
@@ -58,6 +60,7 @@ Since this tool is written in [Go](https://golang.org/) you need install the Go 
 gobuster$ go build
 ```
 This will create a `gobuster` binary for you.
+
 #### Running as a script
 ```
 gobuster$ go run main.go <parameters>
@@ -75,9 +78,7 @@ Default options looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -94,9 +95,7 @@ Default options with status codes disabled looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -114,9 +113,7 @@ Verbose output looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -133,15 +130,16 @@ Found : /contact (Status: 301)
 ```
 Example showing content length:
 ```
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+$ ./gobuster -u http://buffered.io/ -w words.txt -l
+
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /tmp/words
 [+] Status codes : 301,302,307,200,204
+[+] Show length  : true
 =====================================================
 /contact (Status: 301)
 /posts (Status: 301)
@@ -166,9 +164,7 @@ Normal sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -199,9 +195,7 @@ Show IP sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com -i
 
-=====================================================
-Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)
-              (DNS support by Peleus     @0x42424242)
+Gobuster v1.1                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -227,6 +221,21 @@ Found: blog.google.com [216.58.220.105, 2404:6800:4006:801::2009]
 Found: support.google.com [216.58.220.110, 2404:6800:4006:801::200e]
 Found: news.google.com [216.58.220.110, 2404:6800:4006:801::200e]
 Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
+=====================================================
+```
+Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
+```
+$ ./gobuster -m dns -w subdomains.txt -u yp.to -i
+
+Gobuster v1.1                OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : yp.to
+[+] Threads      : 10
+[+] Wordlist     : /tmp/test.txt
+=====================================================
+[!] Unable to validate base domain: yp.to
+Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
 

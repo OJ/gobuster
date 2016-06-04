@@ -10,6 +10,10 @@ package main
 // to native code is also appealing.
 //
 // Run: gobuster -h
+//
+// Please see THANKS file for contributors.
+// Please see LICENSE file for license details.
+//
 //----------------------------------------------------
 
 import (
@@ -17,6 +21,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -25,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"unicode/utf8"
 )
 
@@ -49,26 +55,29 @@ type IntSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Threads        int
-	Wordlist       string
-	Url            string
+	Client         *http.Client
 	Cookies        string
+	Expanded       bool
 	Extensions     []string
-	StatusCodes    IntSet
-	Verbose        bool
-	UseSlash       bool
 	FollowRedirect bool
 	IncludeLength  bool
-	ShowIPs        bool
-	Quiet          bool
-	NoStatus       bool
-	Expanded       bool
 	Mode           string
-	ProxyUrl       *url.URL
-	Setup          SetupFunc
+	NoStatus       bool
+	Password       string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
-	Client         *http.Client
+	ProxyUrl       *url.URL
+	Quiet          bool
+	Setup          SetupFunc
+	ShowIPs        bool
+	StatusCodes    IntSet
+	Threads        int
+	Url            string
+	UseSlash       bool
+	UserAgent      string
+	Username       string
+	Verbose        bool
+	Wordlist       string
 }
 
 type RedirectHandler struct {
@@ -112,6 +121,14 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 
 	if cookie != "" {
 		req.Header.Set("Cookie", cookie)
+	}
+
+	if s.UserAgent != "" {
+		req.Header.Set("User-Agent", s.UserAgent)
+	}
+
+	if s.Username != "" {
+		req.SetBasicAuth(s.Username, s.Password)
 	}
 
 	resp, err := s.Client.Do(req)
@@ -167,18 +184,23 @@ func ParseCmdLine() *State {
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
+	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
+	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
-	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner")
+	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 
 	flag.Parse()
+
+	Banner(&s)
 
 	switch strings.ToLower(s.Mode) {
 	case "dir":
@@ -242,6 +264,22 @@ func ParseCmdLine() *State {
 			}
 		}
 
+		// prompt for password if needed
+		if valid && s.Username != "" && s.Password == "" {
+			fmt.Printf("[?] Auth Password: ")
+			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+
+			// print a newline to simulate the newline that was entered
+			// this means that formatting/printing after doesn't look bad.
+			fmt.Println("")
+
+			if err == nil {
+				s.Password = string(passBytes)
+			} else {
+				panic("Auth username given but reading of password failed")
+			}
+		}
+
 		if valid {
 			var proxyUrlFunc func(*http.Request) (*url.URL, error)
 			proxyUrlFunc = http.ProxyFromEnvironment
@@ -289,7 +327,7 @@ func Process(s *State) {
 		panic("Failed to open wordlist")
 	}
 
-	Banner(s)
+	ShowConfig(s)
 
 	if s.Setup(s) == false {
 		Ruler(s)
@@ -343,10 +381,10 @@ func Process(s *State) {
 	// Lazy reading of the wordlist line by line
 	scanner := bufio.NewScanner(wordlist)
 	for scanner.Scan() {
-		word := scanner.Text()
+		word := strings.TrimSpace(scanner.Text())
 
-		// Skip "comment" lines
-		if strings.HasPrefix(word, "#") == false {
+		// Skip "comment" (starts with #), as well as empty lines
+		if !strings.HasPrefix(word, "#") && len(word) > 0 {
 			wordChan <- word
 		}
 	}
@@ -362,9 +400,19 @@ func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
 	_, err := net.LookupHost("bba1b18d-50f8-4f1d-8295-c861445ed7f5." + s.Url)
 	if err == nil {
-		fmt.Println("Wildcard DNS found.")
+		fmt.Println("[-] Wildcard DNS found.")
 		return false
 	}
+
+	if !s.Quiet {
+		// Provide a warning if the base domain doesn't resolve (in case of typo)
+		_, err = net.LookupHost(s.Url)
+		if err != nil {
+			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
+			fmt.Println("[!] Unable to validate base domain:", s.Url)
+		}
+	}
+
 	return true
 }
 
@@ -501,10 +549,14 @@ func Banner(state *State) {
 	}
 
 	fmt.Println("")
+	fmt.Println("Gobuster v1.1                OJ Reeves (@TheColonial)")
 	Ruler(state)
-	fmt.Println("Gobuster v1.0 (DIR support by OJ Reeves @TheColonial)")
-	fmt.Println("              (DNS support by Peleus     @0x42424242)")
-	Ruler(state)
+}
+
+func ShowConfig(state *State) {
+	if state.Quiet {
+		return
+	}
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
@@ -521,6 +573,18 @@ func Banner(state *State) {
 
 			if state.Cookies != "" {
 				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
+			}
+
+			if state.UserAgent != "" {
+				fmt.Printf("[+] User Agent   : %s\n", state.UserAgent)
+			}
+
+			if state.IncludeLength {
+				fmt.Printf("[+] Show length  : true\n")
+			}
+
+			if state.Username != "" {
+				fmt.Printf("[+] Auth User    : %s\n", state.Username)
 			}
 
 			if len(state.Extensions) > 0 {

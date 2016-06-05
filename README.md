@@ -56,10 +56,14 @@ Yes, you're probably correct. Feel free to :
 Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
 
 #### Compiling
+`gobuster` now has external dependencies, and so they need to be pulled in first:
 ```
-gobuster$ go build
+gobuster $ go get && go build
 ```
-This will create a `gobuster` binary for you.
+This will create a `gobuster` binary for you. If you want to install it in the `$GOPATH/bin` folder you can run:
+```
+gobuster $ go install
+```
 
 #### Running as a script
 ```

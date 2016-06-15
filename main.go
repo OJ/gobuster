@@ -78,6 +78,7 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
+	StdIn	       bool
 }
 
 type RedirectHandler struct {
@@ -221,12 +222,23 @@ func ParseCmdLine() *State {
 		valid = false
 	}
 
-	if s.Wordlist == "" {
-		fmt.Println("WordList (-w): Must be specified")
-		valid = false
-	} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-		fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
-		valid = false
+	stdin, err := os.Stdin.Stat()
+	if err != nil {
+    		panic(err)
+  	}
+
+	if stdin.Mode().String()[0] == 'p' { // check FileMode type to see if there is a named pipe (FIFO)
+		s.StdIn = true
+	} else {s.StdIn = false}
+
+	if s.StdIn == false {
+		if s.Wordlist == "" {
+			fmt.Println("WordList (-w): Must be specified")
+			valid = false
+		} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
+			fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+			valid = false
+		}
 	}
 
 	if s.Url == "" {
@@ -243,7 +255,7 @@ func ParseCmdLine() *State {
 			s.Url = "http://" + s.Url
 		}
 
-		// extensions are comma seaprated
+		// extensions are comma separated
 		if extensions != "" {
 			s.Extensions = strings.Split(extensions, ",")
 			for i := range s.Extensions {
@@ -253,7 +265,7 @@ func ParseCmdLine() *State {
 			}
 		}
 
-		// status codes are comma seaprated
+		// status codes are comma separated
 		if codes != "" {
 			for _, c := range strings.Split(codes, ",") {
 				i, err := strconv.Atoi(c)
@@ -322,10 +334,6 @@ func ParseCmdLine() *State {
 // Process the busting of the website with the given
 // set of settings from the command line.
 func Process(s *State) {
-	wordlist, err := os.Open(s.Wordlist)
-	if err != nil {
-		panic("Failed to open wordlist")
-	}
 
 	ShowConfig(s)
 
@@ -376,16 +384,30 @@ func Process(s *State) {
 		printerGroup.Done()
 	}()
 
-	defer wordlist.Close()
 
-	// Lazy reading of the wordlist line by line
-	scanner := bufio.NewScanner(wordlist)
-	for scanner.Scan() {
-		word := strings.TrimSpace(scanner.Text())
-
-		// Skip "comment" (starts with #), as well as empty lines
-		if !strings.HasPrefix(word, "#") && len(word) > 0 {
+	if s.StdIn {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			word := scanner.Text()
 			wordChan <- word
+		}
+	} else {
+		wordlist, err := os.Open(s.Wordlist)
+		if err != nil {
+			panic("Failed to open wordlist")
+		}
+		defer wordlist.Close()
+
+		// Lazy reading of the wordlist line by line
+		scanner := bufio.NewScanner(wordlist)
+
+		for scanner.Scan() {
+			word := strings.TrimSpace(scanner.Text())
+
+			// Skip "comment" (starts with #), as well as empty lines
+			if !strings.HasPrefix(word, "#") && len(word) > 0 {
+				wordChan <- word
+			}
 		}
 	}
 

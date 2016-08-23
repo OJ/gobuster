@@ -21,12 +21,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,9 +49,14 @@ type PrintResultFunc func(s *State, r *Result)
 type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
 type SetupFunc func(s *State) bool
 
-// Shim type for "set"
+// Shim type for "set" containing ints
 type IntSet struct {
 	set map[int]bool
+}
+
+// Shim type for "set" containing strings
+type StringSet struct {
+	set map[string]bool
 }
 
 // Contains State that are read in from the command
@@ -78,6 +85,11 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
+	IsWildcard     bool
+	WildcardForced bool
+	WildcardIps    StringSet
+	SignalChan     chan os.Signal
+	Terminate      bool
 }
 
 type RedirectHandler struct {
@@ -87,6 +99,45 @@ type RedirectHandler struct {
 
 type RedirectError struct {
 	StatusCode int
+}
+
+// Add an element to a set
+func (set *StringSet) Add(s string) bool {
+	_, found := set.set[s]
+	set.set[s] = true
+	return !found
+}
+
+// Add a list of elements to a set
+func (set *StringSet) AddRange(ss []string) {
+	for _, s := range ss {
+		set.set[s] = true
+	}
+}
+
+// Test if an element is in a set
+func (set *StringSet) Contains(s string) bool {
+	_, found := set.set[s]
+	return found
+}
+
+// Check if any of the elements exist
+func (set *StringSet) ContainsAny(ss []string) bool {
+	for _, s := range ss {
+		if set.set[s] {
+			return true
+		}
+	}
+	return false
+}
+
+// Stringify the set
+func (set *StringSet) Stringify() string {
+	values := []string{}
+	for s, _ := range set.set {
+		values = append(values, s)
+	}
+	return strings.Join(values, ",")
 }
 
 // Add an element to a set
@@ -175,7 +226,11 @@ func ParseCmdLine() *State {
 	var proxy string
 	valid := true
 
-	s := State{StatusCodes: IntSet{set: map[int]bool{}}}
+	s := State{
+		StatusCodes: IntSet{set: map[int]bool{}},
+		WildcardIps: StringSet{set: map[string]bool{}},
+		IsWildcard:  false,
+	}
 
 	// Set up the variables we're interested in parsing.
 	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
@@ -197,6 +252,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
 
 	flag.Parse()
 
@@ -334,6 +390,8 @@ func Process(s *State) {
 		return
 	}
 
+	PrepareSignalHandler(s)
+
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
 	resultChan := make(chan Result)
@@ -381,6 +439,9 @@ func Process(s *State) {
 	// Lazy reading of the wordlist line by line
 	scanner := bufio.NewScanner(wordlist)
 	for scanner.Scan() {
+		if s.Terminate {
+			break
+		}
 		word := strings.TrimSpace(scanner.Text())
 
 		// Skip "comment" (starts with #), as well as empty lines
@@ -398,10 +459,16 @@ func Process(s *State) {
 
 func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
-	_, err := net.LookupHost("bba1b18d-50f8-4f1d-8295-c861445ed7f5." + s.Url)
+	guid := uuid.NewV4()
+	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
 	if err == nil {
-		fmt.Println("[-] Wildcard DNS found.")
-		return false
+		s.IsWildcard = true
+		s.WildcardIps.AddRange(wildcardIps)
+		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.Stringify())
+		if !s.WildcardForced {
+			fmt.Println("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
+		}
+		return s.WildcardForced
 	}
 
 	if !s.Quiet {
@@ -425,13 +492,15 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		result := Result{
-			Entity: subdomain,
+		if !s.IsWildcard || !s.WildcardIps.ContainsAny(ips) {
+			result := Result{
+				Entity: subdomain,
+			}
+			if s.ShowIPs {
+				result.Extra = strings.Join(ips, ", ")
+			}
+			resultChan <- result
 		}
-		if s.ShowIPs {
-			result.Extra = strings.Join(ips, ", ")
-		}
-		resultChan <- result
 	} else if s.Verbose {
 		result := Result{
 			Entity: subdomain,
@@ -512,6 +581,20 @@ func PrintDirResult(s *State, r *Result) {
 
 		fmt.Println(output)
 	}
+}
+
+func PrepareSignalHandler(s *State) {
+	s.SignalChan = make(chan os.Signal, 1)
+	signal.Notify(s.SignalChan, os.Interrupt)
+	go func() {
+		for _ = range s.SignalChan {
+			// caught CTRL+C
+			if !s.Quiet {
+				fmt.Println("[!] Keyboard interrupt detected, terminating.")
+				s.Terminate = true
+			}
+		}
+	}()
 }
 
 func (e *RedirectError) Error() string {

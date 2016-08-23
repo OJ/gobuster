@@ -1,7 +1,10 @@
-Gobuster v1.1 (OJ Reeves @TheColonial)
+Gobuster v1.2 (OJ Reeves @TheColonial)
 ======================================
 
-Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
+Gobuster is a tool used to brute-force:
+
+* URIs (directories and files) in web sites.
+* DNS subdomains (with wildcard support).
 
 ### Oh dear God.. WHY!?
 
@@ -19,7 +22,7 @@ Because I wanted:
 
 ### But it's shit! And your implementation sucks!
 
-Yes, you're probably correct. Feel free to :
+Yes, you're probably correct. Feel free to:
 
 * Not use it.
 * Show me how to do it better.
@@ -27,6 +30,7 @@ Yes, you're probably correct. Feel free to :
 ### Common Command line options
 
 * `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
+* `-q` - disables banner/underline output.
 * `-t <threads>` - number of threads to run (default: `10`).
 * `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-v` - verbose output (show all results).
@@ -34,17 +38,18 @@ Yes, you're probably correct. Feel free to :
 
 ### Command line options for `dns` mode
 
+* `-fw` - Force processing of a domain with wildcard DNS.
 * `-i` - show all IP addresses for the result.
 
 ### Command line options for `dir` mode
 
 * `-a <user agent string>` - specify a user agent string to send in the request header
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
+* `-e` - specify extended mode that renders the full URL.
 * `-f` - append `/` for directory brute forces.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
-* `-q` - disables banner/underline output.
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.
@@ -70,19 +75,26 @@ gobuster $ go install
 gobuster$ go run main.go <parameters>
 ```
 
+### Wordlists via STDIN
+Wordlists can be piped into `gobuster` via stdin:
+```
+hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
+```
+Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
 ### Examples
 
 #### `dir` mode
 
 Command line might look like this:
 ```
-$ ./gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
+$ gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
 ```
 Default options looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt
+$ gobuster -u http://buffered.io/ -w words.txt
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -97,9 +109,9 @@ Gobuster v1.1                OJ Reeves (@TheColonial)
 ```
 Default options with status codes disabled looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -n
+$ gobuster -u http://buffered.io/ -w words.txt -n
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -115,9 +127,9 @@ Gobuster v1.1                OJ Reeves (@TheColonial)
 ```
 Verbose output looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -v
+$ gobuster -u http://buffered.io/ -w words.txt -v
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -134,9 +146,9 @@ Found : /contact (Status: 301)
 ```
 Example showing content length:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -l
+$ gobuster -u http://buffered.io/ -w words.txt -l
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -152,7 +164,7 @@ Gobuster v1.1                OJ Reeves (@TheColonial)
 ```
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -q -n -e
+$ gobuster -u http://buffered.io/ -w words.txt -q -n -e
 http://buffered.io/posts
 http://buffered.io/contact
 http://buffered.io/index
@@ -162,13 +174,13 @@ http://buffered.io/index
 
 Command line might look like this:
 ```
-$ ./gobuster -m dns -u mysite.com -t 50 -w common-names.txt
+$ gobuster -m dns -u mysite.com -t 50 -w common-names.txt
 ```
 Normal sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com
+$ gobuster -m dns -w subdomains.txt -u google.com
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -197,9 +209,9 @@ Found: local.google.com
 ```
 Show IP sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com -i
+$ gobuster -m dns -w subdomains.txt -u google.com -i
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -229,19 +241,49 @@ Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 ```
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
 ```
-$ ./gobuster -m dns -w subdomains.txt -u yp.to -i
+$ gobuster -m dns -w subdomains.txt -u yp.to -i
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
 [+] Threads      : 10
 [+] Wordlist     : /tmp/test.txt
 =====================================================
-[!] Unable to validate base domain: yp.to
+[-] Unable to validate base domain: yp.to
 Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
+Wildcard DNS is also detected properly:
+```
+$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
+
+Gobuster v1.2                OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : doesntexist.com
+[+] Threads      : 10
+[+] Wordlist     : subdomainsbig.txt
+=====================================================
+[-] Wildcard DNS found. IP address(es):  123.123.123.123
+[-] To force processing of Wildcard DNS, specify the '-fw' switch.
+=====================================================
+```
+If the user wants to force processing of a domain that has wildcard entries, use `-fw`:
+```
+$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
+
+Gobuster v1.2                OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : doesntexist.com
+[+] Threads      : 10
+[+] Wordlist     : subdomainsbig.txt
+=====================================================
+[-] Wildcard DNS found. IP address(es):  123.123.123.123
+Found: email.doesntexist.com
+^C[!] Keyboard interrupt detected, terminating.
+=====================================================
 
 ### License
 

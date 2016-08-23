@@ -21,12 +21,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,9 +49,14 @@ type PrintResultFunc func(s *State, r *Result)
 type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
 type SetupFunc func(s *State) bool
 
-// Shim type for "set"
+// Shim type for "set" containing ints
 type IntSet struct {
 	set map[int]bool
+}
+
+// Shim type for "set" containing strings
+type StringSet struct {
+	set map[string]bool
 }
 
 // Contains State that are read in from the command
@@ -78,6 +85,12 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
+	IsWildcard     bool
+	WildcardForced bool
+	WildcardIps    StringSet
+	SignalChan     chan os.Signal
+	Terminate      bool
+	StdIn          bool
 }
 
 type RedirectHandler struct {
@@ -87,6 +100,45 @@ type RedirectHandler struct {
 
 type RedirectError struct {
 	StatusCode int
+}
+
+// Add an element to a set
+func (set *StringSet) Add(s string) bool {
+	_, found := set.set[s]
+	set.set[s] = true
+	return !found
+}
+
+// Add a list of elements to a set
+func (set *StringSet) AddRange(ss []string) {
+	for _, s := range ss {
+		set.set[s] = true
+	}
+}
+
+// Test if an element is in a set
+func (set *StringSet) Contains(s string) bool {
+	_, found := set.set[s]
+	return found
+}
+
+// Check if any of the elements exist
+func (set *StringSet) ContainsAny(ss []string) bool {
+	for _, s := range ss {
+		if set.set[s] {
+			return true
+		}
+	}
+	return false
+}
+
+// Stringify the set
+func (set *StringSet) Stringify() string {
+	values := []string{}
+	for s, _ := range set.set {
+		values = append(values, s)
+	}
+	return strings.Join(values, ",")
 }
 
 // Add an element to a set
@@ -175,7 +227,12 @@ func ParseCmdLine() *State {
 	var proxy string
 	valid := true
 
-	s := State{StatusCodes: IntSet{set: map[int]bool{}}}
+	s := State{
+		StatusCodes: IntSet{set: map[int]bool{}},
+		WildcardIps: StringSet{set: map[string]bool{}},
+		IsWildcard:  false,
+		StdIn:       false,
+	}
 
 	// Set up the variables we're interested in parsing.
 	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
@@ -197,6 +254,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
 
 	flag.Parse()
 
@@ -212,25 +270,37 @@ func ParseCmdLine() *State {
 		s.Processor = ProcessDnsEntry
 		s.Setup = SetupDns
 	default:
-		fmt.Println("Mode (-m): Invalid value:", s.Mode)
+		fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
 		valid = false
 	}
 
 	if s.Threads < 0 {
-		fmt.Println("Threads (-t): Invalid value:", s.Threads)
+		fmt.Println("[!] Threads (-t): Invalid value:", s.Threads)
 		valid = false
 	}
 
-	if s.Wordlist == "" {
-		fmt.Println("WordList (-w): Must be specified")
-		valid = false
-	} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-		fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+	stdin, err := os.Stdin.Stat()
+	if err != nil {
+		fmt.Println("[!] Unable to stat stdin, falling back to wordlist file.")
+	} else if (stdin.Mode()&os.ModeCharDevice) == 0 && stdin.Size() > 0 {
+		s.StdIn = true
+	}
+
+	if !s.StdIn {
+		if s.Wordlist == "" {
+			fmt.Println("[!] WordList (-w): Must be specified")
+			valid = false
+		} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
+			fmt.Println("[!] Wordlist (-w): File does not exist:", s.Wordlist)
+			valid = false
+		}
+	} else if s.Wordlist != "" {
+		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
 		valid = false
 	}
 
 	if s.Url == "" {
-		fmt.Println("Url/Domain (-u): Must be specified")
+		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
 	}
 
@@ -243,7 +313,7 @@ func ParseCmdLine() *State {
 			s.Url = "http://" + s.Url
 		}
 
-		// extensions are comma seaprated
+		// extensions are comma separated
 		if extensions != "" {
 			s.Extensions = strings.Split(extensions, ",")
 			for i := range s.Extensions {
@@ -253,14 +323,16 @@ func ParseCmdLine() *State {
 			}
 		}
 
-		// status codes are comma seaprated
+		// status codes are comma separated
 		if codes != "" {
 			for _, c := range strings.Split(codes, ",") {
 				i, err := strconv.Atoi(c)
 				if err != nil {
-					panic("Invalid status code given")
+					fmt.Println("[!] Invalid status code given: ", c)
+					valid = false
+				} else {
+					s.StatusCodes.Add(i)
 				}
-				s.StatusCodes.Add(i)
 			}
 		}
 
@@ -276,7 +348,8 @@ func ParseCmdLine() *State {
 			if err == nil {
 				s.Password = string(passBytes)
 			} else {
-				panic("Auth username given but reading of password failed")
+				fmt.Println("[!] Auth username given but reading of password failed")
+				valid = false
 			}
 		}
 
@@ -287,7 +360,7 @@ func ParseCmdLine() *State {
 			if proxy != "" {
 				proxyUrl, err := url.Parse(proxy)
 				if err != nil {
-					panic("Proxy URL is invalid")
+					panic("[!] Proxy URL is invalid")
 				}
 				s.ProxyUrl = proxyUrl
 				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
@@ -309,6 +382,8 @@ func ParseCmdLine() *State {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
 			}
+		} else {
+			Ruler(&s)
 		}
 	}
 
@@ -322,10 +397,6 @@ func ParseCmdLine() *State {
 // Process the busting of the website with the given
 // set of settings from the command line.
 func Process(s *State) {
-	wordlist, err := os.Open(s.Wordlist)
-	if err != nil {
-		panic("Failed to open wordlist")
-	}
 
 	ShowConfig(s)
 
@@ -333,6 +404,8 @@ func Process(s *State) {
 		Ruler(s)
 		return
 	}
+
+	PrepareSignalHandler(s)
 
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
@@ -376,11 +449,27 @@ func Process(s *State) {
 		printerGroup.Done()
 	}()
 
-	defer wordlist.Close()
+	var scanner *bufio.Scanner
 
-	// Lazy reading of the wordlist line by line
-	scanner := bufio.NewScanner(wordlist)
+	if s.StdIn {
+		// Read directly from stdin
+		scanner = bufio.NewScanner(os.Stdin)
+	} else {
+		// Pull content from the wordlist
+		wordlist, err := os.Open(s.Wordlist)
+		if err != nil {
+			panic("Failed to open wordlist")
+		}
+		defer wordlist.Close()
+
+		// Lazy reading of the wordlist line by line
+		scanner = bufio.NewScanner(wordlist)
+	}
+
 	for scanner.Scan() {
+		if s.Terminate {
+			break
+		}
 		word := strings.TrimSpace(scanner.Text())
 
 		// Skip "comment" (starts with #), as well as empty lines
@@ -398,10 +487,16 @@ func Process(s *State) {
 
 func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
-	_, err := net.LookupHost("bba1b18d-50f8-4f1d-8295-c861445ed7f5." + s.Url)
+	guid := uuid.NewV4()
+	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
 	if err == nil {
-		fmt.Println("[-] Wildcard DNS found.")
-		return false
+		s.IsWildcard = true
+		s.WildcardIps.AddRange(wildcardIps)
+		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.Stringify())
+		if !s.WildcardForced {
+			fmt.Println("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
+		}
+		return s.WildcardForced
 	}
 
 	if !s.Quiet {
@@ -409,7 +504,7 @@ func SetupDns(s *State) bool {
 		_, err = net.LookupHost(s.Url)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
-			fmt.Println("[!] Unable to validate base domain:", s.Url)
+			fmt.Println("[-] Unable to validate base domain:", s.Url)
 		}
 	}
 
@@ -425,13 +520,15 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		result := Result{
-			Entity: subdomain,
+		if !s.IsWildcard || !s.WildcardIps.ContainsAny(ips) {
+			result := Result{
+				Entity: subdomain,
+			}
+			if s.ShowIPs {
+				result.Extra = strings.Join(ips, ", ")
+			}
+			resultChan <- result
 		}
-		if s.ShowIPs {
-			result.Extra = strings.Join(ips, ", ")
-		}
-		resultChan <- result
 	} else if s.Verbose {
 		result := Result{
 			Entity: subdomain,
@@ -514,6 +611,20 @@ func PrintDirResult(s *State, r *Result) {
 	}
 }
 
+func PrepareSignalHandler(s *State) {
+	s.SignalChan = make(chan os.Signal, 1)
+	signal.Notify(s.SignalChan, os.Interrupt)
+	go func() {
+		for _ = range s.SignalChan {
+			// caught CTRL+C
+			if !s.Quiet {
+				fmt.Println("[!] Keyboard interrupt detected, terminating.")
+				s.Terminate = true
+			}
+		}
+	}()
+}
+
 func (e *RedirectError) Error() string {
 	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
 }
@@ -549,7 +660,7 @@ func Banner(state *State) {
 	}
 
 	fmt.Println("")
-	fmt.Println("Gobuster v1.1                OJ Reeves (@TheColonial)")
+	fmt.Println("Gobuster v1.2                OJ Reeves (@TheColonial)")
 	Ruler(state)
 }
 
@@ -562,7 +673,12 @@ func ShowConfig(state *State) {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
 		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
 		fmt.Printf("[+] Threads      : %d\n", state.Threads)
-		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
+
+		wordlist := "stdin (pipe)"
+		if !state.StdIn {
+			wordlist = state.Wordlist
+		}
+		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())

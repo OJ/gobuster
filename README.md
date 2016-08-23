@@ -284,6 +284,7 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 Found: email.doesntexist.com
 ^C[!] Keyboard interrupt detected, terminating.
 =====================================================
+```
 
 ### License
 

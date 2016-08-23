@@ -78,7 +78,7 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
-	StdIn	       bool
+	StdIn          bool
 }
 
 type RedirectHandler struct {
@@ -176,7 +176,10 @@ func ParseCmdLine() *State {
 	var proxy string
 	valid := true
 
-	s := State{StatusCodes: IntSet{set: map[int]bool{}}}
+	s := State{
+		StatusCodes: IntSet{set: map[int]bool{}},
+		StdIn:       false,
+	}
 
 	// Set up the variables we're interested in parsing.
 	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
@@ -213,36 +216,37 @@ func ParseCmdLine() *State {
 		s.Processor = ProcessDnsEntry
 		s.Setup = SetupDns
 	default:
-		fmt.Println("Mode (-m): Invalid value:", s.Mode)
+		fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
 		valid = false
 	}
 
 	if s.Threads < 0 {
-		fmt.Println("Threads (-t): Invalid value:", s.Threads)
+		fmt.Println("[!] Threads (-t): Invalid value:", s.Threads)
 		valid = false
 	}
 
 	stdin, err := os.Stdin.Stat()
 	if err != nil {
-    		panic(err)
-  	}
-
-	if stdin.Mode().String()[0] == 'p' { // check FileMode type to see if there is a named pipe (FIFO)
+		fmt.Println("[!] Unable to stat stdin, falling back to wordlist file.")
+	} else if (stdin.Mode()&os.ModeCharDevice) == 0 && stdin.Size() > 0 {
 		s.StdIn = true
-	} else {s.StdIn = false}
+	}
 
-	if s.StdIn == false {
+	if !s.StdIn {
 		if s.Wordlist == "" {
-			fmt.Println("WordList (-w): Must be specified")
+			fmt.Println("[!] WordList (-w): Must be specified")
 			valid = false
 		} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-			fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+			fmt.Println("[!] Wordlist (-w): File does not exist:", s.Wordlist)
 			valid = false
 		}
+	} else if s.Wordlist != "" {
+		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
+		valid = false
 	}
 
 	if s.Url == "" {
-		fmt.Println("Url/Domain (-u): Must be specified")
+		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
 	}
 
@@ -270,9 +274,11 @@ func ParseCmdLine() *State {
 			for _, c := range strings.Split(codes, ",") {
 				i, err := strconv.Atoi(c)
 				if err != nil {
-					panic("Invalid status code given")
+					fmt.Println("[!] Invalid status code given: ", c)
+					valid = false
+				} else {
+					s.StatusCodes.Add(i)
 				}
-				s.StatusCodes.Add(i)
 			}
 		}
 
@@ -288,7 +294,8 @@ func ParseCmdLine() *State {
 			if err == nil {
 				s.Password = string(passBytes)
 			} else {
-				panic("Auth username given but reading of password failed")
+				fmt.Println("[!] Auth username given but reading of password failed")
+				valid = false
 			}
 		}
 
@@ -299,7 +306,7 @@ func ParseCmdLine() *State {
 			if proxy != "" {
 				proxyUrl, err := url.Parse(proxy)
 				if err != nil {
-					panic("Proxy URL is invalid")
+					panic("[!] Proxy URL is invalid")
 				}
 				s.ProxyUrl = proxyUrl
 				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
@@ -321,6 +328,8 @@ func ParseCmdLine() *State {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
 			}
+		} else {
+			Ruler(&s)
 		}
 	}
 
@@ -384,14 +393,13 @@ func Process(s *State) {
 		printerGroup.Done()
 	}()
 
+	var scanner *bufio.Scanner
 
 	if s.StdIn {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			word := scanner.Text()
-			wordChan <- word
-		}
+		// Read directly from stdin
+		scanner = bufio.NewScanner(os.Stdin)
 	} else {
+		// Pull content from the wordlist
 		wordlist, err := os.Open(s.Wordlist)
 		if err != nil {
 			panic("Failed to open wordlist")
@@ -399,15 +407,15 @@ func Process(s *State) {
 		defer wordlist.Close()
 
 		// Lazy reading of the wordlist line by line
-		scanner := bufio.NewScanner(wordlist)
+		scanner = bufio.NewScanner(wordlist)
+	}
 
-		for scanner.Scan() {
-			word := strings.TrimSpace(scanner.Text())
+	for scanner.Scan() {
+		word := strings.TrimSpace(scanner.Text())
 
-			// Skip "comment" (starts with #), as well as empty lines
-			if !strings.HasPrefix(word, "#") && len(word) > 0 {
-				wordChan <- word
-			}
+		// Skip "comment" (starts with #), as well as empty lines
+		if !strings.HasPrefix(word, "#") && len(word) > 0 {
+			wordChan <- word
 		}
 	}
 
@@ -584,7 +592,12 @@ func ShowConfig(state *State) {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
 		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
 		fmt.Printf("[+] Threads      : %d\n", state.Threads)
-		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
+
+		wordlist := "stdin (pipe)"
+		if !state.StdIn {
+			wordlist = state.Wordlist
+		}
+		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())

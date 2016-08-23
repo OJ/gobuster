@@ -1,4 +1,4 @@
-Gobuster v1.1 (OJ Reeves @TheColonial)
+Gobuster v1.2 (OJ Reeves @TheColonial)
 ======================================
 
 Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
@@ -82,7 +82,7 @@ Default options looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -99,7 +99,7 @@ Default options with status codes disabled looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -n
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -117,7 +117,7 @@ Verbose output looks like this:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -v
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -136,7 +136,7 @@ Example showing content length:
 ```
 $ ./gobuster -u http://buffered.io/ -w words.txt -l
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -168,7 +168,7 @@ Normal sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -199,7 +199,7 @@ Show IP sample run goes like this:
 ```
 $ ./gobuster -m dns -w subdomains.txt -u google.com -i
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -231,7 +231,7 @@ Base domain validation warning when the base domain fails to resolve. This is a 
 ```
 $ ./gobuster -m dns -w subdomains.txt -u yp.to -i
 
-Gobuster v1.1                OJ Reeves (@TheColonial)
+Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to

@@ -549,7 +549,7 @@ func Banner(state *State) {
 	}
 
 	fmt.Println("")
-	fmt.Println("Gobuster v1.1                OJ Reeves (@TheColonial)")
+	fmt.Println("Gobuster v1.2                OJ Reeves (@TheColonial)")
 	Ruler(state)
 }
 

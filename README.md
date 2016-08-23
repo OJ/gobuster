@@ -56,12 +56,6 @@ Yes, you're probably correct. Feel free to:
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
 
-### Standard Input
-Pipe words into stdin on `gobuster` from tools such as hashcat like:
-```
-hashcat -a 3 --stdout ?l|go run main.go -u https://mysite.com
-```
-
 ### Building
 
 Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
@@ -81,17 +75,24 @@ gobuster $ go install
 gobuster$ go run main.go <parameters>
 ```
 
+### Wordlists via STDIN
+Wordlists can be piped into `gobuster` via stdin:
+```
+hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
+```
+Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
 ### Examples
 
 #### `dir` mode
 
 Command line might look like this:
 ```
-$ ./gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
+$ gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
 ```
 Default options looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt
+$ gobuster -u http://buffered.io/ -w words.txt
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -108,7 +109,7 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 ```
 Default options with status codes disabled looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -n
+$ gobuster -u http://buffered.io/ -w words.txt -n
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -126,7 +127,7 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 ```
 Verbose output looks like this:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -v
+$ gobuster -u http://buffered.io/ -w words.txt -v
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -145,7 +146,7 @@ Found : /contact (Status: 301)
 ```
 Example showing content length:
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -l
+$ gobuster -u http://buffered.io/ -w words.txt -l
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -163,7 +164,7 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 ```
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
 ```
-$ ./gobuster -u http://buffered.io/ -w words.txt -q -n -e
+$ gobuster -u http://buffered.io/ -w words.txt -q -n -e
 http://buffered.io/posts
 http://buffered.io/contact
 http://buffered.io/index
@@ -173,11 +174,11 @@ http://buffered.io/index
 
 Command line might look like this:
 ```
-$ ./gobuster -m dns -u mysite.com -t 50 -w common-names.txt
+$ gobuster -m dns -u mysite.com -t 50 -w common-names.txt
 ```
 Normal sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com
+$ gobuster -m dns -w subdomains.txt -u google.com
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -208,7 +209,7 @@ Found: local.google.com
 ```
 Show IP sample run goes like this:
 ```
-$ ./gobuster -m dns -w subdomains.txt -u google.com -i
+$ gobuster -m dns -w subdomains.txt -u google.com -i
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -240,7 +241,7 @@ Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 ```
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
 ```
-$ ./gobuster -m dns -w subdomains.txt -u yp.to -i
+$ gobuster -m dns -w subdomains.txt -u yp.to -i
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -249,13 +250,13 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 [+] Threads      : 10
 [+] Wordlist     : /tmp/test.txt
 =====================================================
-[!] Unable to validate base domain: yp.to
+[-] Unable to validate base domain: yp.to
 Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
 Wildcard DNS is also detected properly:
 ```
-$ ./gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
+$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================
@@ -270,7 +271,7 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 ```
 If the user wants to force processing of a domain that has wildcard entries, use `-fw`:
 ```
-$ ./gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
+$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
 
 Gobuster v1.2                OJ Reeves (@TheColonial)
 =====================================================

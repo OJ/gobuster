@@ -4,4 +4,5 @@
 @justinsteven - HTTP basic auth support
 @kevinnz - custom user agent support
 @viaMorgoth - base domain validation for DNS mode
-@UID1K - DNS wildcard check support
+@UID1K - initial DNS wildcard check support
+@Ne0nd0g - STDIN support for wordlists

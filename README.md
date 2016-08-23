@@ -1,7 +1,10 @@
 Gobuster v1.2 (OJ Reeves @TheColonial)
 ======================================
 
-Alternative directory and file busting tool written in Go. DNS support recently added after inspiration and effort from [Peleus](https://twitter.com/0x42424242).
+Gobuster is a tool used to brute-force:
+
+* URIs (directories and files) in web sites.
+* DNS subdomains (with wildcard support).
 
 ### Oh dear God.. WHY!?
 
@@ -19,7 +22,7 @@ Because I wanted:
 
 ### But it's shit! And your implementation sucks!
 
-Yes, you're probably correct. Feel free to :
+Yes, you're probably correct. Feel free to:
 
 * Not use it.
 * Show me how to do it better.

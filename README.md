@@ -38,6 +38,7 @@ Yes, you're probably correct. Feel free to:
 
 ### Command line options for `dns` mode
 
+* `-fw` - Force processing of a domain with wildcard DNS.
 * `-i` - show all IP addresses for the result.
 
 ### Command line options for `dir` mode
@@ -246,6 +247,36 @@ Gobuster v1.2                OJ Reeves (@TheColonial)
 Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
+Wildcard DNS is also detected properly:
+```
+$ ./gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
+
+Gobuster v1.2                OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : doesntexist.com
+[+] Threads      : 10
+[+] Wordlist     : subdomainsbig.txt
+=====================================================
+[-] Wildcard DNS found. IP address(es):  123.123.123.123
+[-] To force processing of Wildcard DNS, specify the '-fw' switch.
+=====================================================
+```
+If the user wants to force processing of a domain that has wildcard entries, use `-fw`:
+```
+$ ./gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
+
+Gobuster v1.2                OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dns
+[+] Url/Domain   : doesntexist.com
+[+] Threads      : 10
+[+] Wordlist     : subdomainsbig.txt
+=====================================================
+[-] Wildcard DNS found. IP address(es):  123.123.123.123
+Found: email.doesntexist.com
+^C[!] Keyboard interrupt detected, terminating.
+=====================================================
 
 ### License
 

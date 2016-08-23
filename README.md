@@ -56,6 +56,12 @@ Yes, you're probably correct. Feel free to:
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
 
+### Standard Input
+Pipe words into stdin on `gobuster` from tools such as hashcat like:
+```
+hashcat -a 3 --stdout ?l|go run main.go -u https://mysite.com
+```
+
 ### Building
 
 Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.

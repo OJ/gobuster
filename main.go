@@ -90,6 +90,7 @@ type State struct {
 	WildcardIps    StringSet
 	SignalChan     chan os.Signal
 	Terminate      bool
+	StdIn          bool
 }
 
 type RedirectHandler struct {
@@ -230,6 +231,7 @@ func ParseCmdLine() *State {
 		StatusCodes: IntSet{set: map[int]bool{}},
 		WildcardIps: StringSet{set: map[string]bool{}},
 		IsWildcard:  false,
+		StdIn:       false,
 	}
 
 	// Set up the variables we're interested in parsing.
@@ -268,25 +270,37 @@ func ParseCmdLine() *State {
 		s.Processor = ProcessDnsEntry
 		s.Setup = SetupDns
 	default:
-		fmt.Println("Mode (-m): Invalid value:", s.Mode)
+		fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
 		valid = false
 	}
 
 	if s.Threads < 0 {
-		fmt.Println("Threads (-t): Invalid value:", s.Threads)
+		fmt.Println("[!] Threads (-t): Invalid value:", s.Threads)
 		valid = false
 	}
 
-	if s.Wordlist == "" {
-		fmt.Println("WordList (-w): Must be specified")
-		valid = false
-	} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-		fmt.Println("Wordlist (-w): File does not exist:", s.Wordlist)
+	stdin, err := os.Stdin.Stat()
+	if err != nil {
+		fmt.Println("[!] Unable to stat stdin, falling back to wordlist file.")
+	} else if (stdin.Mode()&os.ModeCharDevice) == 0 && stdin.Size() > 0 {
+		s.StdIn = true
+	}
+
+	if !s.StdIn {
+		if s.Wordlist == "" {
+			fmt.Println("[!] WordList (-w): Must be specified")
+			valid = false
+		} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
+			fmt.Println("[!] Wordlist (-w): File does not exist:", s.Wordlist)
+			valid = false
+		}
+	} else if s.Wordlist != "" {
+		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
 		valid = false
 	}
 
 	if s.Url == "" {
-		fmt.Println("Url/Domain (-u): Must be specified")
+		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
 	}
 
@@ -299,7 +313,7 @@ func ParseCmdLine() *State {
 			s.Url = "http://" + s.Url
 		}
 
-		// extensions are comma seaprated
+		// extensions are comma separated
 		if extensions != "" {
 			s.Extensions = strings.Split(extensions, ",")
 			for i := range s.Extensions {
@@ -309,14 +323,16 @@ func ParseCmdLine() *State {
 			}
 		}
 
-		// status codes are comma seaprated
+		// status codes are comma separated
 		if codes != "" {
 			for _, c := range strings.Split(codes, ",") {
 				i, err := strconv.Atoi(c)
 				if err != nil {
-					panic("Invalid status code given")
+					fmt.Println("[!] Invalid status code given: ", c)
+					valid = false
+				} else {
+					s.StatusCodes.Add(i)
 				}
-				s.StatusCodes.Add(i)
 			}
 		}
 
@@ -332,7 +348,8 @@ func ParseCmdLine() *State {
 			if err == nil {
 				s.Password = string(passBytes)
 			} else {
-				panic("Auth username given but reading of password failed")
+				fmt.Println("[!] Auth username given but reading of password failed")
+				valid = false
 			}
 		}
 
@@ -343,7 +360,7 @@ func ParseCmdLine() *State {
 			if proxy != "" {
 				proxyUrl, err := url.Parse(proxy)
 				if err != nil {
-					panic("Proxy URL is invalid")
+					panic("[!] Proxy URL is invalid")
 				}
 				s.ProxyUrl = proxyUrl
 				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
@@ -365,6 +382,8 @@ func ParseCmdLine() *State {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
 			}
+		} else {
+			Ruler(&s)
 		}
 	}
 
@@ -378,10 +397,6 @@ func ParseCmdLine() *State {
 // Process the busting of the website with the given
 // set of settings from the command line.
 func Process(s *State) {
-	wordlist, err := os.Open(s.Wordlist)
-	if err != nil {
-		panic("Failed to open wordlist")
-	}
 
 	ShowConfig(s)
 
@@ -434,10 +449,23 @@ func Process(s *State) {
 		printerGroup.Done()
 	}()
 
-	defer wordlist.Close()
+	var scanner *bufio.Scanner
 
-	// Lazy reading of the wordlist line by line
-	scanner := bufio.NewScanner(wordlist)
+	if s.StdIn {
+		// Read directly from stdin
+		scanner = bufio.NewScanner(os.Stdin)
+	} else {
+		// Pull content from the wordlist
+		wordlist, err := os.Open(s.Wordlist)
+		if err != nil {
+			panic("Failed to open wordlist")
+		}
+		defer wordlist.Close()
+
+		// Lazy reading of the wordlist line by line
+		scanner = bufio.NewScanner(wordlist)
+	}
+
 	for scanner.Scan() {
 		if s.Terminate {
 			break
@@ -476,7 +504,7 @@ func SetupDns(s *State) bool {
 		_, err = net.LookupHost(s.Url)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
-			fmt.Println("[!] Unable to validate base domain:", s.Url)
+			fmt.Println("[-] Unable to validate base domain:", s.Url)
 		}
 	}
 
@@ -645,7 +673,12 @@ func ShowConfig(state *State) {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
 		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
 		fmt.Printf("[+] Threads      : %d\n", state.Threads)
-		fmt.Printf("[+] Wordlist     : %s\n", state.Wordlist)
+
+		wordlist := "stdin (pipe)"
+		if !state.StdIn {
+			wordlist = state.Wordlist
+		}
+		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())

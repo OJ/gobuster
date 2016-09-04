@@ -91,6 +91,7 @@ type State struct {
 	SignalChan     chan os.Signal
 	Terminate      bool
 	StdIn          bool
+	HitsToAbort    int
 }
 
 type RedirectHandler struct {
@@ -255,6 +256,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
+	flag.IntVar(&s.HitsToAbort, "hta", 0, "Number of hits-in-a-row to abort (dir mode only)")
 
 	flag.Parse()
 
@@ -387,6 +389,11 @@ func ParseCmdLine() *State {
 		}
 	}
 
+	if s.HitsToAbort < 0 {
+		fmt.Println("[!] HitsToAbort (-hta): Invalid value:", s.HitsToAbort)
+		valid = false
+	}
+
 	if valid {
 		return &s
 	}
@@ -443,8 +450,17 @@ func Process(s *State) {
 	// Single goroutine which handles the results as they
 	// appear from the worker threads.
 	go func() {
+		hitsInARow := 0
 		for r := range resultChan {
 			s.Printer(s, &r)
+			if s.HitsToAbort != 0 && s.StatusCodes.Contains(r.Status) {
+				hitsInARow++
+				if hitsInARow >= s.HitsToAbort {
+					s.Terminate = true
+				}
+			} else {
+				hitsInARow = 0
+			}
 		}
 		printerGroup.Done()
 	}()
@@ -725,6 +741,10 @@ func ShowConfig(state *State) {
 
 			if state.Verbose {
 				fmt.Printf("[+] Verbose      : true\n")
+			}
+
+			if state.HitsToAbort > 0 {
+				fmt.Printf("[+] HitsToAbort  : %d\n", state.HitsToAbort)
 			}
 		}
 

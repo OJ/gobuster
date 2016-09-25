@@ -77,6 +77,7 @@ type State struct {
 	Quiet          bool
 	Setup          SetupFunc
 	ShowIPs        bool
+	ShowCNAME      bool
 	StatusCodes    IntSet
 	Threads        int
 	Url            string
@@ -85,6 +86,8 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
+	OutputFileName string
+	OutputFile     *os.File
 	IsWildcard     bool
 	WildcardForced bool
 	WildcardIps    StringSet
@@ -239,6 +242,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
@@ -248,6 +252,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
+	flag.BoolVar(&s.ShowCNAME, "C", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
@@ -466,6 +471,17 @@ func Process(s *State) {
 		scanner = bufio.NewScanner(wordlist)
 	}
 
+	var outputFile *os.File
+	if s.OutputFileName != "" {
+		outputFile, err := os.Create(s.OutputFileName)
+		if err != nil {
+			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", s.OutputFileName)
+			s.OutputFileName = ""
+		} else {
+			s.OutputFile = outputFile
+		}
+	}
+
 	for scanner.Scan() {
 		if s.Terminate {
 			break
@@ -482,6 +498,9 @@ func Process(s *State) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
+	if s.OutputFileName != "" {
+		outputFile.Close()
+	}
 	Ruler(s)
 }
 
@@ -526,6 +545,11 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 			}
 			if s.ShowIPs {
 				result.Extra = strings.Join(ips, ", ")
+			} else if s.ShowCNAME {
+				cname, err := net.LookupCNAME(subdomain)
+				if err == nil {
+					result.Extra = cname
+				}
 			}
 			resultChan <- result
 		}
@@ -570,12 +594,20 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
+	output := ""
 	if r.Status == 404 {
-		fmt.Printf("Missing: %s\n", r.Entity)
+		output += fmt.Sprintf("Missing: %s\n", r.Entity)
 	} else if s.ShowIPs {
-		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output += fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+	} else if s.ShowCNAME {
+		output += fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
-		fmt.Printf("Found: %s\n", r.Entity)
+		output += fmt.Sprintf("Found: %s\n", r.Entity)
+	}
+	fmt.Printf(output)
+
+	if s.OutputFileName != "" {
+		WriteToFile(output, s)
 	}
 }
 
@@ -606,8 +638,19 @@ func PrintDirResult(s *State, r *Result) {
 		if r.Size != nil {
 			output += fmt.Sprintf(" [Size: %d]", *r.Size)
 		}
+		output += "\n"
 
-		fmt.Println(output)
+		fmt.Printf(output)
+		if s.OutputFileName != "" {
+			WriteToFile(output, s)
+		}
+	}
+}
+
+func WriteToFile(output string, s *State) {
+	_, err := s.OutputFile.WriteString(output)
+	if err != nil {
+		panic("[!] Unable to write to file " + s.OutputFileName)
 	}
 }
 
@@ -679,6 +722,10 @@ func ShowConfig(state *State) {
 			wordlist = state.Wordlist
 		}
 		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
+
+		if state.OutputFileName != "" {
+			fmt.Printf("[+] Output file  : %s\n", state.OutputFileName)
+		}
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())

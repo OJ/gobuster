@@ -15,7 +15,6 @@ package main
 // Please see LICENSE file for license details.
 //
 //----------------------------------------------------
-
 import (
 	"bufio"
 	"crypto/tls"
@@ -71,6 +70,7 @@ type State struct {
 	Mode           string
 	NoStatus       bool
 	Password       string
+	Protocol       string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
 	ProxyUrl       *url.URL
@@ -240,6 +240,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
+	flag.StringVar(&s.Protocol, "pr", "http://", "The target URL's protocol (dir mode only)")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
 	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
@@ -310,7 +311,7 @@ func ParseCmdLine() *State {
 		}
 
 		if strings.HasPrefix(s.Url, "http") == false {
-			s.Url = "http://" + s.Url
+			s.Url = s.Protocol + s.Url
 		}
 
 		// extensions are comma separated

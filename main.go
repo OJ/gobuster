@@ -68,8 +68,8 @@ type State struct {
 	Extensions     []string
 	FollowRedirect bool
 	IncludeLength  bool
-	HasInputFile   bool
-	InputFile      string
+	HasBatchFile   bool
+	BatchFile      string
 	Mode           string
 	NoStatus       bool
 	Password       string
@@ -245,7 +245,7 @@ func ParseCmdLine() *State {
 		WildcardIps:  StringSet{set: map[string]bool{}},
 		IsWildcard:   false,
 		StdIn:        false,
-		HasInputFile: false,
+		HasBatchFile: false,
 		RulerLength:  53,
 	}
 
@@ -254,7 +254,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
-	flag.StringVar(&s.InputFile, "iL", "", "Input file containing target URLs or Domains")
+	flag.StringVar(&s.BatchFile, "b", "", "Batch file containing target URLs or Domains")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
@@ -295,16 +295,16 @@ func ParseCmdLine() *State {
 		valid = false
 	}
 
-	if s.InputFile != "" {
-		s.HasInputFile = true
-		if _, err := os.Stat(s.InputFile); os.IsNotExist(err) {
-			fmt.Println("[!] InputFile (-iL): File does not exist:", s.InputFile)
+	if s.BatchFile != "" {
+		s.HasBatchFile = true
+		if _, err := os.Stat(s.BatchFile); os.IsNotExist(err) {
+			fmt.Println("[!] BatchFile (-iL): File does not exist:", s.BatchFile)
 			valid = false
 		}
 	}
 
 	//We can't read all files again from stdin. -iL and stdin aren't compatible
-	if !s.HasInputFile {
+	if !s.HasBatchFile {
 		stdin, err := os.Stdin.Stat()
 		if err != nil {
 			fmt.Println("[!] Unable to stat stdin, falling back to wordlist file.")
@@ -325,7 +325,7 @@ func ParseCmdLine() *State {
 		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
 		valid = false
 	}
-	if !s.HasInputFile && s.Url == "" {
+	if !s.HasBatchFile && s.Url == "" {
 		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
 	}
@@ -454,8 +454,8 @@ func ProcessSingle(s *State) {
 
 	var scanner *bufio.Scanner
 
-	if !s.HasInputFile && s.StdIn {
-		// Read directly from stdin, but skip if an input file is used
+	if !s.HasBatchFile && s.StdIn {
+		// Read directly from stdin, but skip if an Batch file is used
 		scanner = bufio.NewScanner(os.Stdin)
 	} else {
 		// Pull content from the wordlist
@@ -491,10 +491,10 @@ func ProcessMultiple(s *State) {
 
 	var scanner *bufio.Scanner
 
-	// Pull targets from input File
-	targets, err := os.Open(s.InputFile)
+	// Pull targets from Batch file
+	targets, err := os.Open(s.BatchFile)
 	if err != nil {
-		panic("Failed to open InputFile")
+		panic("Failed to open BatchFile")
 	}
 	defer targets.Close()
 
@@ -729,8 +729,8 @@ func ShowConfig(state *State) {
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
-		if state.HasInputFile {
-			fmt.Printf("[+] Input File   : %s\n", state.InputFile)
+		if state.HasBatchFile {
+			fmt.Printf("[+] Batch file   : %s\n", state.BatchFile)
 		} else {
 			fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
 		}
@@ -799,7 +799,7 @@ func ConfigureAndRun(s *State) {
 
 	PrepareSignalHandler(s)
 
-	if !s.HasInputFile {
+	if !s.HasBatchFile {
 		ProcessSingle(s)
 	} else {
 		ProcessMultiple(s)

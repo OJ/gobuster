@@ -55,6 +55,7 @@ Yes, you're probably correct. Feel free to:
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
+* `-is` - Skip verification of SSL certificates.
 
 ### Building
 

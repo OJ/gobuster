@@ -36,6 +36,11 @@ import (
 	"unicode/utf8"
 )
 
+const MaxUint = ^uint(0)
+const MinUint = 0
+const MaxInt = int(MaxUint >> 1)
+const MinInt = -MaxInt - 1
+
 // A single result which comes from an individual web
 // request.
 type Result struct {
@@ -62,35 +67,38 @@ type StringSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Client         *http.Client
-	Cookies        string
-	Expanded       bool
-	Extensions     []string
-	FollowRedirect bool
-	IncludeLength  bool
-	Mode           string
-	NoStatus       bool
-	Password       string
-	Printer        PrintResultFunc
-	Processor      ProcessorFunc
-	ProxyUrl       *url.URL
-	Quiet          bool
-	Setup          SetupFunc
-	ShowIPs        bool
-	StatusCodes    IntSet
-	Threads        int
-	Url            string
-	UseSlash       bool
-	UserAgent      string
-	Username       string
-	Verbose        bool
-	Wordlist       string
-	IsWildcard     bool
-	WildcardForced bool
-	WildcardIps    StringSet
-	SignalChan     chan os.Signal
-	Terminate      bool
-	StdIn          bool
+	Client          *http.Client
+	Cookies         string
+	Expanded        bool
+	Extensions      []string
+	FollowRedirect  bool
+	IncludeLength   bool
+	IgnoreLength    bool
+	IgnoreLengthMin int
+	IgnoreLengthMax int
+	Mode            string
+	NoStatus        bool
+	Password        string
+	Printer         PrintResultFunc
+	Processor       ProcessorFunc
+	ProxyUrl        *url.URL
+	Quiet           bool
+	Setup           SetupFunc
+	ShowIPs         bool
+	StatusCodes     IntSet
+	Threads         int
+	Url             string
+	UseSlash        bool
+	UserAgent       string
+	Username        string
+	Verbose         bool
+	Wordlist        string
+	IsWildcard      bool
+	WildcardForced  bool
+	WildcardIps     StringSet
+	SignalChan      chan os.Signal
+	Terminate       bool
+	StdIn           bool
 }
 
 type RedirectHandler struct {
@@ -225,6 +233,7 @@ func ParseCmdLine() *State {
 	var extensions string
 	var codes string
 	var proxy string
+	var ignoreLength int
 	valid := true
 
 	s := State{
@@ -235,26 +244,29 @@ func ParseCmdLine() *State {
 	}
 
 	// Set up the variables we're interested in parsing.
-	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
-	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
-	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
-	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
-	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
-	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
-	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
-	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
-	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
-	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
-	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
-	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
-	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
-	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
-	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
-	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
+	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
+	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
+	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
+	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
+	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
+	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
+	flag.IntVar(&ignoreLength, "il", 0, "Start range for ignore results of a given length (dir mode only, implies -l)")
+	flag.IntVar(&s.IgnoreLengthMin, "imin", 0, "Start range for ignore results of a given length (dir mode only, implies -l)")
+	flag.IntVar(&s.IgnoreLengthMax, "imax", MaxInt, "End range for ignore results of a given length (dir mode only, implies -l)")
+	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
+	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
+	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
+	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
+	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
+	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
+	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 
 	flag.Parse()
 
@@ -295,7 +307,7 @@ func ParseCmdLine() *State {
 			valid = false
 		}
 	} else if s.Wordlist != "" {
-		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
+		fmt.Println("[!] Wordlist (-w): Set along with pipe from stdin. Can't have both!")
 		valid = false
 	}
 
@@ -307,6 +319,30 @@ func ParseCmdLine() *State {
 	if s.Mode == "dir" {
 		if strings.HasSuffix(s.Url, "/") == false {
 			s.Url = s.Url + "/"
+		}
+
+		if s.IgnoreLengthMin < 0 || s.IgnoreLengthMax < 0 || s.IgnoreLengthMin > s.IgnoreLengthMax {
+			fmt.Println("%d, %d", s.IgnoreLengthMin, s.IgnoreLengthMax)
+			fmt.Println("[!] Ignore range (-imin/-imax): Invalid values given")
+			valid = false
+		} else if s.IgnoreLengthMin != 0 || s.IgnoreLengthMax != MaxInt {
+			s.IncludeLength = true
+			s.IgnoreLength = true
+		}
+
+		if ignoreLength < 0 {
+			fmt.Println("[!] Ignore length (-il): is invalid")
+			valid = false
+		} else if ignoreLength > 0 {
+			if s.IgnoreLength {
+				fmt.Println("[!] Ignore length (-il): Set along with range (-imin/imax). Can't have both!")
+				valid = false
+			} else {
+				s.IgnoreLengthMin = ignoreLength
+				s.IgnoreLengthMax = ignoreLength
+				s.IncludeLength = true
+				s.IgnoreLength = true
+			}
 		}
 
 		if strings.HasPrefix(s.Url, "http") == false {
@@ -538,6 +574,18 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	}
 }
 
+func IsValidSize(s *State, size *int64) bool {
+	if s.IgnoreLength == false || size == nil {
+		return true
+	}
+
+	if int64(s.IgnoreLengthMin) > *size || int64(s.IgnoreLengthMax) < *size {
+		return true
+	}
+
+	return false
+}
+
 func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	suffix := ""
 	if s.UseSlash {
@@ -546,7 +594,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 
 	// Try the DIR first
 	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
-	if dirResp != nil {
+	if dirResp != nil && IsValidSize(s, dirSize) {
 		resultChan <- Result{
 			Entity: word + suffix,
 			Status: *dirResp,
@@ -559,7 +607,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 		file := word + s.Extensions[ext]
 		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
 
-		if fileResp != nil {
+		if fileResp != nil && IsValidSize(s, fileSize) {
 			resultChan <- Result{
 				Entity: file,
 				Status: *fileResp,
@@ -620,6 +668,7 @@ func PrepareSignalHandler(s *State) {
 			if !s.Quiet {
 				fmt.Println("[!] Keyboard interrupt detected, terminating.")
 				s.Terminate = true
+				return
 			}
 		}
 	}()
@@ -697,6 +746,14 @@ func ShowConfig(state *State) {
 
 			if state.IncludeLength {
 				fmt.Printf("[+] Show length  : true\n")
+			}
+
+			if state.IgnoreLength {
+				if state.IgnoreLengthMin == state.IgnoreLengthMax {
+					fmt.Printf("[+] Ignore length: %d\n", state.IgnoreLengthMin)
+				} else {
+					fmt.Printf("[+] Ignore range: %d-%d\n", state.IgnoreLengthMin, state.IgnoreLengthMax)
+				}
 			}
 
 			if state.Username != "" {

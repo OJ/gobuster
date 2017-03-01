@@ -252,7 +252,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
-	flag.BoolVar(&s.ShowCNAME, "C", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
+	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
@@ -477,6 +477,7 @@ func Process(s *State) {
 		if err != nil {
 			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", s.OutputFileName)
 			s.OutputFileName = ""
+			s.OutputFile = nil
 		} else {
 			s.OutputFile = outputFile
 		}
@@ -498,7 +499,7 @@ func Process(s *State) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
-	if s.OutputFileName != "" {
+	if s.OutputFile != nil {
 		outputFile.Close()
 	}
 	Ruler(s)
@@ -604,9 +605,9 @@ func PrintDnsResult(s *State, r *Result) {
 	} else {
 		output += fmt.Sprintf("Found: %s\n", r.Entity)
 	}
-	fmt.Printf(output)
+	fmt.Printf("%s", output)
 
-	if s.OutputFileName != "" {
+	if s.OutputFile != nil {
 		WriteToFile(output, s)
 	}
 }
@@ -641,7 +642,7 @@ func PrintDirResult(s *State, r *Result) {
 		output += "\n"
 
 		fmt.Printf(output)
-		if s.OutputFileName != "" {
+		if s.OutputFile != nil {
 			WriteToFile(output, s)
 		}
 	}

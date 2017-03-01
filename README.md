@@ -39,18 +39,20 @@ Yes, you're probably correct. Feel free to:
 
 ### Command line options for `dns` mode
 
+* `-cn` - show CNAME records (cannot be used with '-i' option).
 * `-i` - show all IP addresses for the result.
 
 ### Command line options for `dir` mode
 
-* `-a <user agent string>` - specify a user agent string to send in the request header
+* `-a <user agent string>` - specify a user agent string to send in the request header.
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-e` - specify extended mode that renders the full URL.
 * `-f` - append `/` for directory brute forces.
 * `-k` - Skip verification of SSL certificates.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
-* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
+* `-o <file>` - specify a file name to write the output to.
+* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-x <extensions>` - list of extensions to check for, if any.

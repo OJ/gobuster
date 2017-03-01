@@ -634,13 +634,13 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 func PrintDnsResult(s *State, r *Result) {
 	output := ""
 	if r.Status == 404 {
-		output += fmt.Sprintf("Missing: %s\n", r.Entity)
+		output = fmt.Sprintf("Missing: %s\n", r.Entity)
 	} else if s.ShowIPs {
-		output += fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else if s.ShowCNAME {
-		output += fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
-		output += fmt.Sprintf("Found: %s\n", r.Entity)
+		output = fmt.Sprintf("Found: %s\n", r.Entity)
 	}
 	fmt.Printf("%s", output)
 
@@ -655,9 +655,9 @@ func PrintDirResult(s *State, r *Result) {
 	// Prefix if we're in verbose mode
 	if s.Verbose {
 		if s.StatusCodes.Contains(r.Status) {
-			output += "Found : "
+			output = "Found : "
 		} else {
-			output += "Missed: "
+			output = "Missed: "
 		}
 	}
 
@@ -679,6 +679,7 @@ func PrintDirResult(s *State, r *Result) {
 		output += "\n"
 
 		fmt.Printf(output)
+
 		if s.OutputFile != nil {
 			WriteToFile(output, s)
 		}

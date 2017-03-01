@@ -261,7 +261,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
-	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
+	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
 
 	flag.Parse()
@@ -537,6 +537,18 @@ func SetupDns(s *State) bool {
 }
 
 func SetupDir(s *State) bool {
+	guid := uuid.NewV4()
+	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+
+	if s.StatusCodes.Contains(*wildcardResp) {
+		s.IsWildcard = true
+		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+		if !s.WildcardForced {
+			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+		}
+		return s.WildcardForced
+	}
+
 	return true
 }
 

@@ -29,6 +29,7 @@ Yes, you're probably correct. Feel free to:
 
 ### Common Command line options
 
+* `-fw` - Force processing of a domain with wildcard results.
 * `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
 * `-q` - disables banner/underline output.
 * `-t <threads>` - number of threads to run (default: `10`).
@@ -38,7 +39,6 @@ Yes, you're probably correct. Feel free to:
 
 ### Command line options for `dns` mode
 
-* `-fw` - Force processing of a domain with wildcard DNS.
 * `-i` - show all IP addresses for the result.
 
 ### Command line options for `dir` mode

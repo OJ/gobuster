@@ -92,6 +92,7 @@ type State struct {
 	SignalChan     chan os.Signal
 	Terminate      bool
 	StdIn          bool
+	InsecureSSL    bool
 }
 
 type RedirectHandler struct {
@@ -188,6 +189,11 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
+
+			if strings.HasPrefix(ue.Err.Error(), "x509") {
+				fmt.Println("[-] Invalid certificate")
+			}
+
 			if re, ok := ue.Err.(*RedirectError); ok {
 				return &re.StatusCode, nil
 			}
@@ -256,6 +262,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
+	flag.BoolVar(&s.InsecureSSL, "is", false, "Skip SSL certificate verification")
 
 	flag.Parse()
 
@@ -390,7 +397,7 @@ func ParseCmdLine() *State {
 					Transport: &http.Transport{
 						Proxy: proxyUrlFunc,
 						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: true,
+							InsecureSkipVerify: s.InsecureSSL,
 						},
 					},
 				}}

@@ -29,6 +29,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -310,7 +311,24 @@ func ParseCmdLine() *State {
 		}
 
 		if strings.HasPrefix(s.Url, "http") == false {
-			s.Url = "http://" + s.Url
+			// check to see if a port was specified
+			re := regexp.MustCompile(`^[^/]+:(\d+)`)
+			match := re.FindStringSubmatch(s.Url)
+
+			if len(match) < 2 {
+				// no port, default to http on 80
+				s.Url = "http://" + s.Url
+			} else {
+				port, err := strconv.Atoi(match[1])
+				if err != nil || (port != 80 && port != 443) {
+					fmt.Println("[!] Url/Domain (-u): Scheme not specified.")
+					valid = false
+				} else if port == 80 {
+					s.Url = "http://" + s.Url
+				} else {
+					s.Url = "https://" + s.Url
+				}
+			}
 		}
 
 		// extensions are comma separated

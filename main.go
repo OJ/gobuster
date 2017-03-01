@@ -29,6 +29,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -77,6 +78,7 @@ type State struct {
 	Quiet          bool
 	Setup          SetupFunc
 	ShowIPs        bool
+	ShowCNAME      bool
 	StatusCodes    IntSet
 	Threads        int
 	Url            string
@@ -85,12 +87,15 @@ type State struct {
 	Username       string
 	Verbose        bool
 	Wordlist       string
+	OutputFileName string
+	OutputFile     *os.File
 	IsWildcard     bool
 	WildcardForced bool
 	WildcardIps    StringSet
 	SignalChan     chan os.Signal
 	Terminate      bool
 	StdIn          bool
+	InsecureSSL    bool
 }
 
 type RedirectHandler struct {
@@ -187,6 +192,11 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
+
+			if strings.HasPrefix(ue.Err.Error(), "x509") {
+				fmt.Println("[-] Invalid certificate")
+			}
+
 			if re, ok := ue.Err.(*RedirectError); ok {
 				return &re.StatusCode, nil
 			}
@@ -239,6 +249,7 @@ func ParseCmdLine() *State {
 	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
@@ -248,13 +259,15 @@ func ParseCmdLine() *State {
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
+	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
-	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
+	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
+	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
 
 	flag.Parse()
 
@@ -310,7 +323,24 @@ func ParseCmdLine() *State {
 		}
 
 		if strings.HasPrefix(s.Url, "http") == false {
-			s.Url = "http://" + s.Url
+			// check to see if a port was specified
+			re := regexp.MustCompile(`^[^/]+:(\d+)`)
+			match := re.FindStringSubmatch(s.Url)
+
+			if len(match) < 2 {
+				// no port, default to http on 80
+				s.Url = "http://" + s.Url
+			} else {
+				port, err := strconv.Atoi(match[1])
+				if err != nil || (port != 80 && port != 443) {
+					fmt.Println("[!] Url/Domain (-u): Scheme not specified.")
+					valid = false
+				} else if port == 80 {
+					s.Url = "http://" + s.Url
+				} else {
+					s.Url = "https://" + s.Url
+				}
+			}
 		}
 
 		// extensions are comma separated
@@ -372,7 +402,7 @@ func ParseCmdLine() *State {
 					Transport: &http.Transport{
 						Proxy: proxyUrlFunc,
 						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: true,
+							InsecureSkipVerify: s.InsecureSSL,
 						},
 					},
 				}}
@@ -466,6 +496,18 @@ func Process(s *State) {
 		scanner = bufio.NewScanner(wordlist)
 	}
 
+	var outputFile *os.File
+	if s.OutputFileName != "" {
+		outputFile, err := os.Create(s.OutputFileName)
+		if err != nil {
+			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", s.OutputFileName)
+			s.OutputFileName = ""
+			s.OutputFile = nil
+		} else {
+			s.OutputFile = outputFile
+		}
+	}
+
 	for scanner.Scan() {
 		if s.Terminate {
 			break
@@ -482,6 +524,9 @@ func Process(s *State) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
+	if s.OutputFile != nil {
+		outputFile.Close()
+	}
 	Ruler(s)
 }
 
@@ -512,6 +557,18 @@ func SetupDns(s *State) bool {
 }
 
 func SetupDir(s *State) bool {
+	guid := uuid.NewV4()
+	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+
+	if s.StatusCodes.Contains(*wildcardResp) {
+		s.IsWildcard = true
+		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+		if !s.WildcardForced {
+			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+		}
+		return s.WildcardForced
+	}
+
 	return true
 }
 
@@ -526,6 +583,11 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 			}
 			if s.ShowIPs {
 				result.Extra = strings.Join(ips, ", ")
+			} else if s.ShowCNAME {
+				cname, err := net.LookupCNAME(subdomain)
+				if err == nil {
+					result.Extra = cname
+				}
 			}
 			resultChan <- result
 		}
@@ -570,12 +632,20 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
+	output := ""
 	if r.Status == 404 {
-		fmt.Printf("Missing: %s\n", r.Entity)
+		output = fmt.Sprintf("Missing: %s\n", r.Entity)
 	} else if s.ShowIPs {
-		fmt.Printf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+	} else if s.ShowCNAME {
+		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
-		fmt.Printf("Found: %s\n", r.Entity)
+		output = fmt.Sprintf("Found: %s\n", r.Entity)
+	}
+	fmt.Printf("%s", output)
+
+	if s.OutputFile != nil {
+		WriteToFile(output, s)
 	}
 }
 
@@ -585,9 +655,9 @@ func PrintDirResult(s *State, r *Result) {
 	// Prefix if we're in verbose mode
 	if s.Verbose {
 		if s.StatusCodes.Contains(r.Status) {
-			output += "Found : "
+			output = "Found : "
 		} else {
-			output += "Missed: "
+			output = "Missed: "
 		}
 	}
 
@@ -606,8 +676,20 @@ func PrintDirResult(s *State, r *Result) {
 		if r.Size != nil {
 			output += fmt.Sprintf(" [Size: %d]", *r.Size)
 		}
+		output += "\n"
 
-		fmt.Println(output)
+		fmt.Printf(output)
+
+		if s.OutputFile != nil {
+			WriteToFile(output, s)
+		}
+	}
+}
+
+func WriteToFile(output string, s *State) {
+	_, err := s.OutputFile.WriteString(output)
+	if err != nil {
+		panic("[!] Unable to write to file " + s.OutputFileName)
 	}
 }
 
@@ -660,7 +742,7 @@ func Banner(state *State) {
 	}
 
 	fmt.Println("")
-	fmt.Println("Gobuster v1.2                OJ Reeves (@TheColonial)")
+	fmt.Println("Gobuster v1.3                OJ Reeves (@TheColonial)")
 	Ruler(state)
 }
 
@@ -679,6 +761,10 @@ func ShowConfig(state *State) {
 			wordlist = state.Wordlist
 		}
 		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
+
+		if state.OutputFileName != "" {
+			fmt.Printf("[+] Output file  : %s\n", state.OutputFileName)
+		}
 
 		if state.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())

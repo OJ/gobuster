@@ -262,7 +262,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found (dns mode only)")
-	flag.BoolVar(&s.InsecureSSL, "is", false, "Skip SSL certificate verification")
+	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
 
 	flag.Parse()
 

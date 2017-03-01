@@ -47,6 +47,7 @@ Yes, you're probably correct. Feel free to:
 * `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
 * `-e` - specify extended mode that renders the full URL.
 * `-f` - append `/` for directory brute forces.
+* `-k` - Skip verification of SSL certificates.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme)
@@ -55,7 +56,6 @@ Yes, you're probably correct. Feel free to:
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
-* `-is` - Skip verification of SSL certificates.
 
 ### Building
 

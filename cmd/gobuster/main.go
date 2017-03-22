@@ -17,7 +17,7 @@ package main
 //----------------------------------------------------
 
 import (
-	"github.com/ilyaglow/gobuster"
+	"github.com/OJ/gobuster"
 )
 
 func main() {

@@ -28,6 +28,7 @@ import (
         "crypto/tls"
         "syscall"
         "golang.org/x/crypto/ssh/terminal"
+        "github.com/hashicorp/go-multierror"
         "github.com/OJ/gobuster/libgobuster"
 )
 
@@ -37,14 +38,8 @@ func ParseCmdLine() *libgobuster.State {
   var extensions string
   var codes string
   var proxy string
-  valid := true
 
-  s := libgobuster.State{
-    StatusCodes: libgobuster.IntSet{Set: map[int]bool{}},
-    WildcardIps: libgobuster.StringSet{Set: map[string]bool{}},
-    IsWildcard:  false,
-    StdIn:       false,
-  }
+  s := InitState()
 
   // Set up the variables we're interested in parsing.
   flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
@@ -74,6 +69,32 @@ func ParseCmdLine() *libgobuster.State {
   flag.Parse()
 
   libgobuster.Banner(&s)
+  defer libgobuster.Ruler(&s)
+
+  if err := ValidateState(&s, extensions, codes, proxy); err.ErrorOrNil() != nil {
+    fmt.Printf("%s\n", err.Error())
+    return nil
+  } else {
+    return &s
+  }
+}
+
+func InitState() libgobuster.State {
+  return libgobuster.State{
+      StatusCodes: libgobuster.IntSet{Set: map[int]bool{}},
+      WildcardIps: libgobuster.StringSet{Set: map[string]bool{}},
+      IsWildcard:  false,
+      StdIn:       false,
+    }
+}
+
+func ValidateState(
+  s *libgobuster.State,
+  extensions string,
+  codes string,
+  proxy string) *multierror.Error {
+
+  var errorList *multierror.Error
 
   switch strings.ToLower(s.Mode) {
   case "dir":
@@ -85,13 +106,11 @@ func ParseCmdLine() *libgobuster.State {
     s.Processor = libgobuster.ProcessDnsEntry
     s.Setup = libgobuster.SetupDns
   default:
-    fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
-    valid = false
+    errorList = multierror.Append(errorList, fmt.Errorf("[!] Mode (-m): Invalid value: %s", s.Mode))
   }
 
   if s.Threads < 0 {
-    fmt.Println("[!] Threads (-t): Invalid value:", s.Threads)
-    valid = false
+    errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %s", s.Threads))
   }
 
   stdin, err := os.Stdin.Stat()
@@ -103,132 +122,128 @@ func ParseCmdLine() *libgobuster.State {
 
   if !s.StdIn {
     if s.Wordlist == "" {
-      fmt.Println("[!] WordList (-w): Must be specified")
-      valid = false
+      errorList = multierror.Append(errorList, fmt.Errorf("[!] WordList (-w): Must be specified"))
     } else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-      fmt.Println("[!] Wordlist (-w): File does not exist:", s.Wordlist)
-      valid = false
+      errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w): File does not exist: %s", s.Wordlist))
     }
   } else if s.Wordlist != "" {
-    fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
-    valid = false
+    errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!"))
   }
 
   if s.Url == "" {
-    fmt.Println("[!] Url/Domain (-u): Must be specified")
-    valid = false
+    errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Must be specified"))
   }
 
   if s.Mode == "dir" {
-    if strings.HasSuffix(s.Url, "/") == false {
-      s.Url = s.Url + "/"
-    }
+    ValidateDirMode(s, extensions, codes, proxy, errorList)
+  }
 
-    if strings.HasPrefix(s.Url, "http") == false {
-      // check to see if a port was specified
-      re := regexp.MustCompile(`^[^/]+:(\d+)`)
-      match := re.FindStringSubmatch(s.Url)
+  return errorList
+}
 
-      if len(match) < 2 {
-        // no port, default to http on 80
+func ValidateDirMode(
+  s *libgobuster.State,
+  extensions string,
+  codes string,
+  proxy string,
+  errorList *multierror.Error) {
+
+  if strings.HasSuffix(s.Url, "/") == false {
+    s.Url = s.Url + "/"
+  }
+
+  if strings.HasPrefix(s.Url, "http") == false {
+    // check to see if a port was specified
+    re := regexp.MustCompile(`^[^/]+:(\d+)`)
+    match := re.FindStringSubmatch(s.Url)
+
+    if len(match) < 2 {
+      // no port, default to http on 80
+      s.Url = "http://" + s.Url
+    } else {
+      port, err := strconv.Atoi(match[1])
+      if err != nil || (port != 80 && port != 443) {
+        errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Scheme not specified."))
+      } else if port == 80 {
         s.Url = "http://" + s.Url
       } else {
-        port, err := strconv.Atoi(match[1])
-        if err != nil || (port != 80 && port != 443) {
-          fmt.Println("[!] Url/Domain (-u): Scheme not specified.")
-          valid = false
-        } else if port == 80 {
-          s.Url = "http://" + s.Url
-        } else {
-          s.Url = "https://" + s.Url
-        }
+        s.Url = "https://" + s.Url
       }
     }
+  }
 
-    // extensions are comma separated
-    if extensions != "" {
-      s.Extensions = strings.Split(extensions, ",")
-      for i := range s.Extensions {
-        if s.Extensions[i][0] != '.' {
-          s.Extensions[i] = "." + s.Extensions[i]
-        }
+  // extensions are comma separated
+  if extensions != "" {
+    s.Extensions = strings.Split(extensions, ",")
+    for i := range s.Extensions {
+      if s.Extensions[i][0] != '.' {
+        s.Extensions[i] = "." + s.Extensions[i]
       }
     }
+  }
 
-    // status codes are comma separated
-    if codes != "" {
-      for _, c := range strings.Split(codes, ",") {
-        i, err := strconv.Atoi(c)
-        if err != nil {
-          fmt.Println("[!] Invalid status code given: ", c)
-          valid = false
-        } else {
-          s.StatusCodes.Add(i)
-        }
-      }
-    }
-
-    // prompt for password if needed
-    if valid && s.Username != "" && s.Password == "" {
-      fmt.Printf("[?] Auth Password: ")
-      passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-
-      // print a newline to simulate the newline that was entered
-      // this means that formatting/printing after doesn't look bad.
-      fmt.Println("")
-
-      if err == nil {
-        s.Password = string(passBytes)
+  // status codes are comma separated
+  if codes != "" {
+    for _, c := range strings.Split(codes, ",") {
+      i, err := strconv.Atoi(c)
+      if err != nil {
+        errorList = multierror.Append(errorList, fmt.Errorf("[!] Invalid status code given: %s", c))
       } else {
-        fmt.Println("[!] Auth username given but reading of password failed")
-        valid = false
+        s.StatusCodes.Add(i)
       }
     }
+  }
 
-    if valid {
-      var proxyUrlFunc func(*http.Request) (*url.URL, error)
-      proxyUrlFunc = http.ProxyFromEnvironment
+  // prompt for password if needed
+  if errorList.ErrorOrNil() == nil && s.Username != "" && s.Password == "" {
+    fmt.Printf("[?] Auth Password: ")
+    passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 
-      if proxy != "" {
-        proxyUrl, err := url.Parse(proxy)
-        if err != nil {
-          panic("[!] Proxy URL is invalid")
-        }
-        s.ProxyUrl = proxyUrl
-        proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
-      }
+    // print a newline to simulate the newline that was entered
+    // this means that formatting/printing after doesn't look bad.
+    fmt.Println("")
 
-      s.Client = &http.Client{
-        Transport: &libgobuster.RedirectHandler{
-          State: &s,
-          Transport: &http.Transport{
-            Proxy: proxyUrlFunc,
-            TLSClientConfig: &tls.Config{
-              InsecureSkipVerify: s.InsecureSSL,
-            },
-          },
-        }}
-
-      code, _ := libgobuster.GoGet(&s, s.Url, "", s.Cookies)
-      if code == nil {
-        fmt.Println("[-] Unable to connect:", s.Url)
-        valid = false
-      }
+    if err == nil {
+      s.Password = string(passBytes)
     } else {
-      libgobuster.Ruler(&s)
+      errorList = multierror.Append(errorList, fmt.Errorf("[!] Auth username given but reading of password failed"))
     }
   }
 
-  if valid {
-    return &s
-  }
+  if errorList.ErrorOrNil() == nil {
+    var proxyUrlFunc func(*http.Request) (*url.URL, error)
+    proxyUrlFunc = http.ProxyFromEnvironment
 
-  return nil
+    if proxy != "" {
+      proxyUrl, err := url.Parse(proxy)
+      if err != nil {
+        panic("[!] Proxy URL is invalid") // TODO: Does this need to be a panic? Could be a standard error?
+      }
+      s.ProxyUrl = proxyUrl
+      proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+    }
+
+    s.Client = &http.Client{
+      Transport: &libgobuster.RedirectHandler{
+        State: s,
+        Transport: &http.Transport{
+          Proxy: proxyUrlFunc,
+          TLSClientConfig: &tls.Config{
+            InsecureSkipVerify: s.InsecureSSL,
+          },
+        },
+      }}
+
+    code, _ := libgobuster.GoGet(s, s.Url, "", s.Cookies)
+    if code == nil {
+      errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
+    }
+  }
 }
 
 func main() {
- state := ParseCmdLine()
- if state != nil {
-   libgobuster.Process(state)
- }
+  state := ParseCmdLine()
+  if state != nil {
+    libgobuster.Process(state)
+  }
 }

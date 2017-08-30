@@ -224,8 +224,6 @@ func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
 	return MakeRequest(s, url+uri, cookie)
 }
 
-
-
 // Process the busting of the website with the given
 // set of settings from the command line.
 func Process(s *State) {

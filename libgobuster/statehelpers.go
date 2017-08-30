@@ -85,19 +85,11 @@ func ValidateState(
     errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Must be specified"))
   }
 
-  // fmt.Println("errorlist prevalidatedir-pointer?:", &errorList)
-
   if s.Mode == "dir" {
     if err := ValidateDirModeState(s, extensions, codes, proxy, errorList); err.ErrorOrNil() != nil {
       errorList = multierror.Append(errorList, err)
-      // fmt.Println("err aftervalidatedirpointer?:", &err)
-      // fmt.Println("errorlist aftervalidatedirpointer?:", &errorList)
-      // fmt.Printf("THISISAHACK1111 RETURN VALUE:\n\n%s\n", err.Error())
     }
   }
-
-  // fmt.Println("errorlist attheendpointer?:", &errorList)
-  // fmt.Printf("THISISAHACK222 SHARED VALUE:\n\n%s\n", errorList.Error())
 
   return errorList
 }
@@ -209,7 +201,5 @@ func ValidateDirModeState(
     }
   }
 
-  // fmt.Println("errorlist endofvalidatedir-pointer?:", &errorList)
-  // fmt.Printf("THISISAHACK:\n\n%s\n", errorList.Error())
   return errorList
 }

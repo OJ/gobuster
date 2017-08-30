@@ -60,12 +60,12 @@ func ParseCmdLine() *libgobuster.State {
   flag.Parse()
 
   libgobuster.Banner(&s)
-  defer libgobuster.Ruler(&s)
 
   if err := libgobuster.ValidateState(&s, extensions, codes, proxy); err.ErrorOrNil() != nil {
     fmt.Printf("%s\n", err.Error())
     return nil
   } else {
+    libgobuster.Ruler(&s)
     return &s
   }
 }

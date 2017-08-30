@@ -104,7 +104,7 @@ func ValidateDirModeState(
 	// If we had previous errors, copy them into the current errorList.
 	// This is an easier to understand solution compared to double pointer black magick
 	var errorList *multierror.Error
-	if previousErrors != nil {
+	if previousErrors.ErrorOrNil() != nil {
 		errorList = multierror.Append(errorList, previousErrors)
 	}
 

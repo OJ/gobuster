@@ -87,7 +87,7 @@ func ValidateState(
 
 	if s.Mode == "dir" {
 		if err := ValidateDirModeState(s, extensions, codes, proxy, errorList); err.ErrorOrNil() != nil {
-			errorList = multierror.Append(errorList, err)
+			errorList = err
 		}
 	}
 

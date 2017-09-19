@@ -72,6 +72,7 @@ type State struct {
 	Mode           string
 	NoStatus       bool
 	Password       string
+	Prefix         string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
 	ProxyUrl       *url.URL
@@ -93,6 +94,7 @@ type State struct {
 	WildcardForced bool
 	WildcardIps    StringSet
 	SignalChan     chan os.Signal
+	Suffix         string
 	Terminate      bool
 	StdIn          bool
 	InsecureSSL    bool
@@ -257,6 +259,8 @@ func ParseCmdLine() *State {
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
+	flag.StringVar(&s.Suffix, "suffix", "", "Add a custom specific suffix to each directory request (dir mode only)")
+	flag.StringVar(&s.Prefix, "prefix", "", "Add a custom specific prefix to each directory request (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
@@ -601,16 +605,23 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
-	suffix := ""
+	suffix, prefix := "", ""
 	if s.UseSlash {
 		suffix = "/"
 	}
+	// Custom suffix will prevail if both options supplied
+	if s.Suffix != "" {
+		suffix = s.Suffix
+	}
+	if s.Prefix != "" {
+		prefix = s.Prefix
+	}
 
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := GoGet(s, s.Url, prefix+word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
-			Entity: word + suffix,
+			Entity: prefix + word + suffix,
 			Status: *dirResp,
 			Size:   dirSize,
 		}
@@ -795,6 +806,14 @@ func ShowConfig(state *State) {
 
 			if state.UseSlash {
 				fmt.Printf("[+] Add Slash    : true\n")
+			}
+
+			if state.Suffix != "" {
+				fmt.Printf("[+] Custom Suffix: %s\n", state.Suffix)
+			}
+
+			if state.Prefix != "" {
+				fmt.Printf("[+] Custom Prefix: %s\n", state.Prefix)
 			}
 
 			if state.FollowRedirect {

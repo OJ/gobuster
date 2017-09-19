@@ -22,6 +22,5 @@ _testmain.go
 *.exe
 *.test
 *.prof
-gobuster
 *.txt
 *.swp

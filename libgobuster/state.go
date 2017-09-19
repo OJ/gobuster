@@ -1,4 +1,4 @@
-package gobuster
+package libgobuster
 
 import (
 	"bufio"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -26,12 +25,12 @@ type SetupFunc func(s *State) bool
 
 // Shim type for "set" containing ints
 type IntSet struct {
-	set map[int]bool
+	Set map[int]bool
 }
 
 // Shim type for "set" containing strings
 type StringSet struct {
-	set map[string]bool
+	Set map[string]bool
 }
 
 // Contains State that are read in from the command
@@ -70,67 +69,6 @@ type State struct {
 	Terminate      bool
 	StdIn          bool
 	InsecureSSL    bool
-}
-
-// Add an element to a set
-func (set *StringSet) Add(s string) bool {
-	_, found := set.set[s]
-	set.set[s] = true
-	return !found
-}
-
-// Add a list of elements to a set
-func (set *StringSet) AddRange(ss []string) {
-	for _, s := range ss {
-		set.set[s] = true
-	}
-}
-
-// Test if an element is in a set
-func (set *StringSet) Contains(s string) bool {
-	_, found := set.set[s]
-	return found
-}
-
-// Check if any of the elements exist
-func (set *StringSet) ContainsAny(ss []string) bool {
-	for _, s := range ss {
-		if set.set[s] {
-			return true
-		}
-	}
-	return false
-}
-
-// Stringify the set
-func (set *StringSet) Stringify() string {
-	values := []string{}
-	for s, _ := range set.set {
-		values = append(values, s)
-	}
-	return strings.Join(values, ",")
-}
-
-// Add an element to a set
-func (set *IntSet) Add(i int) bool {
-	_, found := set.set[i]
-	set.set[i] = true
-	return !found
-}
-
-// Test if an element is in a set
-func (set *IntSet) Contains(i int) bool {
-	_, found := set.set[i]
-	return found
-}
-
-// Stringify the set
-func (set *IntSet) Stringify() string {
-	values := []string{}
-	for s, _ := range set.set {
-		values = append(values, strconv.Itoa(s))
-	}
-	return strings.Join(values, ",")
 }
 
 // Process the busting of the website with the given

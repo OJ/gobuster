@@ -1,4 +1,4 @@
-package gobuster
+package libgobuster
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package gobuster
+package libgobuster
 
 func WriteToFile(output string, s *State) {
 	_, err := s.OutputFile.WriteString(output)

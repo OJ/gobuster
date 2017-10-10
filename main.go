@@ -24,6 +24,7 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -34,6 +35,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 	"unicode/utf8"
 )
 
@@ -63,41 +65,42 @@ type StringSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Client         *http.Client
-	Cookies        string
-	Expanded       bool
-	Extensions     []string
-	FollowRedirect bool
-	IncludeLength  bool
-	Mode           string
-	NoStatus       bool
-	Password       string
-	Prefix         string
-	Printer        PrintResultFunc
-	Processor      ProcessorFunc
-	ProxyUrl       *url.URL
-	Quiet          bool
-	Setup          SetupFunc
-	ShowIPs        bool
-	ShowCNAME      bool
-	StatusCodes    IntSet
-	Threads        int
-	Url            string
-	UseSlash       bool
-	UserAgent      string
-	Username       string
-	Verbose        bool
-	Wordlist       string
-	OutputFileName string
-	OutputFile     *os.File
-	IsWildcard     bool
-	WildcardForced bool
-	WildcardIps    StringSet
-	SignalChan     chan os.Signal
-	Suffix         string
-	Terminate      bool
-	StdIn          bool
-	InsecureSSL    bool
+	Client          *http.Client
+	Cookies         string
+	Expanded        bool
+	Extensions      []string
+	FollowRedirect  bool
+	IncludeLength   bool
+	Mode            string
+	NoStatus        bool
+	Password        string
+	Prefix          string
+	Printer         PrintResultFunc
+	Processor       ProcessorFunc
+	ProxyUrl        *url.URL
+	Quiet           bool
+	Setup           SetupFunc
+	ShowIPs         bool
+	ShowCNAME       bool
+	StatusCodes     IntSet
+	Threads         int
+	Url             string
+	UseSlash        bool
+	UserAgent       string
+	RandomUserAgent bool
+	Username        string
+	Verbose         bool
+	Wordlist        string
+	OutputFileName  string
+	OutputFile      *os.File
+	IsWildcard      bool
+	WildcardForced  bool
+	WildcardIps     StringSet
+	SignalChan      chan os.Signal
+	Suffix          string
+	Terminate       bool
+	StdIn           bool
+	InsecureSSL     bool
 }
 
 type RedirectHandler struct {
@@ -272,6 +275,7 @@ func ParseCmdLine() *State {
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
+	flag.BoolVar(&s.RandomUserAgent, "random-agent", false, "Set the User-Agent string to a random User-Agent (dir mode only)")
 
 	flag.Parse()
 
@@ -319,6 +323,24 @@ func ParseCmdLine() *State {
 	if s.Url == "" {
 		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
+	}
+
+	if s.RandomUserAgent && s.UserAgent == "" {
+		b, err := ioutil.ReadFile("user-agents.txt")
+		if err != nil {
+			fmt.Print(err)
+		}
+		lines := strings.Split(string(b), "\n")
+		var uas []string
+		for _, line := range lines {
+			if !strings.HasPrefix(line, "#") && len(line) > 0 {
+				uas = append(uas, line)
+			}
+		}
+		rand.Seed(time.Now().Unix())
+		fmt.Printf("[!] Picking a random user-agent: %s\n", uas[rand.Intn(len(uas))])
+	} else if s.RandomUserAgent && s.UserAgent != "" {
+		fmt.Println("[!] Both random User-Agent and User-Agent options defined. Using the provided User-Agent.")
 	}
 
 	if s.Mode == "dir" {

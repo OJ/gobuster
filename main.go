@@ -338,7 +338,8 @@ func ParseCmdLine() *State {
 			}
 		}
 		rand.Seed(time.Now().Unix())
-		fmt.Printf("[!] Picking a random user-agent: %s\n", uas[rand.Intn(len(uas))])
+		s.UserAgent = uas[rand.Intn(len(uas))]
+		fmt.Printf("[!] Picking a random user-agent: %s\n", s.UserAgent)
 	} else if s.RandomUserAgent && s.UserAgent != "" {
 		fmt.Println("[!] Both random User-Agent and User-Agent options defined. Using the provided User-Agent.")
 	}

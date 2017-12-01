@@ -21,8 +21,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/satori/go.uuid"
-	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -35,6 +33,9 @@ import (
 	"sync"
 	"syscall"
 	"unicode/utf8"
+
+	"github.com/satori/go.uuid"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // A single result which comes from an individual web
@@ -140,7 +141,7 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 // Stringify the set
 func (set *StringSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.set {
+	for s := range set.set {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
@@ -162,7 +163,7 @@ func (set *IntSet) Contains(i int) bool {
 // Stringify the set
 func (set *IntSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.set {
+	for s := range set.set {
 		values = append(values, strconv.Itoa(s))
 	}
 	return strings.Join(values, ",")
@@ -697,7 +698,7 @@ func PrepareSignalHandler(s *State) {
 	s.SignalChan = make(chan os.Signal, 1)
 	signal.Notify(s.SignalChan, os.Interrupt)
 	go func() {
-		for _ = range s.SignalChan {
+		for range s.SignalChan {
 			// caught CTRL+C
 			if !s.Quiet {
 				fmt.Println("[!] Keyboard interrupt detected, terminating.")

@@ -1,0 +1,10 @@
+hash: e9008c4eb71cd760a0a0a5036669a59cd067ab7566a847972c04774b3265b6de
+updated: 2017-12-01T12:57:48.793497-08:00
+imports:
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
+- name: golang.org/x/crypto
+  version: c10c31b5e94b6f7a0283272dc2bb27163dcea24b
+  subpackages:
+  - ssh/terminal
+testImports: []

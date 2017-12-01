@@ -3,11 +3,10 @@ package main
 //----------------------------------------------------
 // Gobuster -- by OJ Reeves
 //
-// A crap attempt at building something that resembles
-// dirbuster or dirb using Go. The goal was to build
-// a tool that would help learn Go and to actually do
-// something useful. The idea of having this compile
-// to native code is also appealing.
+// A crap attempt at building something that resembles dirbuster or dirb using
+// Go. The goal was to build a tool that would help learn Go and to actually
+// do something useful. The idea of having this compile to native code is also
+// appealing.
 //
 // Run: gobuster -h
 //
@@ -22,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -38,98 +38,88 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// A single result which comes from an individual web
-// request.
-type Result struct {
+const (
+	dirMode = "dir"
+	dnsMode = "dns"
+)
+
+// result is the response of an individual web request
+type result struct {
 	Entity string
 	Status int
 	Extra  string
 	Size   *int64
 }
 
-type PrintResultFunc func(s *State, r *Result)
-type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
-type SetupFunc func(s *State) bool
+type printResultFunc func(s *state, r *result)
+type processorFunc func(s *state, entity string, resultChan chan<- result)
+type setupFunc func(s *state) bool
 
-// Shim type for "set" containing ints
-type IntSet struct {
+// intSet is a shim type for "set" containing ints
+type intSet struct {
 	set map[int]bool
 }
 
-// Shim type for "set" containing strings
-type StringSet struct {
+// stringSet is a shim type for "set" containing strings
+type stringSet struct {
 	set map[string]bool
 }
 
-// Contains State that are read in from the command
-// line when the program is invoked.
-type State struct {
-	Client         *http.Client
-	Cookies        string
-	Expanded       bool
+// state contains data read in from the command line when the program is invoked
+type state struct {
 	Extensions     []string
-	FollowRedirect bool
-	IncludeLength  bool
-	Mode           string
-	NoStatus       bool
-	Password       string
-	Printer        PrintResultFunc
-	Processor      ProcessorFunc
-	ProxyUrl       *url.URL
-	Quiet          bool
-	Setup          SetupFunc
-	ShowIPs        bool
-	ShowCNAME      bool
-	StatusCodes    IntSet
-	Threads        int
-	Url            string
-	UseSlash       bool
+	URL            string
+	Cookies        string
 	UserAgent      string
 	Username       string
-	Verbose        bool
 	Wordlist       string
+	Mode           string
 	OutputFileName string
+	Password       string
+	Printer        printResultFunc
+	Processor      processorFunc
+	ProxyURL       *url.URL
 	OutputFile     *os.File
+	Setup          setupFunc
+	WildcardIps    stringSet
+	SignalChan     chan os.Signal
+	StatusCodes    intSet
+	Threads        int
+	Client         *http.Client
+	UseSlash       bool
+	ShowCNAME      bool
+	ShowIPs        bool
+	Verbose        bool
+	Quiet          bool
+	NoStatus       bool
+	IncludeLength  bool
 	IsWildcard     bool
 	WildcardForced bool
-	WildcardIps    StringSet
-	SignalChan     chan os.Signal
+	FollowRedirect bool
+	Expanded       bool
 	Terminate      bool
 	StdIn          bool
 	InsecureSSL    bool
 }
 
-type RedirectHandler struct {
+type redirectHandler struct {
 	Transport http.RoundTripper
-	State     *State
+	State     *state
 }
 
-type RedirectError struct {
+type redirectError struct {
 	StatusCode int
 }
 
-// Add an element to a set
-func (set *StringSet) Add(s string) bool {
-	_, found := set.set[s]
-	set.set[s] = true
-	return !found
-}
-
-// Add a list of elements to a set
-func (set *StringSet) AddRange(ss []string) {
+// addRange adds a list of elements to a set
+func (set *stringSet) addRange(ss []string) {
 	for _, s := range ss {
 		set.set[s] = true
 	}
 }
 
-// Test if an element is in a set
-func (set *StringSet) Contains(s string) bool {
-	_, found := set.set[s]
-	return found
-}
-
-// Check if any of the elements exist
-func (set *StringSet) ContainsAny(ss []string) bool {
+// containsAny checks if any of the elements exist
+func (set *stringSet) containsAny(ss []string) bool {
 	for _, s := range ss {
 		if set.set[s] {
 			return true
@@ -138,8 +128,8 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 	return false
 }
 
-// Stringify the set
-func (set *StringSet) Stringify() string {
+// stringify returns the set as a string
+func (set *stringSet) stringify() string {
 	values := []string{}
 	for s := range set.set {
 		values = append(values, s)
@@ -147,21 +137,21 @@ func (set *StringSet) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-// Add an element to a set
-func (set *IntSet) Add(i int) bool {
+// add adds an element to a set
+func (set *intSet) add(i int) bool {
 	_, found := set.set[i]
 	set.set[i] = true
 	return !found
 }
 
-// Test if an element is in a set
-func (set *IntSet) Contains(i int) bool {
+// contains tests if an element is in a set
+func (set *intSet) contains(i int) bool {
 	_, found := set.set[i]
 	return found
 }
 
-// Stringify the set
-func (set *IntSet) Stringify() string {
+// stringify returns the set as a string
+func (set *intSet) stringify() string {
 	values := []string{}
 	for s := range set.set {
 		values = append(values, strconv.Itoa(s))
@@ -169,9 +159,9 @@ func (set *IntSet) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-// Make a request to the given URL.
-func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
-	req, err := http.NewRequest("GET", fullUrl, nil)
+// makeRequest makes a request to the given URL
+func makeRequest(s *state, fullURL, cookie string) (*int, *int64) {
+	req, err := http.NewRequest("GET", fullURL, nil)
 
 	if err != nil {
 		return nil, nil
@@ -198,16 +188,21 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 				fmt.Println("[-] Invalid certificate")
 			}
 
-			if re, ok := ue.Err.(*RedirectError); ok {
+			if re, ok := ue.Err.(*redirectError); ok {
 				return &re.StatusCode, nil
 			}
 		}
 		return nil, nil
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Print(err)
+		}
+	}()
 
-	var length *int64 = nil
+	var length *int64
 
 	if s.IncludeLength {
 		length = new(int64)
@@ -224,65 +219,63 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	return &resp.StatusCode, length
 }
 
-// Small helper to combine URL with URI then make a
-// request to the generated location.
-func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
-	return MakeRequest(s, url+uri, cookie)
+// goGet is a small helper to combine URL with URI then make a request to the generated location
+func goGet(s *state, url, uri, cookie string) (*int, *int64) {
+	return makeRequest(s, url+uri, cookie)
 }
 
-// Parse all the command line options into a settings
-// instance for future use.
-func ParseCmdLine() *State {
+// parseCmdLine all the command line options into a settings instance for future use.
+func parseCmdLine() *state {
 	var extensions string
 	var codes string
 	var proxy string
 	valid := true
 
-	s := State{
-		StatusCodes: IntSet{set: map[int]bool{}},
-		WildcardIps: StringSet{set: map[string]bool{}},
+	s := state{
+		StatusCodes: intSet{set: map[int]bool{}},
+		WildcardIps: stringSet{set: map[string]bool{}},
 		IsWildcard:  false,
 		StdIn:       false,
 	}
 
 	// Set up the variables we're interested in parsing.
 	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
-	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
+	flag.StringVar(&s.Mode, "m", dirMode, "Directory/File mode (dirMode) or DNS mode (dnsMode)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
-	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dirMode only)")
 	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
-	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
-	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
-	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
-	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
-	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
-	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
-	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
+	flag.StringVar(&s.URL, "u", "", "The target URL or Domain")
+	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dirMode only)")
+	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dirMode only)")
+	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dirMode only)")
+	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dirMode only)")
+	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dirMode only)")
+	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dirMode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
-	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
-	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
+	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dnsMode only)")
+	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dnsMode only, cannot be used with '-i' option)")
 	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
 	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
-	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
-	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dirMode only)")
+	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dirMode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
 
 	flag.Parse()
 
-	Banner(&s)
+	banner(&s)
 
 	switch strings.ToLower(s.Mode) {
-	case "dir":
-		s.Printer = PrintDirResult
-		s.Processor = ProcessDirEntry
-		s.Setup = SetupDir
-	case "dns":
-		s.Printer = PrintDnsResult
-		s.Processor = ProcessDnsEntry
-		s.Setup = SetupDns
+	case dirMode:
+		s.Printer = printDirResult
+		s.Processor = processDirEntry
+		s.Setup = setupDir
+	case dnsMode:
+		s.Printer = printDNSResult
+		s.Processor = processDNSEntry
+		s.Setup = setupDNS
 	default:
 		fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
 		valid = false
@@ -313,33 +306,33 @@ func ParseCmdLine() *State {
 		valid = false
 	}
 
-	if s.Url == "" {
-		fmt.Println("[!] Url/Domain (-u): Must be specified")
+	if s.URL == "" {
+		fmt.Println("[!] URL/Domain (-u): Must be specified")
 		valid = false
 	}
 
-	if s.Mode == "dir" {
-		if strings.HasSuffix(s.Url, "/") == false {
-			s.Url = s.Url + "/"
+	if s.Mode == dirMode {
+		if !strings.HasSuffix(s.URL, "/") {
+			s.URL = s.URL + "/"
 		}
 
-		if strings.HasPrefix(s.Url, "http") == false {
+		if !strings.HasPrefix(s.URL, "http") {
 			// check to see if a port was specified
 			re := regexp.MustCompile(`^[^/]+:(\d+)`)
-			match := re.FindStringSubmatch(s.Url)
+			match := re.FindStringSubmatch(s.URL)
 
 			if len(match) < 2 {
 				// no port, default to http on 80
-				s.Url = "http://" + s.Url
+				s.URL = "http://" + s.URL
 			} else {
 				port, err := strconv.Atoi(match[1])
 				if err != nil || (port != 80 && port != 443) {
-					fmt.Println("[!] Url/Domain (-u): Scheme not specified.")
+					fmt.Println("[!] URL/Domain (-u): Scheme not specified.")
 					valid = false
 				} else if port == 80 {
-					s.Url = "http://" + s.Url
+					s.URL = "http://" + s.URL
 				} else {
-					s.Url = "https://" + s.Url
+					s.URL = "https://" + s.URL
 				}
 			}
 		}
@@ -362,7 +355,7 @@ func ParseCmdLine() *State {
 					fmt.Println("[!] Invalid status code given: ", c)
 					valid = false
 				} else {
-					s.StatusCodes.Add(i)
+					s.StatusCodes.add(i)
 				}
 			}
 		}
@@ -370,7 +363,7 @@ func ParseCmdLine() *State {
 		// prompt for password if needed
 		if valid && s.Username != "" && s.Password == "" {
 			fmt.Printf("[?] Auth Password: ")
-			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+			passBytes, err := terminal.ReadPassword(syscall.Stdin)
 
 			// print a newline to simulate the newline that was entered
 			// this means that formatting/printing after doesn't look bad.
@@ -385,36 +378,35 @@ func ParseCmdLine() *State {
 		}
 
 		if valid {
-			var proxyUrlFunc func(*http.Request) (*url.URL, error)
-			proxyUrlFunc = http.ProxyFromEnvironment
+			proxyURL := http.ProxyFromEnvironment
 
 			if proxy != "" {
-				proxyUrl, err := url.Parse(proxy)
+				p, err := url.Parse(proxy)
 				if err != nil {
 					panic("[!] Proxy URL is invalid")
 				}
-				s.ProxyUrl = proxyUrl
-				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+				s.ProxyURL = p
+				proxyURL = http.ProxyURL(s.ProxyURL)
 			}
 
 			s.Client = &http.Client{
-				Transport: &RedirectHandler{
+				Transport: &redirectHandler{
 					State: &s,
 					Transport: &http.Transport{
-						Proxy: proxyUrlFunc,
+						Proxy: proxyURL,
 						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: s.InsecureSSL,
+							InsecureSkipVerify: s.InsecureSSL, // nolint: gas
 						},
 					},
 				}}
 
-			code, _ := GoGet(&s, s.Url, "", s.Cookies)
+			code, _ := goGet(&s, s.URL, "", s.Cookies)
 			if code == nil {
-				fmt.Println("[-] Unable to connect:", s.Url)
+				fmt.Println("[-] Unable to connect:", s.URL)
 				valid = false
 			}
 		} else {
-			Ruler(&s)
+			ruler(&s)
 		}
 	}
 
@@ -425,32 +417,29 @@ func ParseCmdLine() *State {
 	return nil
 }
 
-// Process the busting of the website with the given
-// set of settings from the command line.
-func Process(s *State) {
+// process the busting of the website with the given set of settings from the command line.
+func process(s *state) {
 
-	ShowConfig(s)
+	showConfig(s)
 
-	if s.Setup(s) == false {
-		Ruler(s)
+	if !s.Setup(s) {
+		ruler(s)
 		return
 	}
 
-	PrepareSignalHandler(s)
+	prepareSignalHandler(s)
 
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
-	resultChan := make(chan Result)
+	resultChan := make(chan result)
 
-	// Use a wait group for waiting for all threads
-	// to finish
+	// Use a wait group for waiting for all threads to finish
 	processorGroup := new(sync.WaitGroup)
 	processorGroup.Add(s.Threads)
 	printerGroup := new(sync.WaitGroup)
 	printerGroup.Add(1)
 
-	// Create goroutines for each of the number of threads
-	// specified.
+	// Create goroutines for each of the number of threads specified.
 	for i := 0; i < s.Threads; i++ {
 		go func() {
 			for {
@@ -465,14 +454,12 @@ func Process(s *State) {
 				s.Processor(s, word, resultChan)
 			}
 
-			// Indicate to the wait group that the thread
-			// has finished.
+			// Indicate to the wait group that the thread has finished.
 			processorGroup.Done()
 		}()
 	}
 
-	// Single goroutine which handles the results as they
-	// appear from the worker threads.
+	// Single goroutine which handles the results as they appear from the worker threads.
 	go func() {
 		for r := range resultChan {
 			s.Printer(s, &r)
@@ -483,23 +470,25 @@ func Process(s *State) {
 	var scanner *bufio.Scanner
 
 	if s.StdIn {
-		// Read directly from stdin
 		scanner = bufio.NewScanner(os.Stdin)
 	} else {
-		// Pull content from the wordlist
 		wordlist, err := os.Open(s.Wordlist)
 		if err != nil {
 			panic("Failed to open wordlist")
 		}
-		defer wordlist.Close()
+		defer func() {
+			if err := wordlist.Close(); err != nil {
+				log.Print(err)
+			}
+		}()
 
-		// Lazy reading of the wordlist line by line
 		scanner = bufio.NewScanner(wordlist)
 	}
 
 	var outputFile *os.File
+	var err error
 	if s.OutputFileName != "" {
-		outputFile, err := os.Create(s.OutputFileName)
+		outputFile, err = os.Create(s.OutputFileName)
 		if err != nil {
 			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", s.OutputFileName)
 			s.OutputFileName = ""
@@ -526,19 +515,21 @@ func Process(s *State) {
 	close(resultChan)
 	printerGroup.Wait()
 	if s.OutputFile != nil {
-		outputFile.Close()
+		if err := outputFile.Close(); err != nil {
+			log.Print(err)
+		}
 	}
-	Ruler(s)
+	ruler(s)
 }
 
-func SetupDns(s *State) bool {
+func setupDNS(s *state) bool {
 	// Resolve a subdomain that probably shouldn't exist
 	guid := uuid.NewV4()
-	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
+	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.URL))
 	if err == nil {
 		s.IsWildcard = true
-		s.WildcardIps.AddRange(wildcardIps)
-		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.Stringify())
+		s.WildcardIps.addRange(wildcardIps)
+		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.stringify())
 		if !s.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
 		}
@@ -547,23 +538,23 @@ func SetupDns(s *State) bool {
 
 	if !s.Quiet {
 		// Provide a warning if the base domain doesn't resolve (in case of typo)
-		_, err = net.LookupHost(s.Url)
+		_, err = net.LookupHost(s.URL)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
-			fmt.Println("[-] Unable to validate base domain:", s.Url)
+			fmt.Println("[-] Unable to validate base domain:", s.URL)
 		}
 	}
 
 	return true
 }
 
-func SetupDir(s *State) bool {
+func setupDir(s *state) bool {
 	guid := uuid.NewV4()
-	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+	wildcardResp, _ := goGet(s, s.URL, guid.String(), s.Cookies)
 
-	if s.StatusCodes.Contains(*wildcardResp) {
+	if s.StatusCodes.contains(*wildcardResp) {
 		s.IsWildcard = true
-		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.URL, guid), "=>", *wildcardResp)
 		if !s.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
 		}
@@ -573,44 +564,44 @@ func SetupDir(s *State) bool {
 	return true
 }
 
-func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
-	subdomain := word + "." + s.Url
+func processDNSEntry(s *state, word string, resultChan chan<- result) {
+	subdomain := word + "." + s.URL
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		if !s.IsWildcard || !s.WildcardIps.ContainsAny(ips) {
-			result := Result{
+		if !s.IsWildcard || !s.WildcardIps.containsAny(ips) {
+			r := result{
 				Entity: subdomain,
 			}
 			if s.ShowIPs {
-				result.Extra = strings.Join(ips, ", ")
+				r.Extra = strings.Join(ips, ", ")
 			} else if s.ShowCNAME {
 				cname, err := net.LookupCNAME(subdomain)
 				if err == nil {
-					result.Extra = cname
+					r.Extra = cname
 				}
 			}
-			resultChan <- result
+			resultChan <- r
 		}
 	} else if s.Verbose {
-		result := Result{
+		r := result{
 			Entity: subdomain,
 			Status: 404,
 		}
-		resultChan <- result
+		resultChan <- r
 	}
 }
 
-func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
+func processDirEntry(s *state, word string, resultChan chan<- result) {
 	suffix := ""
 	if s.UseSlash {
 		suffix = "/"
 	}
 
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := goGet(s, s.URL, word+suffix, s.Cookies)
 	if dirResp != nil {
-		resultChan <- Result{
+		resultChan <- result{
 			Entity: word + suffix,
 			Status: *dirResp,
 			Size:   dirSize,
@@ -620,10 +611,10 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+		fileResp, fileSize := goGet(s, s.URL, file, s.Cookies)
 
 		if fileResp != nil {
-			resultChan <- Result{
+			resultChan <- result{
 				Entity: file,
 				Status: *fileResp,
 				Size:   fileSize,
@@ -632,7 +623,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 }
 
-func PrintDnsResult(s *State, r *Result) {
+func printDNSResult(s *state, r *result) {
 	output := ""
 	if r.Status == 404 {
 		output = fmt.Sprintf("Missing: %s\n", r.Entity)
@@ -646,25 +637,25 @@ func PrintDnsResult(s *State, r *Result) {
 	fmt.Printf("%s", output)
 
 	if s.OutputFile != nil {
-		WriteToFile(output, s)
+		writeToFile(output, s)
 	}
 }
 
-func PrintDirResult(s *State, r *Result) {
+func printDirResult(s *state, r *result) {
 	output := ""
 
 	// Prefix if we're in verbose mode
 	if s.Verbose {
-		if s.StatusCodes.Contains(r.Status) {
+		if s.StatusCodes.contains(r.Status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if s.StatusCodes.Contains(r.Status) || s.Verbose {
+	if s.StatusCodes.contains(r.Status) || s.Verbose {
 		if s.Expanded {
-			output += s.Url
+			output += s.URL
 		} else {
 			output += "/"
 		}
@@ -679,22 +670,22 @@ func PrintDirResult(s *State, r *Result) {
 		}
 		output += "\n"
 
-		fmt.Printf(output)
+		fmt.Print(output)
 
 		if s.OutputFile != nil {
-			WriteToFile(output, s)
+			writeToFile(output, s)
 		}
 	}
 }
 
-func WriteToFile(output string, s *State) {
+func writeToFile(output string, s *state) {
 	_, err := s.OutputFile.WriteString(output)
 	if err != nil {
 		panic("[!] Unable to write to file " + s.OutputFileName)
 	}
 }
 
-func PrepareSignalHandler(s *State) {
+func prepareSignalHandler(s *state) {
 	s.SignalChan = make(chan os.Signal, 1)
 	signal.Notify(s.SignalChan, os.Interrupt)
 	go func() {
@@ -708,11 +699,11 @@ func PrepareSignalHandler(s *State) {
 	}()
 }
 
-func (e *RedirectError) Error() string {
+func (e *redirectError) Error() string {
 	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
 }
 
-func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+func (rh *redirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	if rh.State.FollowRedirect {
 		return rh.Transport.RoundTrip(req)
 	}
@@ -725,36 +716,36 @@ func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, er
 	switch resp.StatusCode {
 	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther,
 		http.StatusNotModified, http.StatusUseProxy, http.StatusTemporaryRedirect:
-		return nil, &RedirectError{StatusCode: resp.StatusCode}
+		return nil, &redirectError{StatusCode: resp.StatusCode}
 	}
 
 	return resp, err
 }
 
-func Ruler(s *State) {
+func ruler(s *state) {
 	if !s.Quiet {
 		fmt.Println("=====================================================")
 	}
 }
 
-func Banner(state *State) {
+func banner(state *state) {
 	if state.Quiet {
 		return
 	}
 
 	fmt.Println("")
 	fmt.Println("Gobuster v1.3                OJ Reeves (@TheColonial)")
-	Ruler(state)
+	ruler(state)
 }
 
-func ShowConfig(state *State) {
+func showConfig(state *state) {
 	if state.Quiet {
 		return
 	}
 
 	if state != nil {
 		fmt.Printf("[+] Mode         : %s\n", state.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
+		fmt.Printf("[+] URL/Domain   : %s\n", state.URL)
 		fmt.Printf("[+] Threads      : %d\n", state.Threads)
 
 		wordlist := "stdin (pipe)"
@@ -767,11 +758,11 @@ func ShowConfig(state *State) {
 			fmt.Printf("[+] Output file  : %s\n", state.OutputFileName)
 		}
 
-		if state.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
+		if state.Mode == dirMode {
+			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.stringify())
 
-			if state.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)
+			if state.ProxyURL != nil {
+				fmt.Printf("[+] Proxy        : %s\n", state.ProxyURL)
 			}
 
 			if state.Cookies != "" {
@@ -795,7 +786,7 @@ func ShowConfig(state *State) {
 			}
 
 			if state.UseSlash {
-				fmt.Printf("[+] Add Slash    : true\n")
+				fmt.Printf("[+] add Slash    : true\n")
 			}
 
 			if state.FollowRedirect {
@@ -815,13 +806,13 @@ func ShowConfig(state *State) {
 			}
 		}
 
-		Ruler(state)
+		ruler(state)
 	}
 }
 
 func main() {
-	state := ParseCmdLine()
+	state := parseCmdLine()
 	if state != nil {
-		Process(state)
+		process(state)
 	}
 }

@@ -10,6 +10,8 @@ gobuster: *.go ## Build the gobuster executable
 bootstrap: ## Get developer tools
 	go get -u sourcegraph.com/sqs/goreturns
 	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install
+	go get -u ./...
 
 .PHONY: lint
 lint: ## Lint golang source code

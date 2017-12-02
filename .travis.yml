@@ -1,0 +1,12 @@
+---
+language: go
+
+go:
+  - 1.9
+  - master
+
+jobs:
+  allow_failures:
+    - go: master
+
+script: make bootstrap&&make lint&&make test

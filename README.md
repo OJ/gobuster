@@ -1,5 +1,7 @@
 # Gobuster v1.3 (OJ Reeves @TheColonial)
 
+[![Build Status](https://travis-ci.org/24PR/gobuster.svg?branch=master)](https://travis-ci.org/24PR/gobuster)
+
 Gobuster is a tool used to brute-force:
 
 - URIs (directories and files) in web sites.

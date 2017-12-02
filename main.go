@@ -85,6 +85,12 @@ type State struct {
 	InsecureSSL    bool
 }
 
+// Small helper to combine URL with URI then make a
+// request to the generated location.
+func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
+	return MakeRequest(s, url+uri, cookie)
+}
+
 // Make a request to the given URL.
 func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
@@ -138,12 +144,6 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	}
 
 	return &resp.StatusCode, length
-}
-
-// Small helper to combine URL with URI then make a
-// request to the generated location.
-func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
-	return MakeRequest(s, url+uri, cookie)
 }
 
 // Parse all the command line options into a settings

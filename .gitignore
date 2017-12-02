@@ -25,4 +25,3 @@ _testmain.go
 gobuster
 *.txt
 *.swp
-vendor

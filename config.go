@@ -36,7 +36,7 @@ type config struct {
 	password       string
 	printer        func(cfg *config, br *busterResult)
 	processor      func(cfg *config, entity string, brc chan<- busterResult)
-	proxyUrl       *url.URL
+	proxyURL       *url.URL
 	quiet          bool
 	setup          func(cfg *config) bool
 	showIPs        bool
@@ -113,11 +113,11 @@ func parseCmdLine() *config {
 		cfg.printer = printDirResult
 		cfg.processor = processURL
 		cfg.setup = setupURL
-		if strings.HasSuffix(cfg.url, "/") == false {
+		if !strings.HasSuffix(cfg.url, "/") {
 			cfg.url = cfg.url + "/"
 		}
 
-		if strings.HasPrefix(cfg.url, "http") == false {
+		if !strings.HasPrefix(cfg.url, "http") {
 			// check to see if a port was specified
 			re := regexp.MustCompile(`^[^/]+:(\d+)`)
 			match := re.FindStringSubmatch(cfg.url)
@@ -164,7 +164,7 @@ func parseCmdLine() *config {
 		// prompt for password if needed
 		if valid && cfg.username != "" && cfg.password == "" {
 			fmt.Printf("[?] Auth Password: ")
-			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+			passBytes, err := terminal.ReadPassword(syscall.Stdin)
 
 			// print a newline to simulate the newline that was entered
 			// this means that formatting/printing after doesn't look bad.
@@ -179,25 +179,24 @@ func parseCmdLine() *config {
 		}
 
 		if valid {
-			var proxyUrlFunc func(*http.Request) (*url.URL, error)
-			proxyUrlFunc = http.ProxyFromEnvironment
+			proxyURLFunc := http.ProxyFromEnvironment
 
 			if proxy != "" {
-				proxyUrl, err := url.Parse(proxy)
+				proxyURL, err := url.Parse(proxy)
 				if err != nil {
 					panic("[!] Proxy URL is invalid")
 				}
-				cfg.proxyUrl = proxyUrl
-				proxyUrlFunc = http.ProxyURL(cfg.proxyUrl)
+				cfg.proxyURL = proxyURL
+				proxyURLFunc = http.ProxyURL(cfg.proxyURL)
 			}
 
 			cfg.client = &http.Client{
 				Transport: &redirectHandler{
 					Config: &cfg,
 					Transport: &http.Transport{
-						Proxy: proxyUrlFunc,
+						Proxy: proxyURLFunc,
 						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: cfg.insecureSSL,
+							InsecureSkipVerify: cfg.insecureSSL, //nolint: gas
 						},
 					},
 				}}

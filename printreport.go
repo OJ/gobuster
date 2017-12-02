@@ -102,8 +102,8 @@ func printConfig(cfg *config) {
 		if cfg.mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", cfg.statusCodes.string())
 
-			if cfg.proxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", cfg.proxyUrl)
+			if cfg.proxyURL != nil {
+				fmt.Printf("[+] Proxy        : %s\n", cfg.proxyURL)
 			}
 
 			if cfg.cookies != "" {

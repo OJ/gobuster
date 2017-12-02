@@ -47,10 +47,6 @@ type Result struct {
 	Size   *int64
 }
 
-type ipWildcards struct {
-	ipw map[string]bool
-}
-
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
@@ -82,7 +78,7 @@ type State struct {
 	OutputFile     *os.File
 	IsWildcard     bool
 	WildcardForced bool
-	WildcardIps    ipWildcards
+	WildcardIps    ipwildcards
 	SignalChan     chan os.Signal
 	Terminate      bool
 	StdIn          bool
@@ -96,45 +92,6 @@ type RedirectHandler struct {
 
 type RedirectError struct {
 	StatusCode int
-}
-
-// Add an element to a set
-func (set *ipWildcards) Add(s string) bool {
-	_, found := set.ipw[s]
-	set.ipw[s] = true
-	return !found
-}
-
-// Add a list of elements to a set
-func (set *ipWildcards) AddRange(ss []string) {
-	for _, s := range ss {
-		set.ipw[s] = true
-	}
-}
-
-// Test if an element is in a set
-func (set *ipWildcards) Contains(s string) bool {
-	_, found := set.ipw[s]
-	return found
-}
-
-// Check if any of the elements exist
-func (set *ipWildcards) ContainsAny(ss []string) bool {
-	for _, s := range ss {
-		if set.ipw[s] {
-			return true
-		}
-	}
-	return false
-}
-
-// Stringify the set
-func (set *ipWildcards) Stringify() string {
-	values := []string{}
-	for s := range set.ipw {
-		values = append(values, s)
-	}
-	return strings.Join(values, ",")
 }
 
 // Make a request to the given URL.
@@ -208,7 +165,7 @@ func ParseCmdLine() *State {
 
 	s := State{
 		StatusCodes: statuscodes{sc: map[int]bool{}},
-		WildcardIps: ipWildcards{ipw: map[string]bool{}},
+		WildcardIps: ipwildcards{ipw: map[string]bool{}},
 		IsWildcard:  false,
 		StdIn:       false,
 	}
@@ -505,8 +462,8 @@ func SetupDns(s *State) bool {
 	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
 	if err == nil {
 		s.IsWildcard = true
-		s.WildcardIps.AddRange(wildcardIps)
-		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.Stringify())
+		s.WildcardIps.addRange(wildcardIps)
+		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.string())
 		if !s.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
 		}
@@ -546,7 +503,7 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		if !s.IsWildcard || !s.WildcardIps.ContainsAny(ips) {
+		if !s.IsWildcard || !s.WildcardIps.containsAny(ips) {
 			result := Result{
 				Entity: subdomain,
 			}

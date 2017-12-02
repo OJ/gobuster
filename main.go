@@ -47,18 +47,12 @@ type Result struct {
 	Size   *int64
 }
 
-type PrintResultFunc func(s *State, r *Result)
-type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
-type SetupFunc func(s *State) bool
-
-// Shim type for "set" containing ints
-type IntSet struct {
-	set map[int]bool
+type statuscodes struct {
+	sc map[int]bool
 }
 
-// Shim type for "set" containing strings
-type StringSet struct {
-	set map[string]bool
+type ipWildcards struct {
+	ipw map[string]bool
 }
 
 // Contains State that are read in from the command
@@ -73,14 +67,14 @@ type State struct {
 	Mode           string
 	NoStatus       bool
 	Password       string
-	Printer        PrintResultFunc
-	Processor      ProcessorFunc
+	Printer        func(s *State, r *Result)
+	Processor      func(s *State, entity string, resultChan chan<- Result)
 	ProxyUrl       *url.URL
 	Quiet          bool
-	Setup          SetupFunc
+	Setup          func(s *State) bool
 	ShowIPs        bool
 	ShowCNAME      bool
-	StatusCodes    IntSet
+	StatusCodes    statuscodes
 	Threads        int
 	Url            string
 	UseSlash       bool
@@ -92,7 +86,7 @@ type State struct {
 	OutputFile     *os.File
 	IsWildcard     bool
 	WildcardForced bool
-	WildcardIps    StringSet
+	WildcardIps    ipWildcards
 	SignalChan     chan os.Signal
 	Terminate      bool
 	StdIn          bool
@@ -109,29 +103,29 @@ type RedirectError struct {
 }
 
 // Add an element to a set
-func (set *StringSet) Add(s string) bool {
-	_, found := set.set[s]
-	set.set[s] = true
+func (set *ipWildcards) Add(s string) bool {
+	_, found := set.ipw[s]
+	set.ipw[s] = true
 	return !found
 }
 
 // Add a list of elements to a set
-func (set *StringSet) AddRange(ss []string) {
+func (set *ipWildcards) AddRange(ss []string) {
 	for _, s := range ss {
-		set.set[s] = true
+		set.ipw[s] = true
 	}
 }
 
 // Test if an element is in a set
-func (set *StringSet) Contains(s string) bool {
-	_, found := set.set[s]
+func (set *ipWildcards) Contains(s string) bool {
+	_, found := set.ipw[s]
 	return found
 }
 
 // Check if any of the elements exist
-func (set *StringSet) ContainsAny(ss []string) bool {
+func (set *ipWildcards) ContainsAny(ss []string) bool {
 	for _, s := range ss {
-		if set.set[s] {
+		if set.ipw[s] {
 			return true
 		}
 	}
@@ -139,31 +133,31 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 }
 
 // Stringify the set
-func (set *StringSet) Stringify() string {
+func (set *ipWildcards) Stringify() string {
 	values := []string{}
-	for s := range set.set {
+	for s := range set.ipw {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
 }
 
 // Add an element to a set
-func (set *IntSet) Add(i int) bool {
-	_, found := set.set[i]
-	set.set[i] = true
+func (set *statuscodes) Add(i int) bool {
+	_, found := set.sc[i]
+	set.sc[i] = true
 	return !found
 }
 
 // Test if an element is in a set
-func (set *IntSet) Contains(i int) bool {
-	_, found := set.set[i]
+func (set *statuscodes) Contains(i int) bool {
+	_, found := set.sc[i]
 	return found
 }
 
 // Stringify the set
-func (set *IntSet) Stringify() string {
+func (set *statuscodes) Stringify() string {
 	values := []string{}
-	for s := range set.set {
+	for s := range set.sc {
 		values = append(values, strconv.Itoa(s))
 	}
 	return strings.Join(values, ",")
@@ -239,8 +233,8 @@ func ParseCmdLine() *State {
 	valid := true
 
 	s := State{
-		StatusCodes: IntSet{set: map[int]bool{}},
-		WildcardIps: StringSet{set: map[string]bool{}},
+		StatusCodes: statuscodes{sc: map[int]bool{}},
+		WildcardIps: ipWildcards{ipw: map[string]bool{}},
 		IsWildcard:  false,
 		StdIn:       false,
 	}

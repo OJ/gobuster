@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -127,7 +128,11 @@ func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
 		return nil, nil
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("[!] problem closing the response body")
+		}
+	}()
 
 	var length *int64 = nil
 

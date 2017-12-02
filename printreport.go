@@ -4,19 +4,20 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
-func printDnsResult(cfg *config, r *Result) {
+func printDnsResult(cfg *config, br *busterResult) {
 	output := ""
-	if r.Status == 404 {
-		output = fmt.Sprintf("Missing: %s\n", r.Entity)
+	if br.Status == 404 {
+		output = fmt.Sprintf("Missing: %s\n", br.Entity)
 	} else if cfg.ShowIPs {
-		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", br.Entity, br.Extra)
 	} else if cfg.ShowCNAME {
-		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", br.Entity, br.Extra)
 	} else {
-		output = fmt.Sprintf("Found: %s\n", r.Entity)
+		output = fmt.Sprintf("Found: %s\n", br.Entity)
 	}
 	fmt.Printf("%s", output)
 
@@ -25,32 +26,32 @@ func printDnsResult(cfg *config, r *Result) {
 	}
 }
 
-func printDirResult(cfg *config, r *Result) {
+func printDirResult(cfg *config, br *busterResult) {
 	output := ""
 
 	// Prefix if we're in verbose mode
 	if cfg.Verbose {
-		if cfg.StatusCodes.contains(r.Status) {
+		if cfg.StatusCodes.contains(br.Status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if cfg.StatusCodes.contains(r.Status) || cfg.Verbose {
+	if cfg.StatusCodes.contains(br.Status) || cfg.Verbose {
 		if cfg.Expanded {
 			output += cfg.Url
 		} else {
 			output += "/"
 		}
-		output += r.Entity
+		output += br.Entity
 
 		if !cfg.NoStatus {
-			output += fmt.Sprintf(" (Status: %d)", r.Status)
+			output += fmt.Sprintf(" (Status: %d)", br.Status)
 		}
 
-		if r.Size != nil {
-			output += fmt.Sprintf(" [Size: %d]", *r.Size)
+		if br.Size != nil {
+			output += fmt.Sprintf(" [Size: %d]", *br.Size)
 		}
 		output += "\n"
 
@@ -147,5 +148,12 @@ func printConfig(cfg *config) {
 		}
 
 		printRuler(cfg)
+	}
+}
+
+func WriteToFile(cfg *config, output string) {
+	_, err := cfg.OutputFile.WriteString(output)
+	if err != nil {
+		log.Panicf("[!] Unable to write to file %v", cfg.OutputFileName)
 	}
 }

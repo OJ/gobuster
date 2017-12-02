@@ -29,8 +29,8 @@ type config struct {
 	Mode           string
 	NoStatus       bool
 	Password       string
-	Printer        func(cfg *config, r *Result)
-	Processor      func(cfg *config, entity string, resultChan chan<- Result)
+	Printer        func(cfg *config, br *busterResult)
+	Processor      func(cfg *config, entity string, brc chan<- busterResult)
 	ProxyUrl       *url.URL
 	Quiet          bool
 	Setup          func(cfg *config) bool
@@ -102,12 +102,12 @@ func ParseCmdLine() *config {
 	switch strings.ToLower(cfg.Mode) {
 	case "dir":
 		cfg.Printer = printDirResult
-		cfg.Processor = ProcessDirEntry
-		cfg.Setup = SetupDir
+		cfg.Processor = processURL
+		cfg.Setup = setupURL
 	case "dns":
 		cfg.Printer = printDnsResult
-		cfg.Processor = ProcessDnsEntry
-		cfg.Setup = SetupDns
+		cfg.Processor = processDNS
+		cfg.Setup = setupDNS
 	default:
 		fmt.Println("[!] Mode (-m): Invalid value:", cfg.Mode)
 		valid = false

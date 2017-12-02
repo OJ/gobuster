@@ -567,7 +567,7 @@ func PrintDnsResult(cfg *config, r *Result) {
 	fmt.Printf("%s", output)
 
 	if cfg.OutputFile != nil {
-		WriteToFile(output, cfg)
+		WriteToFile(cfg, output)
 	}
 }
 
@@ -603,12 +603,12 @@ func PrintDirResult(cfg *config, r *Result) {
 		fmt.Printf(output)
 
 		if cfg.OutputFile != nil {
-			WriteToFile(output, cfg)
+			WriteToFile(cfg, output)
 		}
 	}
 }
 
-func WriteToFile(output string, cfg *config) {
+func WriteToFile(cfg *config, output string) {
 	_, err := cfg.OutputFile.WriteString(output)
 	if err != nil {
 		log.Panicf("[!] Unable to write to file %v", cfg.OutputFileName)

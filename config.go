@@ -24,7 +24,7 @@ const (
 
 // Contains config that are read in from the command
 // line when the program is invoked.
-type config struct {
+type config struct { //nolint: maligned
 	client         *http.Client
 	cookies        string
 	expanded       bool
@@ -62,7 +62,7 @@ type config struct {
 
 // Parse all the command line options into a settings
 // instance for future use.
-func parseCmdLine() *config {
+func parseCmdLine() *config { //nolint: gocyclo
 	var extensions string
 	var codes string
 	var proxy string

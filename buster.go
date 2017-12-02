@@ -32,7 +32,7 @@ func get(cfg *config, url, uri, cookie string) (*int, *int64) {
 }
 
 // Make a request to the given URL.
-func getResponse(cfg *config, fullURL, cookie string) (*int, *int64) {
+func getResponse(cfg *config, fullURL, cookie string) (*int, *int64) { //nolint: gocyclo
 	req, err := http.NewRequest("GET", fullURL, nil)
 
 	if err != nil {
@@ -106,7 +106,7 @@ func prepareSignalHandler(cfg *config) {
 
 // runBuster the busting of the website with the given
 // set of settings from the command line.
-func runBuster(cfg *config) {
+func runBuster(cfg *config) { //nolint: gocyclo
 
 	printConfig(cfg)
 

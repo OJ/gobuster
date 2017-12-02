@@ -6,11 +6,11 @@ import "net/http"
 
 type redirectHandler struct {
 	Transport http.RoundTripper
-	State     *State
+	Config    *config
 }
 
 func (rh *redirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	if rh.State.FollowRedirect {
+	if rh.Config.FollowRedirect {
 		return rh.Transport.RoundTrip(req)
 	}
 

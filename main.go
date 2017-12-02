@@ -48,9 +48,9 @@ type Result struct {
 	Size   *int64
 }
 
-// Contains State that are read in from the command
+// Contains config that are read in from the command
 // line when the program is invoked.
-type State struct {
+type config struct {
 	Client         *http.Client
 	Cookies        string
 	Expanded       bool
@@ -60,11 +60,11 @@ type State struct {
 	Mode           string
 	NoStatus       bool
 	Password       string
-	Printer        func(s *State, r *Result)
-	Processor      func(s *State, entity string, resultChan chan<- Result)
+	Printer        func(cfg *config, r *Result)
+	Processor      func(cfg *config, entity string, resultChan chan<- Result)
 	ProxyUrl       *url.URL
 	Quiet          bool
-	Setup          func(s *State) bool
+	Setup          func(cfg *config) bool
 	ShowIPs        bool
 	ShowCNAME      bool
 	StatusCodes    statuscodes
@@ -88,12 +88,12 @@ type State struct {
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func get(s *State, url, uri, cookie string) (*int, *int64) {
-	return getResponse(s, url+uri, cookie)
+func get(cfg *config, url, uri, cookie string) (*int, *int64) {
+	return getResponse(cfg, url+uri, cookie)
 }
 
 // Make a request to the given URL.
-func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
+func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
@@ -104,15 +104,15 @@ func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
 		req.Header.Set("Cookie", cookie)
 	}
 
-	if s.UserAgent != "" {
-		req.Header.Set("User-Agent", s.UserAgent)
+	if cfg.UserAgent != "" {
+		req.Header.Set("User-Agent", cfg.UserAgent)
 	}
 
-	if s.Username != "" {
-		req.SetBasicAuth(s.Username, s.Password)
+	if cfg.Username != "" {
+		req.SetBasicAuth(cfg.Username, cfg.Password)
 	}
 
-	resp, err := s.Client.Do(req)
+	resp, err := cfg.Client.Do(req)
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
@@ -136,7 +136,7 @@ func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
 
 	var length *int64 = nil
 
-	if s.IncludeLength {
+	if cfg.IncludeLength {
 		length = new(int64)
 		if resp.ContentLength <= 0 {
 			body, err := ioutil.ReadAll(resp.Body)
@@ -153,13 +153,13 @@ func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
 
 // Parse all the command line options into a settings
 // instance for future use.
-func ParseCmdLine() *State {
+func ParseCmdLine() *config {
 	var extensions string
 	var codes string
 	var proxy string
 	valid := true
 
-	s := State{
+	cfg := config{
 		StatusCodes: statuscodes{sc: map[int]bool{}},
 		WildcardIps: ipwildcards{ipw: map[string]bool{}},
 		IsWildcard:  false,
@@ -167,50 +167,50 @@ func ParseCmdLine() *State {
 	}
 
 	// Set up the variables we're interested in parsing.
-	flag.IntVar(&s.Threads, "t", 10, "Number of concurrent threads")
-	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
-	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
+	flag.IntVar(&cfg.Threads, "t", 10, "Number of concurrent threads")
+	flag.StringVar(&cfg.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
+	flag.StringVar(&cfg.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
-	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
-	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
-	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
-	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
-	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
+	flag.StringVar(&cfg.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
+	flag.StringVar(&cfg.Url, "u", "", "The target URL or Domain")
+	flag.StringVar(&cfg.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
+	flag.StringVar(&cfg.Username, "U", "", "Username for Basic Auth (dir mode only)")
+	flag.StringVar(&cfg.Password, "P", "", "Password for Basic Auth (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
-	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
+	flag.StringVar(&cfg.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
-	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
-	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
-	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
-	flag.BoolVar(&s.FollowRedirect, "r", false, "Follow redirects")
-	flag.BoolVar(&s.Quiet, "q", false, "Don't print the banner and other noise")
-	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
-	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
-	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
-	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
-	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
-	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
+	flag.BoolVar(&cfg.Verbose, "v", false, "Verbose output (errors)")
+	flag.BoolVar(&cfg.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
+	flag.BoolVar(&cfg.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")
+	flag.BoolVar(&cfg.FollowRedirect, "r", false, "Follow redirects")
+	flag.BoolVar(&cfg.Quiet, "q", false, "Don't print the banner and other noise")
+	flag.BoolVar(&cfg.Expanded, "e", false, "Expanded mode, print full URLs")
+	flag.BoolVar(&cfg.NoStatus, "n", false, "Don't print status codes")
+	flag.BoolVar(&cfg.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
+	flag.BoolVar(&cfg.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
+	flag.BoolVar(&cfg.WildcardForced, "fw", false, "Force continued operation when wildcard found")
+	flag.BoolVar(&cfg.InsecureSSL, "k", false, "Skip SSL certificate verification")
 
 	flag.Parse()
 
-	Banner(&s)
+	Banner(&cfg)
 
-	switch strings.ToLower(s.Mode) {
+	switch strings.ToLower(cfg.Mode) {
 	case "dir":
-		s.Printer = PrintDirResult
-		s.Processor = ProcessDirEntry
-		s.Setup = SetupDir
+		cfg.Printer = PrintDirResult
+		cfg.Processor = ProcessDirEntry
+		cfg.Setup = SetupDir
 	case "dns":
-		s.Printer = PrintDnsResult
-		s.Processor = ProcessDnsEntry
-		s.Setup = SetupDns
+		cfg.Printer = PrintDnsResult
+		cfg.Processor = ProcessDnsEntry
+		cfg.Setup = SetupDns
 	default:
-		fmt.Println("[!] Mode (-m): Invalid value:", s.Mode)
+		fmt.Println("[!] Mode (-m): Invalid value:", cfg.Mode)
 		valid = false
 	}
 
-	if s.Threads < 0 {
-		fmt.Println("[!] Threads (-t): Invalid value:", s.Threads)
+	if cfg.Threads < 0 {
+		fmt.Println("[!] Threads (-t): Invalid value:", cfg.Threads)
 		valid = false
 	}
 
@@ -218,59 +218,59 @@ func ParseCmdLine() *State {
 	if err != nil {
 		fmt.Println("[!] Unable to stat stdin, falling back to wordlist file.")
 	} else if (stdin.Mode()&os.ModeCharDevice) == 0 && stdin.Size() > 0 {
-		s.StdIn = true
+		cfg.StdIn = true
 	}
 
-	if !s.StdIn {
-		if s.Wordlist == "" {
+	if !cfg.StdIn {
+		if cfg.Wordlist == "" {
 			fmt.Println("[!] WordList (-w): Must be specified")
 			valid = false
-		} else if _, err := os.Stat(s.Wordlist); os.IsNotExist(err) {
-			fmt.Println("[!] Wordlist (-w): File does not exist:", s.Wordlist)
+		} else if _, err := os.Stat(cfg.Wordlist); os.IsNotExist(err) {
+			fmt.Println("[!] Wordlist (-w): File does not exist:", cfg.Wordlist)
 			valid = false
 		}
-	} else if s.Wordlist != "" {
+	} else if cfg.Wordlist != "" {
 		fmt.Println("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!")
 		valid = false
 	}
 
-	if s.Url == "" {
+	if cfg.Url == "" {
 		fmt.Println("[!] Url/Domain (-u): Must be specified")
 		valid = false
 	}
 
-	if s.Mode == "dir" {
-		if strings.HasSuffix(s.Url, "/") == false {
-			s.Url = s.Url + "/"
+	if cfg.Mode == "dir" {
+		if strings.HasSuffix(cfg.Url, "/") == false {
+			cfg.Url = cfg.Url + "/"
 		}
 
-		if strings.HasPrefix(s.Url, "http") == false {
+		if strings.HasPrefix(cfg.Url, "http") == false {
 			// check to see if a port was specified
 			re := regexp.MustCompile(`^[^/]+:(\d+)`)
-			match := re.FindStringSubmatch(s.Url)
+			match := re.FindStringSubmatch(cfg.Url)
 
 			if len(match) < 2 {
 				// no port, default to http on 80
-				s.Url = "http://" + s.Url
+				cfg.Url = "http://" + cfg.Url
 			} else {
 				port, err := strconv.Atoi(match[1])
 				if err != nil || (port != 80 && port != 443) {
 					fmt.Println("[!] Url/Domain (-u): Scheme not specified.")
 					valid = false
 				} else if port == 80 {
-					s.Url = "http://" + s.Url
+					cfg.Url = "http://" + cfg.Url
 				} else {
-					s.Url = "https://" + s.Url
+					cfg.Url = "https://" + cfg.Url
 				}
 			}
 		}
 
 		// extensions are comma separated
 		if extensions != "" {
-			s.Extensions = strings.Split(extensions, ",")
-			for i := range s.Extensions {
-				if s.Extensions[i][0] != '.' {
-					s.Extensions[i] = "." + s.Extensions[i]
+			cfg.Extensions = strings.Split(extensions, ",")
+			for i := range cfg.Extensions {
+				if cfg.Extensions[i][0] != '.' {
+					cfg.Extensions[i] = "." + cfg.Extensions[i]
 				}
 			}
 		}
@@ -283,13 +283,13 @@ func ParseCmdLine() *State {
 					fmt.Println("[!] Invalid status code given: ", c)
 					valid = false
 				} else {
-					s.StatusCodes.add(i)
+					cfg.StatusCodes.add(i)
 				}
 			}
 		}
 
 		// prompt for password if needed
-		if valid && s.Username != "" && s.Password == "" {
+		if valid && cfg.Username != "" && cfg.Password == "" {
 			fmt.Printf("[?] Auth Password: ")
 			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 
@@ -298,7 +298,7 @@ func ParseCmdLine() *State {
 			fmt.Println("")
 
 			if err == nil {
-				s.Password = string(passBytes)
+				cfg.Password = string(passBytes)
 			} else {
 				fmt.Println("[!] Auth username given but reading of password failed")
 				valid = false
@@ -314,33 +314,33 @@ func ParseCmdLine() *State {
 				if err != nil {
 					panic("[!] Proxy URL is invalid")
 				}
-				s.ProxyUrl = proxyUrl
-				proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+				cfg.ProxyUrl = proxyUrl
+				proxyUrlFunc = http.ProxyURL(cfg.ProxyUrl)
 			}
 
-			s.Client = &http.Client{
+			cfg.Client = &http.Client{
 				Transport: &redirectHandler{
-					State: &s,
+					Config: &cfg,
 					Transport: &http.Transport{
 						Proxy: proxyUrlFunc,
 						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: s.InsecureSSL,
+							InsecureSkipVerify: cfg.InsecureSSL,
 						},
 					},
 				}}
 
-			code, _ := get(&s, s.Url, "", s.Cookies)
+			code, _ := get(&cfg, cfg.Url, "", cfg.Cookies)
 			if code == nil {
-				fmt.Println("[-] Unable to connect:", s.Url)
+				fmt.Println("[-] Unable to connect:", cfg.Url)
 				valid = false
 			}
 		} else {
-			Ruler(&s)
+			Ruler(&cfg)
 		}
 	}
 
 	if valid {
-		return &s
+		return &cfg
 	}
 
 	return nil
@@ -348,31 +348,31 @@ func ParseCmdLine() *State {
 
 // Process the busting of the website with the given
 // set of settings from the command line.
-func Process(s *State) {
+func Process(cfg *config) {
 
-	ShowConfig(s)
+	ShowConfig(cfg)
 
-	if s.Setup(s) == false {
-		Ruler(s)
+	if cfg.Setup(cfg) == false {
+		Ruler(cfg)
 		return
 	}
 
-	PrepareSignalHandler(s)
+	PrepareSignalHandler(cfg)
 
 	// channels used for comms
-	wordChan := make(chan string, s.Threads)
+	wordChan := make(chan string, cfg.Threads)
 	resultChan := make(chan Result)
 
 	// Use a wait group for waiting for all threads
 	// to finish
 	processorGroup := new(sync.WaitGroup)
-	processorGroup.Add(s.Threads)
+	processorGroup.Add(cfg.Threads)
 	printerGroup := new(sync.WaitGroup)
 	printerGroup.Add(1)
 
 	// Create goroutines for each of the number of threads
 	// specified.
-	for i := 0; i < s.Threads; i++ {
+	for i := 0; i < cfg.Threads; i++ {
 		go func() {
 			for {
 				word := <-wordChan
@@ -383,7 +383,7 @@ func Process(s *State) {
 				}
 
 				// Mode-specific processing
-				s.Processor(s, word, resultChan)
+				cfg.Processor(cfg, word, resultChan)
 			}
 
 			// Indicate to the wait group that the thread
@@ -396,19 +396,19 @@ func Process(s *State) {
 	// appear from the worker threads.
 	go func() {
 		for r := range resultChan {
-			s.Printer(s, &r)
+			cfg.Printer(cfg, &r)
 		}
 		printerGroup.Done()
 	}()
 
 	var scanner *bufio.Scanner
 
-	if s.StdIn {
+	if cfg.StdIn {
 		// Read directly from stdin
 		scanner = bufio.NewScanner(os.Stdin)
 	} else {
 		// Pull content from the wordlist
-		wordlist, err := os.Open(s.Wordlist)
+		wordlist, err := os.Open(cfg.Wordlist)
 		if err != nil {
 			panic("Failed to open wordlist")
 		}
@@ -419,19 +419,19 @@ func Process(s *State) {
 	}
 
 	var outputFile *os.File
-	if s.OutputFileName != "" {
-		outputFile, err := os.Create(s.OutputFileName)
+	if cfg.OutputFileName != "" {
+		outputFile, err := os.Create(cfg.OutputFileName)
 		if err != nil {
-			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", s.OutputFileName)
-			s.OutputFileName = ""
-			s.OutputFile = nil
+			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", cfg.OutputFileName)
+			cfg.OutputFileName = ""
+			cfg.OutputFile = nil
 		} else {
-			s.OutputFile = outputFile
+			cfg.OutputFile = outputFile
 		}
 	}
 
 	for scanner.Scan() {
-		if s.Terminate {
+		if cfg.Terminate {
 			break
 		}
 		word := strings.TrimSpace(scanner.Text())
@@ -446,66 +446,66 @@ func Process(s *State) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
-	if s.OutputFile != nil {
+	if cfg.OutputFile != nil {
 		outputFile.Close()
 	}
-	Ruler(s)
+	Ruler(cfg)
 }
 
-func SetupDns(s *State) bool {
+func SetupDns(cfg *config) bool {
 	// Resolve a subdomain that probably shouldn't exist
 	guid := uuid.NewV4()
-	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
+	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, cfg.Url))
 	if err == nil {
-		s.IsWildcard = true
-		s.WildcardIps.addRange(wildcardIps)
-		fmt.Println("[-] Wildcard DNS found. IP address(es): ", s.WildcardIps.string())
-		if !s.WildcardForced {
+		cfg.IsWildcard = true
+		cfg.WildcardIps.addRange(wildcardIps)
+		fmt.Println("[-] Wildcard DNS found. IP address(es): ", cfg.WildcardIps.string())
+		if !cfg.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
 		}
-		return s.WildcardForced
+		return cfg.WildcardForced
 	}
 
-	if !s.Quiet {
+	if !cfg.Quiet {
 		// Provide a warning if the base domain doesn't resolve (in case of typo)
-		_, err = net.LookupHost(s.Url)
+		_, err = net.LookupHost(cfg.Url)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
-			fmt.Println("[-] Unable to validate base domain:", s.Url)
+			fmt.Println("[-] Unable to validate base domain:", cfg.Url)
 		}
 	}
 
 	return true
 }
 
-func SetupDir(s *State) bool {
+func SetupDir(cfg *config) bool {
 	guid := uuid.NewV4()
-	wildcardResp, _ := get(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+	wildcardResp, _ := get(cfg, cfg.Url, fmt.Sprintf("%s", guid), cfg.Cookies)
 
-	if s.StatusCodes.contains(*wildcardResp) {
-		s.IsWildcard = true
-		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
-		if !s.WildcardForced {
+	if cfg.StatusCodes.contains(*wildcardResp) {
+		cfg.IsWildcard = true
+		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", cfg.Url, guid), "=>", *wildcardResp)
+		if !cfg.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
 		}
-		return s.WildcardForced
+		return cfg.WildcardForced
 	}
 
 	return true
 }
 
-func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
-	subdomain := word + "." + s.Url
+func ProcessDnsEntry(cfg *config, word string, resultChan chan<- Result) {
+	subdomain := word + "." + cfg.Url
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
-		if !s.IsWildcard || !s.WildcardIps.containsAny(ips) {
+		if !cfg.IsWildcard || !cfg.WildcardIps.containsAny(ips) {
 			result := Result{
 				Entity: subdomain,
 			}
-			if s.ShowIPs {
+			if cfg.ShowIPs {
 				result.Extra = strings.Join(ips, ", ")
-			} else if s.ShowCNAME {
+			} else if cfg.ShowCNAME {
 				cname, err := net.LookupCNAME(subdomain)
 				if err == nil {
 					result.Extra = cname
@@ -513,7 +513,7 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 			}
 			resultChan <- result
 		}
-	} else if s.Verbose {
+	} else if cfg.Verbose {
 		result := Result{
 			Entity: subdomain,
 			Status: 404,
@@ -522,14 +522,14 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 	}
 }
 
-func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
+func ProcessDirEntry(cfg *config, word string, resultChan chan<- Result) {
 	suffix := ""
-	if s.UseSlash {
+	if cfg.UseSlash {
 		suffix = "/"
 	}
 
 	// Try the DIR first
-	dirResp, dirSize := get(s, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := get(cfg, cfg.Url, word+suffix, cfg.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: word + suffix,
@@ -539,9 +539,9 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Follow up with files using each ext.
-	for ext := range s.Extensions {
-		file := word + s.Extensions[ext]
-		fileResp, fileSize := get(s, s.Url, file, s.Cookies)
+	for ext := range cfg.Extensions {
+		file := word + cfg.Extensions[ext]
+		fileResp, fileSize := get(cfg, cfg.Url, file, cfg.Cookies)
 
 		if fileResp != nil {
 			resultChan <- Result{
@@ -553,45 +553,45 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 }
 
-func PrintDnsResult(s *State, r *Result) {
+func PrintDnsResult(cfg *config, r *Result) {
 	output := ""
 	if r.Status == 404 {
 		output = fmt.Sprintf("Missing: %s\n", r.Entity)
-	} else if s.ShowIPs {
+	} else if cfg.ShowIPs {
 		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
-	} else if s.ShowCNAME {
+	} else if cfg.ShowCNAME {
 		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
 		output = fmt.Sprintf("Found: %s\n", r.Entity)
 	}
 	fmt.Printf("%s", output)
 
-	if s.OutputFile != nil {
-		WriteToFile(output, s)
+	if cfg.OutputFile != nil {
+		WriteToFile(output, cfg)
 	}
 }
 
-func PrintDirResult(s *State, r *Result) {
+func PrintDirResult(cfg *config, r *Result) {
 	output := ""
 
 	// Prefix if we're in verbose mode
-	if s.Verbose {
-		if s.StatusCodes.contains(r.Status) {
+	if cfg.Verbose {
+		if cfg.StatusCodes.contains(r.Status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if s.StatusCodes.contains(r.Status) || s.Verbose {
-		if s.Expanded {
-			output += s.Url
+	if cfg.StatusCodes.contains(r.Status) || cfg.Verbose {
+		if cfg.Expanded {
+			output += cfg.Url
 		} else {
 			output += "/"
 		}
 		output += r.Entity
 
-		if !s.NoStatus {
+		if !cfg.NoStatus {
 			output += fmt.Sprintf(" (Status: %d)", r.Status)
 		}
 
@@ -602,118 +602,118 @@ func PrintDirResult(s *State, r *Result) {
 
 		fmt.Printf(output)
 
-		if s.OutputFile != nil {
-			WriteToFile(output, s)
+		if cfg.OutputFile != nil {
+			WriteToFile(output, cfg)
 		}
 	}
 }
 
-func WriteToFile(output string, s *State) {
-	_, err := s.OutputFile.WriteString(output)
+func WriteToFile(output string, cfg *config) {
+	_, err := cfg.OutputFile.WriteString(output)
 	if err != nil {
-		panic("[!] Unable to write to file " + s.OutputFileName)
+		log.Panicf("[!] Unable to write to file %v", cfg.OutputFileName)
 	}
 }
 
-func PrepareSignalHandler(s *State) {
-	s.SignalChan = make(chan os.Signal, 1)
-	signal.Notify(s.SignalChan, os.Interrupt)
+func PrepareSignalHandler(cfg *config) {
+	cfg.SignalChan = make(chan os.Signal, 1)
+	signal.Notify(cfg.SignalChan, os.Interrupt)
 	go func() {
-		for range s.SignalChan {
+		for range cfg.SignalChan {
 			// caught CTRL+C
-			if !s.Quiet {
+			if !cfg.Quiet {
 				fmt.Println("[!] Keyboard interrupt detected, terminating.")
-				s.Terminate = true
+				cfg.Terminate = true
 			}
 		}
 	}()
 }
 
-func Ruler(s *State) {
-	if !s.Quiet {
+func Ruler(cfg *config) {
+	if !cfg.Quiet {
 		fmt.Println("=====================================================")
 	}
 }
 
-func Banner(state *State) {
-	if state.Quiet {
+func Banner(cfg *config) {
+	if cfg.Quiet {
 		return
 	}
 
 	fmt.Println("")
 	fmt.Println("Gobuster v1.3                OJ Reeves (@TheColonial)")
-	Ruler(state)
+	Ruler(cfg)
 }
 
-func ShowConfig(state *State) {
-	if state.Quiet {
+func ShowConfig(cfg *config) {
+	if cfg.Quiet {
 		return
 	}
 
-	if state != nil {
-		fmt.Printf("[+] Mode         : %s\n", state.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", state.Url)
-		fmt.Printf("[+] Threads      : %d\n", state.Threads)
+	if cfg != nil {
+		fmt.Printf("[+] Mode         : %s\n", cfg.Mode)
+		fmt.Printf("[+] Url/Domain   : %s\n", cfg.Url)
+		fmt.Printf("[+] Threads      : %d\n", cfg.Threads)
 
 		wordlist := "stdin (pipe)"
-		if !state.StdIn {
-			wordlist = state.Wordlist
+		if !cfg.StdIn {
+			wordlist = cfg.Wordlist
 		}
 		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
 
-		if state.OutputFileName != "" {
-			fmt.Printf("[+] Output file  : %s\n", state.OutputFileName)
+		if cfg.OutputFileName != "" {
+			fmt.Printf("[+] Output file  : %s\n", cfg.OutputFileName)
 		}
 
-		if state.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.string())
+		if cfg.Mode == "dir" {
+			fmt.Printf("[+] Status codes : %s\n", cfg.StatusCodes.string())
 
-			if state.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)
+			if cfg.ProxyUrl != nil {
+				fmt.Printf("[+] Proxy        : %s\n", cfg.ProxyUrl)
 			}
 
-			if state.Cookies != "" {
-				fmt.Printf("[+] Cookies      : %s\n", state.Cookies)
+			if cfg.Cookies != "" {
+				fmt.Printf("[+] Cookies      : %s\n", cfg.Cookies)
 			}
 
-			if state.UserAgent != "" {
-				fmt.Printf("[+] User Agent   : %s\n", state.UserAgent)
+			if cfg.UserAgent != "" {
+				fmt.Printf("[+] User Agent   : %s\n", cfg.UserAgent)
 			}
 
-			if state.IncludeLength {
+			if cfg.IncludeLength {
 				fmt.Printf("[+] Show length  : true\n")
 			}
 
-			if state.Username != "" {
-				fmt.Printf("[+] Auth User    : %s\n", state.Username)
+			if cfg.Username != "" {
+				fmt.Printf("[+] Auth User    : %s\n", cfg.Username)
 			}
 
-			if len(state.Extensions) > 0 {
-				fmt.Printf("[+] Extensions   : %s\n", strings.Join(state.Extensions, ","))
+			if len(cfg.Extensions) > 0 {
+				fmt.Printf("[+] Extensions   : %s\n", strings.Join(cfg.Extensions, ","))
 			}
 
-			if state.UseSlash {
+			if cfg.UseSlash {
 				fmt.Printf("[+] Add Slash    : true\n")
 			}
 
-			if state.FollowRedirect {
+			if cfg.FollowRedirect {
 				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
-			if state.Expanded {
+			if cfg.Expanded {
 				fmt.Printf("[+] Expanded     : true\n")
 			}
 
-			if state.NoStatus {
+			if cfg.NoStatus {
 				fmt.Printf("[+] No status    : true\n")
 			}
 
-			if state.Verbose {
+			if cfg.Verbose {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
 
-		Ruler(state)
+		Ruler(cfg)
 	}
 }
 

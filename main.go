@@ -196,8 +196,7 @@ func makeRequest(s *state, fullURL, cookie string) (*int, *int64) {
 	}
 
 	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
+		if err := resp.Body.Close(); err != nil {
 			log.Print(err)
 		}
 	}()

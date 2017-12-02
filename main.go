@@ -47,10 +47,6 @@ type Result struct {
 	Size   *int64
 }
 
-type statuscodes struct {
-	sc map[int]bool
-}
-
 type ipWildcards struct {
 	ipw map[string]bool
 }
@@ -137,28 +133,6 @@ func (set *ipWildcards) Stringify() string {
 	values := []string{}
 	for s := range set.ipw {
 		values = append(values, s)
-	}
-	return strings.Join(values, ",")
-}
-
-// Add an element to a set
-func (set *statuscodes) Add(i int) bool {
-	_, found := set.sc[i]
-	set.sc[i] = true
-	return !found
-}
-
-// Test if an element is in a set
-func (set *statuscodes) Contains(i int) bool {
-	_, found := set.sc[i]
-	return found
-}
-
-// Stringify the set
-func (set *statuscodes) Stringify() string {
-	values := []string{}
-	for s := range set.sc {
-		values = append(values, strconv.Itoa(s))
 	}
 	return strings.Join(values, ",")
 }
@@ -356,7 +330,7 @@ func ParseCmdLine() *State {
 					fmt.Println("[!] Invalid status code given: ", c)
 					valid = false
 				} else {
-					s.StatusCodes.Add(i)
+					s.StatusCodes.add(i)
 				}
 			}
 		}
@@ -555,7 +529,7 @@ func SetupDir(s *State) bool {
 	guid := uuid.NewV4()
 	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
 
-	if s.StatusCodes.Contains(*wildcardResp) {
+	if s.StatusCodes.contains(*wildcardResp) {
 		s.IsWildcard = true
 		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
 		if !s.WildcardForced {
@@ -649,14 +623,14 @@ func PrintDirResult(s *State, r *Result) {
 
 	// Prefix if we're in verbose mode
 	if s.Verbose {
-		if s.StatusCodes.Contains(r.Status) {
+		if s.StatusCodes.contains(r.Status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if s.StatusCodes.Contains(r.Status) || s.Verbose {
+	if s.StatusCodes.contains(r.Status) || s.Verbose {
 		if s.Expanded {
 			output += s.Url
 		} else {
@@ -762,7 +736,7 @@ func ShowConfig(state *State) {
 		}
 
 		if state.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.Stringify())
+			fmt.Printf("[+] Status codes : %s\n", state.StatusCodes.string())
 
 			if state.ProxyUrl != nil {
 				fmt.Printf("[+] Proxy        : %s\n", state.ProxyUrl)

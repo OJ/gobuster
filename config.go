@@ -106,7 +106,7 @@ func parseCmdLine() *config {
 
 	switch strings.ToLower(cfg.mode) {
 	case modeDNS:
-		cfg.printer = printDnsResult
+		cfg.printer = printDNSResult
 		cfg.processor = processDNS
 		cfg.setup = setupDNS
 	case modeURL:

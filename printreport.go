@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func printDnsResult(cfg *config, br *busterResult) {
-	output := ""
+func printDNSResult(cfg *config, br *busterResult) {
+	var output string
 	if br.status == 404 {
 		output = fmt.Sprintf("Missing: %s\n", br.entity)
 	} else if cfg.showIPs {
@@ -22,12 +22,12 @@ func printDnsResult(cfg *config, br *busterResult) {
 	fmt.Printf("%s", output)
 
 	if cfg.outputFile != nil {
-		WriteToFile(cfg, output)
+		writeToFile(cfg, output)
 	}
 }
 
 func printDirResult(cfg *config, br *busterResult) {
-	output := ""
+	var output string
 
 	// Prefix if we're in verbose mode
 	if cfg.verbose {
@@ -55,10 +55,10 @@ func printDirResult(cfg *config, br *busterResult) {
 		}
 		output += "\n"
 
-		fmt.Printf(output)
+		fmt.Print(output)
 
 		if cfg.outputFile != nil {
-			WriteToFile(cfg, output)
+			writeToFile(cfg, output)
 		}
 	}
 }
@@ -79,7 +79,7 @@ func printBanner(cfg *config) {
 	printRuler(cfg)
 }
 
-func printConfig(cfg *config) {
+func printConfig(cfg *config) { //nolint: gocyclo
 	if cfg.quiet {
 		return
 	}
@@ -151,7 +151,7 @@ func printConfig(cfg *config) {
 	}
 }
 
-func WriteToFile(cfg *config, output string) {
+func writeToFile(cfg *config, output string) {
 	_, err := cfg.outputFile.WriteString(output)
 	if err != nil {
 		log.Panicf("[!] Unable to write to file %v", cfg.outputFileName)

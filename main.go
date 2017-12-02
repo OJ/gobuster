@@ -17,7 +17,7 @@
 package main
 
 func main() {
-	state := ParseCmdLine()
+	state := parseCmdLine()
 	if state != nil {
 		runBuster(state)
 	}

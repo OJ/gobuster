@@ -43,15 +43,15 @@ func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
 		req.Header.Set("Cookie", cookie)
 	}
 
-	if cfg.UserAgent != "" {
-		req.Header.Set("User-Agent", cfg.UserAgent)
+	if cfg.userAgent != "" {
+		req.Header.Set("User-Agent", cfg.userAgent)
 	}
 
-	if cfg.Username != "" {
-		req.SetBasicAuth(cfg.Username, cfg.Password)
+	if cfg.username != "" {
+		req.SetBasicAuth(cfg.username, cfg.password)
 	}
 
-	resp, err := cfg.Client.Do(req)
+	resp, err := cfg.client.Do(req)
 
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
@@ -75,7 +75,7 @@ func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
 
 	var length *int64 = nil
 
-	if cfg.IncludeLength {
+	if cfg.includeLength {
 		length = new(int64)
 		if resp.ContentLength <= 0 {
 			body, err := ioutil.ReadAll(resp.Body)
@@ -91,14 +91,14 @@ func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
 }
 
 func prepareSignalHandler(cfg *config) {
-	cfg.SignalChan = make(chan os.Signal, 1)
-	signal.Notify(cfg.SignalChan, os.Interrupt)
+	cfg.signalChan = make(chan os.Signal, 1)
+	signal.Notify(cfg.signalChan, os.Interrupt)
 	go func() {
-		for range cfg.SignalChan {
+		for range cfg.signalChan {
 			// caught CTRL+C
-			if !cfg.Quiet {
+			if !cfg.quiet {
 				fmt.Println("[!] Keyboard interrupt detected, terminating.")
-				cfg.Terminate = true
+				cfg.terminate = true
 			}
 		}
 	}()
@@ -110,7 +110,7 @@ func runBuster(cfg *config) {
 
 	printConfig(cfg)
 
-	if cfg.Setup(cfg) == false {
+	if cfg.setup(cfg) == false {
 		printRuler(cfg)
 		return
 	}
@@ -118,19 +118,19 @@ func runBuster(cfg *config) {
 	prepareSignalHandler(cfg)
 
 	// channels used for comms
-	wordChan := make(chan string, cfg.Threads)
+	wordChan := make(chan string, cfg.threads)
 	resultChan := make(chan busterResult)
 
 	// Use a wait group for waiting for all threads
 	// to finish
 	processorGroup := new(sync.WaitGroup)
-	processorGroup.Add(cfg.Threads)
+	processorGroup.Add(cfg.threads)
 	printerGroup := new(sync.WaitGroup)
 	printerGroup.Add(1)
 
 	// Create goroutines for each of the number of threads
 	// specified.
-	for i := 0; i < cfg.Threads; i++ {
+	for i := 0; i < cfg.threads; i++ {
 		go func() {
 			for {
 				word := <-wordChan
@@ -141,7 +141,7 @@ func runBuster(cfg *config) {
 				}
 
 				// Mode-specific processing
-				cfg.Processor(cfg, word, resultChan)
+				cfg.processor(cfg, word, resultChan)
 			}
 
 			// Indicate to the wait group that the thread
@@ -154,19 +154,19 @@ func runBuster(cfg *config) {
 	// appear from the worker threads.
 	go func() {
 		for r := range resultChan {
-			cfg.Printer(cfg, &r)
+			cfg.printer(cfg, &r)
 		}
 		printerGroup.Done()
 	}()
 
 	var scanner *bufio.Scanner
 
-	if cfg.StdIn {
+	if cfg.stdIn {
 		// Read directly from stdin
 		scanner = bufio.NewScanner(os.Stdin)
 	} else {
 		// Pull content from the wordlist
-		wordlist, err := os.Open(cfg.Wordlist)
+		wordlist, err := os.Open(cfg.wordlist)
 		if err != nil {
 			panic("Failed to open wordlist")
 		}
@@ -177,19 +177,19 @@ func runBuster(cfg *config) {
 	}
 
 	var outputFile *os.File
-	if cfg.OutputFileName != "" {
-		outputFile, err := os.Create(cfg.OutputFileName)
+	if cfg.outputFileName != "" {
+		outputFile, err := os.Create(cfg.outputFileName)
 		if err != nil {
-			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", cfg.OutputFileName)
-			cfg.OutputFileName = ""
-			cfg.OutputFile = nil
+			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", cfg.outputFileName)
+			cfg.outputFileName = ""
+			cfg.outputFile = nil
 		} else {
-			cfg.OutputFile = outputFile
+			cfg.outputFile = outputFile
 		}
 	}
 
 	for scanner.Scan() {
-		if cfg.Terminate {
+		if cfg.terminate {
 			break
 		}
 		word := strings.TrimSpace(scanner.Text())
@@ -204,7 +204,7 @@ func runBuster(cfg *config) {
 	processorGroup.Wait()
 	close(resultChan)
 	printerGroup.Wait()
-	if cfg.OutputFile != nil {
+	if cfg.outputFile != nil {
 		outputFile.Close()
 	}
 	printRuler(cfg)

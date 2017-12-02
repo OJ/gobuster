@@ -10,7 +10,7 @@ type redirectHandler struct {
 }
 
 func (rh *redirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	if rh.Config.FollowRedirect {
+	if rh.Config.followRedirect {
 		return rh.Transport.RoundTrip(req)
 	}
 

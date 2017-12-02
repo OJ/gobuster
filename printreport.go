@@ -12,16 +12,16 @@ func printDnsResult(cfg *config, br *busterResult) {
 	output := ""
 	if br.status == 404 {
 		output = fmt.Sprintf("Missing: %s\n", br.entity)
-	} else if cfg.ShowIPs {
+	} else if cfg.showIPs {
 		output = fmt.Sprintf("Found: %s [%s]\n", br.entity, br.extra)
-	} else if cfg.ShowCNAME {
+	} else if cfg.showCNAME {
 		output = fmt.Sprintf("Found: %s [%s]\n", br.entity, br.extra)
 	} else {
 		output = fmt.Sprintf("Found: %s\n", br.entity)
 	}
 	fmt.Printf("%s", output)
 
-	if cfg.OutputFile != nil {
+	if cfg.outputFile != nil {
 		WriteToFile(cfg, output)
 	}
 }
@@ -30,23 +30,23 @@ func printDirResult(cfg *config, br *busterResult) {
 	output := ""
 
 	// Prefix if we're in verbose mode
-	if cfg.Verbose {
-		if cfg.StatusCodes.contains(br.status) {
+	if cfg.verbose {
+		if cfg.statusCodes.contains(br.status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if cfg.StatusCodes.contains(br.status) || cfg.Verbose {
-		if cfg.Expanded {
-			output += cfg.Url
+	if cfg.statusCodes.contains(br.status) || cfg.verbose {
+		if cfg.expanded {
+			output += cfg.url
 		} else {
 			output += "/"
 		}
 		output += br.entity
 
-		if !cfg.NoStatus {
+		if !cfg.noStatus {
 			output += fmt.Sprintf(" (Status: %d)", br.status)
 		}
 
@@ -57,20 +57,20 @@ func printDirResult(cfg *config, br *busterResult) {
 
 		fmt.Printf(output)
 
-		if cfg.OutputFile != nil {
+		if cfg.outputFile != nil {
 			WriteToFile(cfg, output)
 		}
 	}
 }
 
 func printRuler(cfg *config) {
-	if !cfg.Quiet {
+	if !cfg.quiet {
 		fmt.Println("=====================================================")
 	}
 }
 
 func printBanner(cfg *config) {
-	if cfg.Quiet {
+	if cfg.quiet {
 		return
 	}
 
@@ -80,69 +80,69 @@ func printBanner(cfg *config) {
 }
 
 func printConfig(cfg *config) {
-	if cfg.Quiet {
+	if cfg.quiet {
 		return
 	}
 
 	if cfg != nil {
-		fmt.Printf("[+] Mode         : %s\n", cfg.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", cfg.Url)
-		fmt.Printf("[+] Threads      : %d\n", cfg.Threads)
+		fmt.Printf("[+] Mode         : %s\n", cfg.mode)
+		fmt.Printf("[+] Url/Domain   : %s\n", cfg.url)
+		fmt.Printf("[+] Threads      : %d\n", cfg.threads)
 
 		wordlist := "stdin (pipe)"
-		if !cfg.StdIn {
-			wordlist = cfg.Wordlist
+		if !cfg.stdIn {
+			wordlist = cfg.wordlist
 		}
 		fmt.Printf("[+] Wordlist     : %s\n", wordlist)
 
-		if cfg.OutputFileName != "" {
-			fmt.Printf("[+] Output file  : %s\n", cfg.OutputFileName)
+		if cfg.outputFileName != "" {
+			fmt.Printf("[+] Output file  : %s\n", cfg.outputFileName)
 		}
 
-		if cfg.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", cfg.StatusCodes.string())
+		if cfg.mode == "dir" {
+			fmt.Printf("[+] Status codes : %s\n", cfg.statusCodes.string())
 
-			if cfg.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", cfg.ProxyUrl)
+			if cfg.proxyUrl != nil {
+				fmt.Printf("[+] Proxy        : %s\n", cfg.proxyUrl)
 			}
 
-			if cfg.Cookies != "" {
-				fmt.Printf("[+] Cookies      : %s\n", cfg.Cookies)
+			if cfg.cookies != "" {
+				fmt.Printf("[+] Cookies      : %s\n", cfg.cookies)
 			}
 
-			if cfg.UserAgent != "" {
-				fmt.Printf("[+] User Agent   : %s\n", cfg.UserAgent)
+			if cfg.userAgent != "" {
+				fmt.Printf("[+] User Agent   : %s\n", cfg.userAgent)
 			}
 
-			if cfg.IncludeLength {
+			if cfg.includeLength {
 				fmt.Printf("[+] Show length  : true\n")
 			}
 
-			if cfg.Username != "" {
-				fmt.Printf("[+] Auth User    : %s\n", cfg.Username)
+			if cfg.username != "" {
+				fmt.Printf("[+] Auth User    : %s\n", cfg.username)
 			}
 
-			if len(cfg.Extensions) > 0 {
-				fmt.Printf("[+] Extensions   : %s\n", strings.Join(cfg.Extensions, ","))
+			if len(cfg.extensions) > 0 {
+				fmt.Printf("[+] Extensions   : %s\n", strings.Join(cfg.extensions, ","))
 			}
 
-			if cfg.UseSlash {
+			if cfg.useSlash {
 				fmt.Printf("[+] Add Slash    : true\n")
 			}
 
-			if cfg.FollowRedirect {
+			if cfg.followRedirect {
 				fmt.Printf("[+] Follow Redir : true\n")
 			}
 
-			if cfg.Expanded {
+			if cfg.expanded {
 				fmt.Printf("[+] Expanded     : true\n")
 			}
 
-			if cfg.NoStatus {
+			if cfg.noStatus {
 				fmt.Printf("[+] No status    : true\n")
 			}
 
-			if cfg.Verbose {
+			if cfg.verbose {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
 		}
@@ -152,8 +152,8 @@ func printConfig(cfg *config) {
 }
 
 func WriteToFile(cfg *config, output string) {
-	_, err := cfg.OutputFile.WriteString(output)
+	_, err := cfg.outputFile.WriteString(output)
 	if err != nil {
-		log.Panicf("[!] Unable to write to file %v", cfg.OutputFileName)
+		log.Panicf("[!] Unable to write to file %v", cfg.outputFileName)
 	}
 }

@@ -85,10 +85,6 @@ type State struct {
 	InsecureSSL    bool
 }
 
-type RedirectError struct {
-	StatusCode int
-}
-
 // Make a request to the given URL.
 func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
@@ -118,7 +114,7 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 				fmt.Println("[-] Invalid certificate")
 			}
 
-			if re, ok := ue.Err.(*RedirectError); ok {
+			if re, ok := ue.Err.(*redirectError); ok {
 				return &re.StatusCode, nil
 			}
 		}
@@ -626,10 +622,6 @@ func PrepareSignalHandler(s *State) {
 			}
 		}
 	}()
-}
-
-func (e *RedirectError) Error() string {
-	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
 }
 
 func Ruler(s *State) {

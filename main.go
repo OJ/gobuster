@@ -85,11 +85,6 @@ type State struct {
 	InsecureSSL    bool
 }
 
-type RedirectHandler struct {
-	Transport http.RoundTripper
-	State     *State
-}
-
 type RedirectError struct {
 	StatusCode int
 }
@@ -323,7 +318,7 @@ func ParseCmdLine() *State {
 			}
 
 			s.Client = &http.Client{
-				Transport: &RedirectHandler{
+				Transport: &redirectHandler{
 					State: &s,
 					Transport: &http.Transport{
 						Proxy: proxyUrlFunc,
@@ -635,25 +630,6 @@ func PrepareSignalHandler(s *State) {
 
 func (e *RedirectError) Error() string {
 	return fmt.Sprintf("Redirect code: %d", e.StatusCode)
-}
-
-func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	if rh.State.FollowRedirect {
-		return rh.Transport.RoundTrip(req)
-	}
-
-	resp, err = rh.Transport.RoundTrip(req)
-	if err != nil {
-		return resp, err
-	}
-
-	switch resp.StatusCode {
-	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther,
-		http.StatusNotModified, http.StatusUseProxy, http.StatusTemporaryRedirect:
-		return nil, &RedirectError{StatusCode: resp.StatusCode}
-	}
-
-	return resp, err
 }
 
 func Ruler(s *State) {

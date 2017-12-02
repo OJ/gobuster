@@ -1,11 +1,11 @@
-@0x42424242 - initial DNS support
-@averagesecurityguy - quiet mode support
-@g0tmi1k - content length, wordlist and command line parsing fixes
-@gehaxelt - DIR mode UUID wildcard detection
-@justinsteven - HTTP basic auth support
-@kevinnz - custom user agent support
-@knapsy - saving output to file, and CNAME resolution for DNS mode
-@rverton - CLI flag to skip SSL verification
-@viaMorgoth - base domain validation for DNS mode
-@UID1K - initial DNS wildcard check support
-@Ne0nd0g - STDIN support for wordlists
+[@0x42424242](http://github.com/$i) - initial DNS support
+[@averagesecurityguy](http://github.com/$i) - quiet mode support
+[@g0tmi1k](http://github.com/$i) - content length, wordlist and command line parsing fixes
+[@gehaxelt](http://github.com/$i) - DIR mode UUID wildcard detection
+[@justinsteven](http://github.com/$i) - HTTP basic auth support
+[@kevinnz](http://github.com/$i) - custom user agent support
+[@knapsy](http://github.com/$i) - saving output to file, and CNAME resolution for DNS mode
+[@rverton](http://github.com/$i) - CLI flag to skip SSL verification
+[@viaMorgoth](http://github.com/$i) - base domain validation for DNS mode
+[@UID1K](http://github.com/$i) - initial DNS wildcard check support
+[@Ne0nd0g](http://github.com/$i) - STDIN support for wordlists

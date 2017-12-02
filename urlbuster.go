@@ -10,7 +10,7 @@ import (
 
 func setupURL(cfg *config) bool {
 	guid := uuid.NewV4()
-	wildcardResp, _ := get(cfg, cfg.Url, fmt.Sprintf("%s", guid), cfg.Cookies)
+	wildcardResp, _ := get(cfg, cfg.Url, guid.String(), cfg.Cookies)
 
 	if cfg.StatusCodes.contains(*wildcardResp) {
 		cfg.IsWildcard = true

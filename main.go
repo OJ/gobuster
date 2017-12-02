@@ -87,12 +87,12 @@ type State struct {
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
-	return MakeRequest(s, url+uri, cookie)
+func get(s *State, url, uri, cookie string) (*int, *int64) {
+	return getResponse(s, url+uri, cookie)
 }
 
 // Make a request to the given URL.
-func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
+func getResponse(s *State, fullUrl, cookie string) (*int, *int64) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
@@ -324,7 +324,7 @@ func ParseCmdLine() *State {
 					},
 				}}
 
-			code, _ := GoGet(&s, s.Url, "", s.Cookies)
+			code, _ := get(&s, s.Url, "", s.Cookies)
 			if code == nil {
 				fmt.Println("[-] Unable to connect:", s.Url)
 				valid = false
@@ -475,7 +475,7 @@ func SetupDns(s *State) bool {
 
 func SetupDir(s *State) bool {
 	guid := uuid.NewV4()
-	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+	wildcardResp, _ := get(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
 
 	if s.StatusCodes.contains(*wildcardResp) {
 		s.IsWildcard = true
@@ -524,7 +524,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := get(s, s.Url, word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: word + suffix,
@@ -536,7 +536,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+		fileResp, fileSize := get(s, s.Url, file, s.Cookies)
 
 		if fileResp != nil {
 			resultChan <- Result{

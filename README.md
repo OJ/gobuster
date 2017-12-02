@@ -1,101 +1,111 @@
-Gobuster v1.3 (OJ Reeves @TheColonial)
-======================================
+# Gobuster v1.3 (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
 
-* URIs (directories and files) in web sites.
-* DNS subdomains (with wildcard support).
+- URIs (directories and files) in web sites.
+- DNS subdomains (with wildcard support).
 
-### Oh dear God.. WHY!?
+## Oh dear God.. WHY!?
 
 Because I wanted:
 
 1. ... something that didn't have a fat Java GUI (console FTW).
-1. ... to build something that just worked on the command line.
-1. ... something that did not do recursive brute force.
-1. ... something that allowed me to brute force folders and multiple extensions at once.
-1. ... something that compiled to native on multiple platforms.
-1. ... something that was faster than an interpreted script (such as Python).
-1. ... something that didn't require a runtime.
-1. ... use something that was good with concurrency (hence Go).
-1. ... to build something in Go that wasn't totally useless.
+2. ... to build something that just worked on the command line.
+3. ... something that did not do recursive brute force.
+4. ... something that allowed me to brute force folders and multiple extensions at once.
+5. ... something that compiled to native on multiple platforms.
+6. ... something that was faster than an interpreted script (such as Python).
+7. ... something that didn't require a runtime.
+8. ... use something that was good with concurrency (hence Go).
+9. ... to build something in Go that wasn't totally useless.
 
-### But it's shit! And your implementation sucks!
+## But it's shit! And your implementation sucks!
 
 Yes, you're probably correct. Feel free to:
 
-* Not use it.
-* Show me how to do it better.
+- Not use it.
+- Show me how to do it better.
 
-### Common Command line options
+## Common Command line options
 
-* `-fw` - Force processing of a domain with wildcard results.
-* `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
-* `-q` - disables banner/underline output.
-* `-t <threads>` - number of threads to run (default: `10`).
-* `-u <url/domain>` - full URL (including scheme), or base domain name.
-* `-v` - verbose output (show all results).
-* `-w <wordlist>` - path to the wordlist used for brute forcing.
+- `-fw` - Force processing of a domain with wildcard results.
+- `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
+- `-q` - disables banner/underline output.
+- `-t <threads>` - number of threads to run (default: `10`).
+- `-u <url/domain>` - full URL (including scheme), or base domain name.
+- `-v` - verbose output (show all results).
+- `-w <wordlist>` - path to the wordlist used for brute forcing.
 
-### Command line options for `dns` mode
+## Command line options for `dns` mode
 
-* `-cn` - show CNAME records (cannot be used with '-i' option).
-* `-i` - show all IP addresses for the result.
+- `-cn` - show CNAME records (cannot be used with '-i' option).
+- `-i` - show all IP addresses for the result.
 
-### Command line options for `dir` mode
+## Command line options for `dir` mode
 
-* `-a <user agent string>` - specify a user agent string to send in the request header.
-* `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
-* `-e` - specify extended mode that renders the full URL.
-* `-f` - append `/` for directory brute forces.
-* `-k` - Skip verification of SSL certificates.
-* `-l` - show the length of the response.
-* `-n` - "no status" mode, disables the output of the result's status code.
-* `-o <file>` - specify a file name to write the output to.
-* `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
-* `-r` - follow redirects.
-* `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
-* `-x <extensions>` - list of extensions to check for, if any.
-* `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
-* `-U <username>` - HTTP Authorization username (Basic Auth only).
+- `-a <user agent string>` - specify a user agent string to send in the request header.
+- `-c <http cookies>` - use this to specify any cookies that you might need (simulating auth).
+- `-e` - specify extended mode that renders the full URL.
+- `-f` - append `/` for directory brute forces.
+- `-k` - Skip verification of SSL certificates.
+- `-l` - show the length of the response.
+- `-n` - "no status" mode, disables the output of the result's status code.
+- `-o <file>` - specify a file name to write the output to.
+- `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
+- `-r` - follow redirects.
+- `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
+- `-x <extensions>` - list of extensions to check for, if any.
+- `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
+- `-U <username>` - HTTP Authorization username (Basic Auth only).
 
-### Building
+## Building
 
 Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
 
-#### Compiling
+### Compiling
+
 `gobuster` now has external dependencies, and so they need to be pulled in first:
+
+```shell
+go get && go build
 ```
-gobuster $ go get && go build
-```
+
 This will create a `gobuster` binary for you. If you want to install it in the `$GOPATH/bin` folder you can run:
-```
-gobuster $ go install
+
+```shell
+go install
 ```
 
-#### Running as a script
-```
-gobuster$ go run main.go <parameters>
+### Running as a script
+
+```shell
+go run main.go <parameters>
 ```
 
-### Wordlists via STDIN
+## Wordlists via STDIN
+
 Wordlists can be piped into `gobuster` via stdin:
-```
+
+```shell
 hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
 ```
+
 Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
 
-### Examples
+## Examples
 
-#### `dir` mode
+### `dir` mode
 
 Command line might look like this:
+
+```shell
+gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
 ```
-$ gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
-```
+
 Default options looks like this:
-```
-$ gobuster -u http://buffered.io/ -w words.txt
+
+```shell
+gobuster -u http://buffered.io/ -w words.txt
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -110,9 +120,11 @@ Gobuster v1.3                OJ Reeves (@TheColonial)
 /contact (Status: 301)
 =====================================================
 ```
+
 Default options with status codes disabled looks like this:
-```
-$ gobuster -u http://buffered.io/ -w words.txt -n
+
+```shell
+gobuster -u http://buffered.io/ -w words.txt -n
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -128,9 +140,11 @@ Gobuster v1.3                OJ Reeves (@TheColonial)
 /contact
 =====================================================
 ```
+
 Verbose output looks like this:
-```
-$ gobuster -u http://buffered.io/ -w words.txt -v
+
+```shell
+gobuster -u http://buffered.io/ -w words.txt -v
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -147,9 +161,11 @@ Found : /posts (Status: 301)
 Found : /contact (Status: 301)
 =====================================================
 ```
+
 Example showing content length:
-```
-$ gobuster -u http://buffered.io/ -w words.txt -l
+
+```shell
+gobuster -u http://buffered.io/ -w words.txt -l
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -165,23 +181,28 @@ Gobuster v1.3                OJ Reeves (@TheColonial)
 /index (Status: 200) [Size: 61481]
 =====================================================
 ```
+
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
-```
-$ gobuster -u http://buffered.io/ -w words.txt -q -n -e
+
+```shell
+gobuster -u http://buffered.io/ -w words.txt -q -n -e
 http://buffered.io/posts
 http://buffered.io/contact
 http://buffered.io/index
 ```
 
-#### `dns` mode
+### `dns` mode
 
 Command line might look like this:
+
+```shell
+gobuster -m dns -u mysite.com -t 50 -w common-names.txt
 ```
-$ gobuster -m dns -u mysite.com -t 50 -w common-names.txt
-```
+
 Normal sample run goes like this:
-```
-$ gobuster -m dns -w subdomains.txt -u google.com
+
+```shell
+gobuster -m dns -w subdomains.txt -u google.com
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -210,9 +231,11 @@ Found: cse.google.com
 Found: local.google.com
 =====================================================
 ```
+
 Show IP sample run goes like this:
-```
-$ gobuster -m dns -w subdomains.txt -u google.com -i
+
+```shell
+gobuster -m dns -w subdomains.txt -u google.com -i
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -242,9 +265,11 @@ Found: news.google.com [216.58.220.110, 2404:6800:4006:801::200e]
 Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
 =====================================================
 ```
+
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
-```
-$ gobuster -m dns -w subdomains.txt -u yp.to -i
+
+```shell
+gobuster -m dns -w subdomains.txt -u yp.to -i
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -257,9 +282,11 @@ Gobuster v1.3                OJ Reeves (@TheColonial)
 Found: cr.yp.to [131.155.70.11, 131.155.70.13]
 =====================================================
 ```
+
 Wildcard DNS is also detected properly:
-```
-$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
+
+```shell
+gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -272,9 +299,11 @@ Gobuster v1.3                OJ Reeves (@TheColonial)
 [-] To force processing of Wildcard DNS, specify the '-fw' switch.
 =====================================================
 ```
+
 If the user wants to force processing of a domain that has wildcard entries, use `-fw`:
-```
-$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
+
+```shell
+gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
 
 Gobuster v1.3                OJ Reeves (@TheColonial)
 =====================================================
@@ -289,10 +318,10 @@ Found: email.doesntexist.com
 =====================================================
 ```
 
-### License
+## License
 
 See the LICENSE file.
 
-### Thanks
+## Thanks
 
 See the THANKS file for people who helped out.

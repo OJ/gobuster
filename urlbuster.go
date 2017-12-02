@@ -34,9 +34,9 @@ func processURL(cfg *config, word string, brc chan<- busterResult) {
 	dirResp, dirSize := get(cfg, cfg.Url, word+suffix, cfg.Cookies)
 	if dirResp != nil {
 		brc <- busterResult{
-			Entity: word + suffix,
-			Status: *dirResp,
-			Size:   dirSize,
+			entity: word + suffix,
+			status: *dirResp,
+			size:   dirSize,
 		}
 	}
 
@@ -47,9 +47,9 @@ func processURL(cfg *config, word string, brc chan<- busterResult) {
 
 		if fileResp != nil {
 			brc <- busterResult{
-				Entity: file,
-				Status: *fileResp,
-				Size:   fileSize,
+				entity: file,
+				status: *fileResp,
+				size:   fileSize,
 			}
 		}
 	}

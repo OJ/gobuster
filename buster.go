@@ -19,10 +19,10 @@ import (
 // A single result which comes from an individual web
 // request.
 type busterResult struct {
-	Entity string
-	Status int
-	Extra  string
-	Size   *int64
+	entity string
+	status int
+	extra  string
+	size   *int64
 }
 
 // Small helper to combine URL with URI then make a

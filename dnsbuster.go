@@ -43,22 +43,22 @@ func processDNS(cfg *config, word string, brc chan<- busterResult) {
 	if err == nil {
 		if !cfg.IsWildcard || !cfg.WildcardIps.containsAny(ips) {
 			br := busterResult{
-				Entity: subdomain,
+				entity: subdomain,
 			}
 			if cfg.ShowIPs {
-				br.Extra = strings.Join(ips, ", ")
+				br.extra = strings.Join(ips, ", ")
 			} else if cfg.ShowCNAME {
 				cname, err := net.LookupCNAME(subdomain)
 				if err == nil {
-					br.Extra = cname
+					br.extra = cname
 				}
 			}
 			brc <- br
 		}
 	} else if cfg.Verbose {
 		br := busterResult{
-			Entity: subdomain,
-			Status: 404,
+			entity: subdomain,
+			status: 404,
 		}
 		brc <- br
 	}

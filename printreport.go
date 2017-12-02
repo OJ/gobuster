@@ -10,14 +10,14 @@ import (
 
 func printDnsResult(cfg *config, br *busterResult) {
 	output := ""
-	if br.Status == 404 {
-		output = fmt.Sprintf("Missing: %s\n", br.Entity)
+	if br.status == 404 {
+		output = fmt.Sprintf("Missing: %s\n", br.entity)
 	} else if cfg.ShowIPs {
-		output = fmt.Sprintf("Found: %s [%s]\n", br.Entity, br.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", br.entity, br.extra)
 	} else if cfg.ShowCNAME {
-		output = fmt.Sprintf("Found: %s [%s]\n", br.Entity, br.Extra)
+		output = fmt.Sprintf("Found: %s [%s]\n", br.entity, br.extra)
 	} else {
-		output = fmt.Sprintf("Found: %s\n", br.Entity)
+		output = fmt.Sprintf("Found: %s\n", br.entity)
 	}
 	fmt.Printf("%s", output)
 
@@ -31,27 +31,27 @@ func printDirResult(cfg *config, br *busterResult) {
 
 	// Prefix if we're in verbose mode
 	if cfg.Verbose {
-		if cfg.StatusCodes.contains(br.Status) {
+		if cfg.StatusCodes.contains(br.status) {
 			output = "Found : "
 		} else {
 			output = "Missed: "
 		}
 	}
 
-	if cfg.StatusCodes.contains(br.Status) || cfg.Verbose {
+	if cfg.StatusCodes.contains(br.status) || cfg.Verbose {
 		if cfg.Expanded {
 			output += cfg.Url
 		} else {
 			output += "/"
 		}
-		output += br.Entity
+		output += br.entity
 
 		if !cfg.NoStatus {
-			output += fmt.Sprintf(" (Status: %d)", br.Status)
+			output += fmt.Sprintf(" (Status: %d)", br.status)
 		}
 
-		if br.Size != nil {
-			output += fmt.Sprintf(" [Size: %d]", *br.Size)
+		if br.size != nil {
+			output += fmt.Sprintf(" [Size: %d]", *br.size)
 		}
 		output += "\n"
 

@@ -32,8 +32,8 @@ func get(cfg *config, url, uri, cookie string) (*int, *int64) {
 }
 
 // Make a request to the given URL.
-func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
-	req, err := http.NewRequest("GET", fullUrl, nil)
+func getResponse(cfg *config, fullURL, cookie string) (*int, *int64) {
+	req, err := http.NewRequest("GET", fullURL, nil)
 
 	if err != nil {
 		return nil, nil
@@ -73,7 +73,7 @@ func getResponse(cfg *config, fullUrl, cookie string) (*int, *int64) {
 		}
 	}()
 
-	var length *int64 = nil
+	var length *int64
 
 	if cfg.includeLength {
 		length = new(int64)
@@ -110,7 +110,7 @@ func runBuster(cfg *config) {
 
 	printConfig(cfg)
 
-	if cfg.setup(cfg) == false {
+	if !cfg.setup(cfg) {
 		printRuler(cfg)
 		return
 	}
@@ -170,15 +170,20 @@ func runBuster(cfg *config) {
 		if err != nil {
 			panic("Failed to open wordlist")
 		}
-		defer wordlist.Close()
+		defer func() {
+			if err := wordlist.Close(); err != nil {
+				log.Printf("[!] Problem closing word list: %v", err)
+			}
+		}()
 
 		// Lazy reading of the wordlist line by line
 		scanner = bufio.NewScanner(wordlist)
 	}
 
 	var outputFile *os.File
+	var err error
 	if cfg.outputFileName != "" {
-		outputFile, err := os.Create(cfg.outputFileName)
+		outputFile, err = os.Create(cfg.outputFileName)
 		if err != nil {
 			fmt.Printf("[!] Unable to write to %s, falling back to stdout.\n", cfg.outputFileName)
 			cfg.outputFileName = ""
@@ -205,7 +210,9 @@ func runBuster(cfg *config) {
 	close(resultChan)
 	printerGroup.Wait()
 	if cfg.outputFile != nil {
-		outputFile.Close()
+		if err := outputFile.Close(); err != nil {
+			log.Printf("[!] Problem closing %v: %v", outputFile.Name(), err)
+		}
 	}
 	printRuler(cfg)
 }

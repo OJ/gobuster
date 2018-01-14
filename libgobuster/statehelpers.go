@@ -19,8 +19,6 @@ package libgobuster
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"golang.org/x/crypto/ssh/terminal"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,6 +26,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/hashicorp/go-multierror"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func InitState() State {
@@ -195,7 +196,7 @@ func ValidateDirModeState(
 				},
 			}}
 
-		code, _ := GoGet(s, s.Url, "", s.Cookies)
+		code, _, _ := GoGet(s, s.Url, "", s.Cookies)
 		if code == nil {
 			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
 		}

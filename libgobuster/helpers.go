@@ -77,6 +77,10 @@ func ShowConfig(s *State) {
 				fmt.Printf("[+] Show length  : true\n")
 			}
 
+			if s.IncludeOptions {
+				fmt.Printf("[+] Show Methods : true\n")
+			}
+
 			if s.Username != "" {
 				fmt.Printf("[+] Auth User    : %s\n", s.Username)
 			}

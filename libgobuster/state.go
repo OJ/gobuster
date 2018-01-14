@@ -13,10 +13,11 @@ import (
 // A single result which comes from an individual web
 // request.
 type Result struct {
-	Entity string
-	Status int
-	Extra  string
-	Size   *int64
+	Entity  string
+	Status  int
+	Extra   string
+	Size    *int64
+	Options *[]string
 }
 
 type PrintResultFunc func(s *State, r *Result)
@@ -42,6 +43,7 @@ type State struct {
 	Extensions     []string
 	FollowRedirect bool
 	IncludeLength  bool
+	IncludeOptions bool
 	Mode           string
 	NoStatus       bool
 	Password       string

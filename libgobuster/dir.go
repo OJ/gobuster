@@ -105,7 +105,7 @@ func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
 }
 
 func SetupDir(s *State) bool {
-	guid := uuid.NewV4()
+	guid := uuid.Must(uuid.NewV4())
 	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
 
 	if s.StatusCodes.Contains(*wildcardResp) {

@@ -10,7 +10,7 @@ import (
 
 func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
-	guid := uuid.NewV4()
+	guid := uuid.Must(uuid.NewV4())
 	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
 	if err == nil {
 		s.IsWildcard = true

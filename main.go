@@ -53,7 +53,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.BoolVar(&s.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&s.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&s.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
-	flag.BoolVar(&s.IncludeOptions, "opt", false, "Include the possible HTTP methods in the output (dir mode only)")
+	flag.BoolVar(&s.IncludeOptions, "methods", false, "Include the possible HTTP methods in the output (dir mode only)")
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")

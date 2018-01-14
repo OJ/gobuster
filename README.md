@@ -55,6 +55,7 @@ Yes, you're probably correct. Feel free to:
 * `-k` - Skip verification of SSL certificates.
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
+* `-methods` Show HTTP methods support by the server at that URL. Good for exposing WebDAV support.
 * `-o <file>` - specify a file name to write the output to.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
 * `-r` - follow redirects.

@@ -1,11 +1,14 @@
 @0x42424242 - initial DNS support
+@0xdevalias - Refactoring of code, and lots of other stuff
+@Ne0nd0g - STDIN support for wordlists
+@UID1K - initial DNS wildcard check support
 @averagesecurityguy - quiet mode support
+@eur0pa - Compiler error fixes for updated dependencies
 @g0tmi1k - content length, wordlist and command line parsing fixes
 @gehaxelt - DIR mode UUID wildcard detection
+@ilyaglow - Refactoring and tidying of code
 @justinsteven - HTTP basic auth support
 @kevinnz - custom user agent support
 @knapsy - saving output to file, and CNAME resolution for DNS mode
 @rverton - CLI flag to skip SSL verification
 @viaMorgoth - base domain validation for DNS mode
-@UID1K - initial DNS wildcard check support
-@Ne0nd0g - STDIN support for wordlists

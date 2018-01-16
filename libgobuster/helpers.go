@@ -69,12 +69,6 @@ func ShowConfig(s *State) {
 				fmt.Printf("[+] Cookies      : %s\n", s.Cookies)
 			}
 
-			if s.RandomUserAgent && s.UserAgent == "" {
-				fmt.Printf("[+] Random user-agent picked.")
-			} else if s.RandomUserAgent && s.UserAgent != "" {
-				fmt.Println("[!] Both random User-Agent and User-Agent options defined. Using the provided User-Agent.")
-			}
-
 			if s.UserAgent != "" {
 				fmt.Printf("[+] User Agent   : %s\n", s.UserAgent)
 			}

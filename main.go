@@ -44,7 +44,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
-	flag.StringVar(&s.RandomUserAgent, "random-agent", "", "Set the User-Agent string to a random User-Agent (dir mode only)")
+	flag.BoolVar(&s.RandomUserAgent, "random-agent", false, "Set the User-Agent string to a random User-Agent (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.StringVar(&s.Suffix, "suffix", "", "Add a custom specific suffix to each directory request (dir mode only)")
 	flag.StringVar(&s.Prefix, "prefix", "", "Add a custom specific prefix to each directory request (dir mode only)")

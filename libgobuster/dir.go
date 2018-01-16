@@ -74,9 +74,7 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 			}
 		}
 		rand.Seed(time.Now().Unix())
-		s.UserAgent = uas[rand.Intn(len(uas))]
-	} else if s.RandomUserAgent && s.UserAgent != "" {
-		fmt.Println("[!] Both random User-Agent and User-Agent options defined. Using the provided User-Agent.")
+		req.Header.Set("User-Agent", uas[rand.Intn(len(uas))])
 	}
 
 	if s.Username != "" {

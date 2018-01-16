@@ -96,7 +96,7 @@ func ShowConfig(s *State) {
 			if s.Prefix != "" {
 				fmt.Printf("[+] Custom Prefix: %s\n", s.Prefix)
 			}
-
+      
 			if s.FollowRedirect {
 				fmt.Printf("[+] Follow Redir : true\n")
 			}

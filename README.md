@@ -1,5 +1,5 @@
-Gobuster v1.3 (OJ Reeves @TheColonial)
-======================================
+Gobuster v1.4.1 (OJ Reeves @TheColonial)
+========================================
 
 Gobuster is a tool used to brute-force:
 
@@ -53,7 +53,7 @@ Yes, you're probably correct. Feel free to:
 * `-n` - "no status" mode, disables the output of the result's status code.
 * `-o <file>` - specify a file name to write the output to.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
-* `-prefix <prefix>` - append a custom prefix for directory brute forces.
+* `-prefix <prefix>` - append a custom prefix for directory brute forces
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-suffix <suffix>` - append a custom suffix for directory brute forces.
@@ -99,7 +99,7 @@ Default options looks like this:
 ```
 $ gobuster -u http://buffered.io/ -w words.txt
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -116,7 +116,7 @@ Default options with status codes disabled looks like this:
 ```
 $ gobuster -u http://buffered.io/ -w words.txt -n
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -134,7 +134,7 @@ Verbose output looks like this:
 ```
 $ gobuster -u http://buffered.io/ -w words.txt -v
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -153,7 +153,7 @@ Example showing content length:
 ```
 $ gobuster -u http://buffered.io/ -w words.txt -l
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : http://buffered.io/
@@ -185,7 +185,7 @@ Normal sample run goes like this:
 ```
 $ gobuster -m dns -w subdomains.txt -u google.com
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -216,7 +216,7 @@ Show IP sample run goes like this:
 ```
 $ gobuster -m dns -w subdomains.txt -u google.com -i
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -248,7 +248,7 @@ Base domain validation warning when the base domain fails to resolve. This is a 
 ```
 $ gobuster -m dns -w subdomains.txt -u yp.to -i
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
@@ -263,7 +263,7 @@ Wildcard DNS is also detected properly:
 ```
 $ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : doesntexist.com
@@ -278,7 +278,7 @@ If the user wants to force processing of a domain that has wildcard entries, use
 ```
 $ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
 
-Gobuster v1.3                OJ Reeves (@TheColonial)
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : doesntexist.com

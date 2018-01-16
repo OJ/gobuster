@@ -136,6 +136,21 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 		}
 	}
 
+	if s.Placeholder != "" {
+
+		replacedURL := strings.Replace(s.Url, s.Placeholder, word, -1)
+		replacedURL = strings.TrimRight(replacedURL, "/") // halp! where does the trailing / come from?
+
+		dirResp, dirSize := GoGet(s, replacedURL, "", s.Cookies)
+		if dirResp != nil {
+			resultChan <- Result{
+				Entity: "(replaced " + s.Placeholder + " with " + word + ")",
+				Status: *dirResp,
+				Size:   dirSize,
+			}
+		}
+	}
+
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]

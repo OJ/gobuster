@@ -19,8 +19,6 @@ package libgobuster
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"golang.org/x/crypto/ssh/terminal"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,6 +26,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/hashicorp/go-multierror"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func InitState() State {
@@ -199,6 +200,11 @@ func ValidateDirModeState(
 		if code == nil {
 			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
 		}
+	}
+
+	// Ensure that a given placeholder exists in a URL
+	if s.Placeholder != "" && !strings.Contains(s.Url, s.Placeholder) {
+		errorList = multierror.Append(errorList, fmt.Errorf("[!] Placeholder given but not present in target URL"))
 	}
 
 	return errorList

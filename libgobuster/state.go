@@ -40,6 +40,7 @@ type State struct {
 	Cookies        string
 	Expanded       bool
 	Extensions     []string
+	Placeholder    string
 	FollowRedirect bool
 	IncludeLength  bool
 	Mode           string

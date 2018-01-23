@@ -28,6 +28,7 @@ import (
 func ParseCmdLine() *libgobuster.State {
 	var extensions string
 	var codes string
+	var negcodes string
 	var proxy string
 
 	s := libgobuster.InitState()
@@ -37,6 +38,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.StringVar(&s.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
+	flag.StringVar(&negcodes, "S", "", "Negative status codes (dir mode only) (can't be used with \"-s\") (overrides \"-s\")")
 	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
 	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
@@ -61,7 +63,7 @@ func ParseCmdLine() *libgobuster.State {
 
 	libgobuster.Banner(&s)
 
-	if err := libgobuster.ValidateState(&s, extensions, codes, proxy); err.ErrorOrNil() != nil {
+	if err := libgobuster.ValidateState(&s, extensions, codes, negcodes, proxy); err.ErrorOrNil() != nil {
 		fmt.Printf("%s\n", err.Error())
 		return nil
 	} else {

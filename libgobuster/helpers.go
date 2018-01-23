@@ -59,7 +59,11 @@ func ShowConfig(s *State) {
 		}
 
 		if s.Mode == "dir" {
-			fmt.Printf("[+] Status codes : %s\n", s.StatusCodes.Stringify())
+			if s.NegStatusCodes.Stringify() == "" {
+				fmt.Printf("[+] Status codes : %s\n", s.StatusCodes.Stringify())
+			} else {
+				fmt.Printf("[+] Negative status codes: %s\n", s.NegStatusCodes.Stringify())
+			}
 
 			if s.ProxyUrl != nil {
 				fmt.Printf("[+] Proxy        : %s\n", s.ProxyUrl)

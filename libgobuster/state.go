@@ -53,6 +53,7 @@ type State struct {
 	ShowIPs        bool
 	ShowCNAME      bool
 	StatusCodes    IntSet
+	NegStatusCodes    IntSet
 	Threads        int
 	Url            string
 	UseSlash       bool

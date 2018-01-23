@@ -55,6 +55,7 @@ Yes, you're probably correct. Feel free to:
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
+* `-S <status codes>` - comma-separated set of the list of status codes to be deemed to be a "negative" (no default; cannot be used with "-s"; overrides "-s")
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).

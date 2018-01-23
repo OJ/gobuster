@@ -108,16 +108,28 @@ func SetupDir(s *State) bool {
 	guid := uuid.Must(uuid.NewV4())
 	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
 
-	if s.StatusCodes.Contains(*wildcardResp) {
-		s.IsWildcard = true
-		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
-		if !s.WildcardForced {
-			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+	if s.NegStatusCodes.Stringify() == "" {
+		if s.StatusCodes.Contains(*wildcardResp) {
+			s.IsWildcard = true
+			fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+			if !s.WildcardForced {
+				fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+			}
+			return s.WildcardForced
 		}
-		return s.WildcardForced
+		return true
+	} else {
+		if !s.NegStatusCodes.Contains(*wildcardResp) {
+			s.IsWildcard = true
+			fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+			if !s.WildcardForced {
+				fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+			}
+			return s.WildcardForced
+		}
+		return true
 	}
 
-	return true
 }
 
 func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
@@ -156,34 +168,68 @@ func PrintDirResult(s *State, r *Result) {
 
 	// Prefix if we're in verbose mode
 	if s.Verbose {
-		if s.StatusCodes.Contains(r.Status) {
-			output = "Found : "
+		if s.NegStatusCodes.Stringify() == "" {
+			if s.StatusCodes.Contains(r.Status) {
+				output = "Found : "
+			} else {
+				output = "Missed: "
+			}
 		} else {
-			output = "Missed: "
+			if !s.NegStatusCodes.Contains(r.Status) {
+				output = "Found : "
+			} else {
+				output = "Missed: "
+			}
 		}
 	}
 
-	if s.StatusCodes.Contains(r.Status) || s.Verbose {
-		if s.Expanded {
-			output += s.Url
-		} else {
-			output += "/"
+	if s.NegStatusCodes.Stringify() == "" {
+		if s.StatusCodes.Contains(r.Status) || s.Verbose {
+			if s.Expanded {
+				output += s.Url
+			} else {
+				output += "/"
+			}
+			output += r.Entity
+
+			if !s.NoStatus {
+				output += fmt.Sprintf(" (Status: %d)", r.Status)
+			}
+
+			if r.Size != nil {
+				output += fmt.Sprintf(" [Size: %d]", *r.Size)
+			}
+			output += "\n"
+
+			fmt.Printf(output)
+
+			if s.OutputFile != nil {
+				WriteToFile(output, s)
+			}
 		}
-		output += r.Entity
+	} else {
+		if !s.NegStatusCodes.Contains(r.Status) || s.Verbose {
+			if s.Expanded {
+				output += s.Url
+			} else {
+				output += "/"
+			}
+			output += r.Entity
 
-		if !s.NoStatus {
-			output += fmt.Sprintf(" (Status: %d)", r.Status)
-		}
+			if !s.NoStatus {
+				output += fmt.Sprintf(" (Status: %d)", r.Status)
+			}
 
-		if r.Size != nil {
-			output += fmt.Sprintf(" [Size: %d]", *r.Size)
-		}
-		output += "\n"
+			if r.Size != nil {
+				output += fmt.Sprintf(" [Size: %d]", *r.Size)
+			}
+			output += "\n"
 
-		fmt.Printf(output)
+			fmt.Printf(output)
 
-		if s.OutputFile != nil {
-			WriteToFile(output, s)
+			if s.OutputFile != nil {
+				WriteToFile(output, s)
+			}
 		}
 	}
 }

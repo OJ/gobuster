@@ -33,6 +33,7 @@ import (
 func InitState() State {
 	return State{
 		StatusCodes: IntSet{Set: map[int]bool{}},
+		NegStatusCodes: IntSet{Set: map[int]bool{}},
 		WildcardIps: StringSet{Set: map[string]bool{}},
 		IsWildcard:  false,
 		StdIn:       false,
@@ -43,6 +44,7 @@ func ValidateState(
 	s *State,
 	extensions string,
 	codes string,
+	negcodes string,
 	proxy string) *multierror.Error {
 
 	var errorList *multierror.Error
@@ -86,7 +88,7 @@ func ValidateState(
 	}
 
 	if s.Mode == "dir" {
-		if err := ValidateDirModeState(s, extensions, codes, proxy, errorList); err.ErrorOrNil() != nil {
+		if err := ValidateDirModeState(s, extensions, codes, negcodes, proxy, errorList); err.ErrorOrNil() != nil {
 			errorList = err
 		}
 	}
@@ -98,6 +100,7 @@ func ValidateDirModeState(
 	s *State,
 	extensions string,
 	codes string,
+	negcodes string,
 	proxy string,
 	previousErrors *multierror.Error) *multierror.Error {
 
@@ -138,6 +141,19 @@ func ValidateDirModeState(
 		for i := range s.Extensions {
 			if s.Extensions[i][0] != '.' {
 				s.Extensions[i] = "." + s.Extensions[i]
+			}
+		}
+	}
+
+	// negative status codes are comma separated. Negative status codes override positive status codes
+	if negcodes != "" {
+		codes = ""
+		for _, c := range strings.Split(negcodes, ",") {
+			i, err := strconv.Atoi(c)
+			if err != nil {
+				errorList = multierror.Append(errorList, fmt.Errorf("[!] Invalid (negative) status code given: %s", c))
+			} else {
+				s.NegStatusCodes.Add(i)
 			}
 		}
 	}

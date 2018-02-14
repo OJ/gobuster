@@ -46,11 +46,11 @@ func (rh *RedirectHandler) RoundTrip(req *http.Request) (resp *http.Response, er
 }
 
 // Make a request to the given URL.
-func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
+func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64, error) {
 	req, err := http.NewRequest("GET", fullUrl, nil)
 
 	if err != nil {
-		return nil, nil
+		return nil, nil, err
 	}
 
 	if cookie != "" {
@@ -64,7 +64,7 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	if s.RandomUserAgent && s.UserAgent == "" {
 		b, err := ioutil.ReadFile(s.UserAgentsFile)
 		if err != nil {
-			return nil, nil
+			return nil, nil, err
 		}
 		lines := strings.Split(string(b), "\n")
 		var uas []string
@@ -91,10 +91,10 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 			}
 
 			if re, ok := ue.Err.(*RedirectError); ok {
-				return &re.StatusCode, nil
+				return &re.StatusCode, nil, err
 			}
 		}
-		return nil, nil
+		return nil, nil, err
 	}
 
 	defer resp.Body.Close()
@@ -113,18 +113,19 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 		}
 	}
 
-	return &resp.StatusCode, length
+	return &resp.StatusCode, length, nil
 }
 
 // Small helper to combine URL with URI then make a
 // request to the generated location.
-func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
+func GoGet(s *State, url, uri, cookie string) (*int, *int64, error) {
 	return MakeRequest(s, url+uri, cookie)
 }
 
 func SetupDir(s *State) bool {
 	guid := uuid.Must(uuid.NewV4())
-	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+	// TODO: Error propagation handling
+	wildcardResp, _, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
 
 	if s.StatusCodes.Contains(*wildcardResp) {
 		s.IsWildcard = true
@@ -152,7 +153,8 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	}
 
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s, s.Url, prefix+word+suffix, s.Cookies)
+	// TODO: Error propagation handling
+	dirResp, dirSize, _ := GoGet(s, s.Url, prefix+word+suffix, s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
 			Entity: prefix + word + suffix,
@@ -164,7 +166,8 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
 		file := word + s.Extensions[ext]
-		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+		// TODO: Error propagation handling
+		fileResp, fileSize, _ := GoGet(s, s.Url, file, s.Cookies)
 
 		if fileResp != nil {
 			resultChan <- Result{

@@ -59,6 +59,7 @@ type State struct {
 	Url             string
 	UseSlash        bool
 	UserAgent       string
+	UserAgentsFile  string
 	RandomUserAgent bool
 	Username        string
 	Verbose         bool

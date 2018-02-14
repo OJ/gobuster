@@ -69,6 +69,10 @@ func ShowConfig(s *State) {
 				fmt.Printf("[+] Cookies      : %s\n", s.Cookies)
 			}
 
+			if s.RandomUserAgent {
+				fmt.Printf("[+] Random User Agent from : %s\n", s.UserAgentsFile)
+			}
+
 			if s.UserAgent != "" {
 				fmt.Printf("[+] User Agent   : %s\n", s.UserAgent)
 			}
@@ -96,7 +100,7 @@ func ShowConfig(s *State) {
 			if s.Prefix != "" {
 				fmt.Printf("[+] Custom Prefix: %s\n", s.Prefix)
 			}
-      
+
 			if s.FollowRedirect {
 				fmt.Printf("[+] Follow Redir : true\n")
 			}

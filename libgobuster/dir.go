@@ -62,9 +62,9 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 	}
 
 	if s.RandomUserAgent && s.UserAgent == "" {
-		b, err := ioutil.ReadFile("user-agents.txt")
+		b, err := ioutil.ReadFile(s.UserAgentsFile)
 		if err != nil {
-			fmt.Print(err)
+			return nil, nil
 		}
 		lines := strings.Split(string(b), "\n")
 		var uas []string

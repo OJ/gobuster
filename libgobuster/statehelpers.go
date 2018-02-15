@@ -196,7 +196,11 @@ func ValidateDirModeState(
 			}}
 
 		// TODO: Error propagation handling
-		code, _, _ := GoGet(s, s.Url, "", s.Cookies)
+		code, _, err := GoGet(s, s.Url, "", s.Cookies)
+		if err != nil {
+			errorList = multierror.Append(errorList, err)
+		}
+
 		if code == nil {
 			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
 		}

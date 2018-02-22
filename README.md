@@ -55,6 +55,7 @@ Yes, you're probably correct. Feel free to:
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
 * `-prefix <prefix>` - append a custom prefix for directory brute forces
 * `-r` - follow redirects.
+* `-random-agent` - use a random user agent string to send in the request header.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).
 * `-suffix <suffix>` - append a custom suffix for directory brute forces.
 * `-x <extensions>` - list of extensions to check for, if any.

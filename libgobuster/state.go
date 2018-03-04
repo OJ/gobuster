@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// A single result which comes from an individual web
+// Result ...A single result which comes from an individual web
 // request.
 type Result struct {
 	Entity string
@@ -19,27 +19,33 @@ type Result struct {
 	Size   *int64
 }
 
+// PrintResultFunc ...
 type PrintResultFunc func(s *State, r *Result)
+// ProcessorFunc ...
 type ProcessorFunc func(s *State, entity string, resultChan chan<- Result)
+// SetupFunc ...
 type SetupFunc func(s *State) bool
 
-// Shim type for "set" containing ints
+// IntSet ... Shim type for "set" containing ints
 type IntSet struct {
 	Set map[int]bool
 }
 
-// Shim type for "set" containing strings
+// StringSet ... Shim type for "set" containing strings
 type StringSet struct {
 	Set map[string]bool
 }
 
-// Contains State that are read in from the command
+// State ... Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
+	Body	       string
 	Client         *http.Client
 	Cookies        string
+	ContentType    string
 	Expanded       bool
 	Extensions     []string
+	Headers		   string
 	FollowRedirect bool
 	IncludeLength  bool
 	Mode           string
@@ -47,14 +53,15 @@ type State struct {
 	Password       string
 	Printer        PrintResultFunc
 	Processor      ProcessorFunc
-	ProxyUrl       *url.URL
+	ProxyURL       *url.URL
 	Quiet          bool
+	Request		   *http.Request
 	Setup          SetupFunc
 	ShowIPs        bool
 	ShowCNAME      bool
 	StatusCodes    IntSet
 	Threads        int
-	Url            string
+	URL            string
 	UseSlash       bool
 	UserAgent      string
 	Username       string
@@ -69,6 +76,7 @@ type State struct {
 	Terminate      bool
 	StdIn          bool
 	InsecureSSL    bool
+	Verb           string
 }
 
 // Process the busting of the website with the given
@@ -77,7 +85,7 @@ func Process(s *State) {
 
 	ShowConfig(s)
 
-	if s.Setup(s) == false {
+	if !s.Setup(s) {
 		Ruler(s)
 		return
 	}

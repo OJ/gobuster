@@ -19,7 +19,7 @@ package libgobuster
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
+	"go-multierror"
 	"golang.org/x/crypto/ssh/terminal"
 	"net/http"
 	"net/url"
@@ -30,6 +30,7 @@ import (
 	"syscall"
 )
 
+// InitState ...
 func InitState() State {
 	return State{
 		StatusCodes: IntSet{Set: map[int]bool{}},
@@ -39,6 +40,34 @@ func InitState() State {
 	}
 }
 
+// ValidVerb ...
+func ValidVerb(verb string) bool {
+	switch verb {
+    case
+        "GET",
+        "POST":
+        return true
+    default:
+    	return false
+    }
+}
+
+// ValidHeaders ...
+func ValidHeaders(headers string) bool {
+	if headers == "" {
+		return true
+	}
+    headerSet := strings.Split(headers, "|")
+    for i := range headerSet {
+		headerPair := strings.Split(headerSet[i], ": ")
+		if len(headerPair) != 2 {
+			return false
+		}
+    }
+    return true
+}
+
+// ValidateState ...
 func ValidateState(
 	s *State,
 	extensions string,
@@ -53,9 +82,9 @@ func ValidateState(
 		s.Processor = ProcessDirEntry
 		s.Setup = SetupDir
 	case "dns":
-		s.Printer = PrintDnsResult
-		s.Processor = ProcessDnsEntry
-		s.Setup = SetupDns
+		s.Printer = PrintDNSResult
+		s.Processor = ProcessDNSEntry
+		s.Setup = SetupDNS
 	default:
 		errorList = multierror.Append(errorList, fmt.Errorf("[!] Mode (-m): Invalid value: %s", s.Mode))
 	}
@@ -78,15 +107,15 @@ func ValidateState(
 			errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w): File does not exist: %s", s.Wordlist))
 		}
 	} else if s.Wordlist != "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!"))
+		errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w) specified with pipe from stdin. Can't have both"))
 	}
 
-	if s.Url == "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Must be specified"))
+	if s.URL == "" {
+		errorList = multierror.Append(errorList, fmt.Errorf("[!] URL/Domain (-u): Must be specified"))
 	}
 
 	if s.Mode == "dir" {
-		if err := ValidateDirModeState(s, extensions, codes, proxy, errorList); err.ErrorOrNil() != nil {
+		if err := validateDirModeState(s, extensions, codes, proxy, errorList); err.ErrorOrNil() != nil {
 			errorList = err
 		}
 	}
@@ -94,7 +123,7 @@ func ValidateState(
 	return errorList
 }
 
-func ValidateDirModeState(
+func validateDirModeState(
 	s *State,
 	extensions string,
 	codes string,
@@ -108,29 +137,46 @@ func ValidateDirModeState(
 		errorList = multierror.Append(errorList, previousErrors)
 	}
 
-	if strings.HasSuffix(s.Url, "/") == false {
-		s.Url = s.Url + "/"
+	if !strings.HasSuffix(s.URL, "/") {
+		s.URL = s.URL + "/"
 	}
 
-	if strings.HasPrefix(s.Url, "http") == false {
+	if !strings.HasPrefix(s.URL, "http") {
 		// check to see if a port was specified
 		re := regexp.MustCompile(`^[^/]+:(\d+)`)
-		match := re.FindStringSubmatch(s.Url)
+		match := re.FindStringSubmatch(s.URL)
 
 		if len(match) < 2 {
 			// no port, default to http on 80
-			s.Url = "http://" + s.Url
+			s.URL = "http://" + s.URL
 		} else {
 			port, err := strconv.Atoi(match[1])
 			if err != nil || (port != 80 && port != 443) {
-				errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Scheme not specified."))
+				errorList = multierror.Append(errorList, fmt.Errorf("[!] URL/Domain (-u): Scheme not specified"))
 			} else if port == 80 {
-				s.Url = "http://" + s.Url
+				s.URL = "http://" + s.URL
 			} else {
-				s.Url = "https://" + s.Url
+				s.URL = "https://" + s.URL
 			}
 		}
 	}
+
+
+   if !ValidVerb(s.Verb) {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Verb (-X): Invalid value: %s", s.Verb))
+    }
+
+    if !ValidHeaders(s.Headers) {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Headers (-H): Invalid value: %s", s.Headers))
+    }
+
+    if s.Verb == "GET" && s.Body != "" {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Body (-b): GET request has no body"))
+    }
+
+    if s.Verb == "GET" && s.ContentType != "" {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Content-Type (-ct): GET request has no Content-Type"))
+    }
 
 	// extensions are comma separated
 	if extensions != "" {
@@ -157,7 +203,7 @@ func ValidateDirModeState(
 	// prompt for password if needed
 	if errorList.ErrorOrNil() == nil && s.Username != "" && s.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
-		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		passBytes, err := terminal.ReadPassword(syscall.Stdin)
 
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
@@ -171,33 +217,32 @@ func ValidateDirModeState(
 	}
 
 	if errorList.ErrorOrNil() == nil {
-		var proxyUrlFunc func(*http.Request) (*url.URL, error)
-		proxyUrlFunc = http.ProxyFromEnvironment
+		var proxyURLFunc = http.ProxyFromEnvironment
 
 		if proxy != "" {
-			proxyUrl, err := url.Parse(proxy)
+			proxyURL, err := url.Parse(proxy)
 			if err != nil {
 				errorList = multierror.Append(errorList, fmt.Errorf("[!] Proxy URL is invalid"))
 				panic("[!] Proxy URL is invalid") // TODO: Does this need to be a panic? Could be a standard error?
 			}
-			s.ProxyUrl = proxyUrl
-			proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+			s.ProxyURL = proxyURL
+			proxyURLFunc = http.ProxyURL(s.ProxyURL)
 		}
 
 		s.Client = &http.Client{
 			Transport: &RedirectHandler{
 				State: s,
 				Transport: &http.Transport{
-					Proxy: proxyUrlFunc,
+					Proxy: proxyURLFunc,
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: s.InsecureSSL,
 					},
 				},
 			}}
 
-		code, _ := GoGet(s, s.Url, "", s.Cookies)
+		code, _ := GoGet(s, s.URL, "", s.Cookies)
 		if code == nil {
-			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
+			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.URL))
 		}
 	}
 

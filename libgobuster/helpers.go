@@ -8,11 +8,12 @@ import (
 	"strings"
 )
 
+// PrepareSignalHandler ... Set up a SIGINT handler
 func PrepareSignalHandler(s *State) {
 	s.SignalChan = make(chan os.Signal, 1)
 	signal.Notify(s.SignalChan, os.Interrupt)
 	go func() {
-		for _ = range s.SignalChan {
+		for range s.SignalChan {
 			// caught CTRL+C
 			if !s.Quiet {
 				fmt.Println("[!] Keyboard interrupt detected, terminating.")
@@ -22,12 +23,14 @@ func PrepareSignalHandler(s *State) {
 	}()
 }
 
+// Ruler ... Perform advanced screen I/O :>
 func Ruler(s *State) {
 	if !s.Quiet {
 		fmt.Println("=====================================================")
 	}
 }
 
+// Banner ... Print the Gobuster banner to the screen
 func Banner(s *State) {
 	if s.Quiet {
 		return
@@ -38,6 +41,7 @@ func Banner(s *State) {
 	Ruler(s)
 }
 
+// ShowConfig ... Print the state to the screen
 func ShowConfig(s *State) {
 	if s.Quiet {
 		return
@@ -45,7 +49,7 @@ func ShowConfig(s *State) {
 
 	if s != nil {
 		fmt.Printf("[+] Mode         : %s\n", s.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", s.Url)
+		fmt.Printf("[+] URL/Domain   : %s\n", s.URL)
 		fmt.Printf("[+] Threads      : %d\n", s.Threads)
 
 		wordlist := "stdin (pipe)"
@@ -61,8 +65,8 @@ func ShowConfig(s *State) {
 		if s.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", s.StatusCodes.Stringify())
 
-			if s.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", s.ProxyUrl)
+			if s.ProxyURL != nil {
+				fmt.Printf("[+] Proxy        : %s\n", s.ProxyURL)
 			}
 
 			if s.Cookies != "" {
@@ -110,27 +114,27 @@ func ShowConfig(s *State) {
 	}
 }
 
-// Add an element to a set
+// Add ... Add an element to a set
 func (set *StringSet) Add(s string) bool {
 	_, found := set.Set[s]
 	set.Set[s] = true
 	return !found
 }
 
-// Add a list of elements to a set
+// AddRange ... Add a list of elements to a set
 func (set *StringSet) AddRange(ss []string) {
 	for _, s := range ss {
 		set.Set[s] = true
 	}
 }
 
-// Test if an element is in a set
+// Contains ... Test if an element is in a set
 func (set *StringSet) Contains(s string) bool {
 	_, found := set.Set[s]
 	return found
 }
 
-// Check if any of the elements exist
+// ContainsAny ... Check if any of the elements exist
 func (set *StringSet) ContainsAny(ss []string) bool {
 	for _, s := range ss {
 		if set.Set[s] {
@@ -140,32 +144,32 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 	return false
 }
 
-// Stringify the set
+// Stringify ... Stringify the set
 func (set *StringSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.Set {
+	for s := range set.Set {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
 }
 
-// Add an element to a set
+// Add ... Add an element to a set
 func (set *IntSet) Add(i int) bool {
 	_, found := set.Set[i]
 	set.Set[i] = true
 	return !found
 }
 
-// Test if an element is in a set
+// Contains ... Test if an element is in a set
 func (set *IntSet) Contains(i int) bool {
 	_, found := set.Set[i]
 	return found
 }
 
-// Stringify the set
+// Stringify ... Stringify the set
 func (set *IntSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.Set {
+	for s := range set.Set {
 		values = append(values, strconv.Itoa(s))
 	}
 	return strings.Join(values, ",")

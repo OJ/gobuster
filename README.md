@@ -26,6 +26,7 @@ Yes, you're probably correct. Feel free to:
 
 * Not use it.
 * Show me how to do it better.
+* The code has been gometalint'd as of 3/4/2018 so calm down :>
 
 ### Common Command line options
 
@@ -58,6 +59,10 @@ Yes, you're probably correct. Feel free to:
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
+* `-H <header1: value|header2: value|header3: value` - HTTP headers to add to the request
+* `-X <verb>` - Verb to use instead of GET (GET, POST are supported, default is GET)
+* `-b <body string>` - String to use as the POST body. Use $'xxx' in the shell for best results
+* `-ct <content type>` - Content-Type header value for POST requests, i.e. application/json
 
 ### Building
 
@@ -128,6 +133,26 @@ Gobuster v1.4.1              OJ Reeves (@TheColonial)
 /contact
 =====================================================
 ```
+
+Calling a JSON API would look like this:
+```
+$ ./gobuster.git -u http://localhost/api/v1/ -X POST -b '{"test": "test"}' -w api-method-wordlist.txt -ct application/json
+
+Gobuster v1.4.1              OJ Reeves (@TheColonial)
+=====================================================
+=====================================================
+[+] Mode         : dir
+[+] URL/Domain   : http://localhost/api/vi/
+[+] Threads      : 10
+[+] Wordlist     : ../raft-medium-directories.txt
+[+] Status codes : 302,307,200,204,301
+=====================================================
+=====================================================
+/api/v1/login
+...
+$
+```
+
 Verbose output looks like this:
 ```
 $ gobuster -u http://buffered.io/ -w words.txt -v

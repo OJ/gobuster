@@ -12,3 +12,4 @@
 @knapsy - saving output to file, and CNAME resolution for DNS mode
 @rverton - CLI flag to skip SSL verification
 @viaMorgoth - base domain validation for DNS mode
+@mzpqnxow - extensive linting, arbitrary headers, arbitrary verbs, HTTP body, ...

@@ -60,9 +60,9 @@ Yes, you're probably correct. Feel free to:
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
 * `-H <header1: value|header2: value|header3: value` - HTTP headers to add to the request
-* `-X <verb>` - Verb to use instead of GET (GET, POST are supported, default is GET)
-* `-b <body string>` - String to use as the POST body. Use $'xxx' in the shell for best results
-* `-ct <content type>` - Content-Type header value for POST requests, i.e. application/json
+* `-X <verb>` - Verb to use instead of GET (GET, POST, OPTIONS, PUT are supported, default is GET)
+* `-b <body string>` - String to use as the POST, PUT body. Use $'xxx' in the shell for best results
+* `-ct <content type>` - Content-Type header value for POST, PUT requests, i.e. application/json
 
 ### Building
 

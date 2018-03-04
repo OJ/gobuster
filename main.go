@@ -46,7 +46,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
 	flag.StringVar(&s.ContentType, "ct", "", "Default Content-Type for POST requests")
-	flag.StringVar(&s.Verb, "X", "GET", "Verb to use instead of GET (GET, POST are valid)")
+	flag.StringVar(&s.Verb, "X", "GET", "Verb to use instead of GET (GET, POST, PUT) are valid)")
 	flag.StringVar(&s.Body, "b", "", "Content of POST body, i.e. '{}' for Application/JSON")
 	flag.StringVar(&s.Headers, "H", "", "List of arbitrary headers to supply, separated by '|' characters")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")

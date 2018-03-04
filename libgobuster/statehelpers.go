@@ -44,7 +44,9 @@ func InitState() State {
 func ValidVerb(verb string) bool {
 	switch verb {
     case
+    	"OPTIONS",
         "GET",
+        "PUT",
         "POST":
         return true
     default:
@@ -170,12 +172,12 @@ func validateDirModeState(
     	errorList = multierror.Append(errorList, fmt.Errorf("[!] Headers (-H): Invalid value: %s", s.Headers))
     }
 
-    if s.Verb == "GET" && s.Body != "" {
-    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Body (-b): GET request has no body"))
+    if (s.Verb == "GET" || s.Verb == "OPTIONS") && s.Body != "" {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Body (-b): GET and OPTIONS requests have no body"))
     }
 
-    if s.Verb == "GET" && s.ContentType != "" {
-    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Content-Type (-ct): GET request has no Content-Type"))
+    if (s.Verb == "GET" || s.Verb == "OPTIONS") && s.ContentType != "" {
+    	errorList = multierror.Append(errorList, fmt.Errorf("[!] Content-Type (-ct): GET and OPTIONS requests have no Content-Type"))
     }
 
 	// extensions are comma separated

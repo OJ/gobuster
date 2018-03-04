@@ -24,3 +24,6 @@ _testmain.go
 *.prof
 *.txt
 *.swp
+
+# The executable, if it has been built
+gobuster

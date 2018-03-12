@@ -62,19 +62,8 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64, error) {
 	}
 
 	if s.RandomUserAgent && s.UserAgent == "" {
-		b, err := ioutil.ReadFile(s.UserAgentsFile)
-		if err != nil {
-			return nil, nil, err
-		}
-		lines := strings.Split(string(b), "\n")
-		var uas []string
-		for _, line := range lines {
-			if !strings.HasPrefix(line, "#") && len(line) > 0 {
-				uas = append(uas, line)
-			}
-		}
 		rand.Seed(time.Now().Unix())
-		req.Header.Set("User-Agent", uas[rand.Intn(len(uas))])
+		req.Header.Set("User-Agent", s.UserAgentsList[rand.Intn(len(s.UserAgentsList))])
 	}
 
 	if s.Username != "" {
@@ -159,7 +148,7 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 	// TODO: Error propagation handling
 	dirResp, dirSize, err := GoGet(s, s.Url, prefix+word+suffix, s.Cookies)
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 	if dirResp != nil {
 		resultChan <- Result{

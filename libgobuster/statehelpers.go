@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -168,6 +169,22 @@ func ValidateDirModeState(
 		} else {
 			errorList = multierror.Append(errorList, fmt.Errorf("[!] Auth username given but reading of password failed"))
 		}
+	}
+
+	// Read the user agents file
+	if errorList.ErrorOrNil() == nil && s.RandomUserAgent {
+		b, err := ioutil.ReadFile(s.UserAgentsFile)
+		if err != nil {
+			errorList = multierror.Append(errorList, fmt.Errorf("[!] Error when reading the User-Agents file"))
+		}
+		lines := strings.Split(string(b), "\n")
+		var uas []string
+		for _, line := range lines {
+			if !strings.HasPrefix(line, "#") && len(line) > 0 {
+				uas = append(uas, line)
+			}
+		}
+		s.UserAgentsList = uas
 	}
 
 	if errorList.ErrorOrNil() == nil {

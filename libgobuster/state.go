@@ -60,6 +60,7 @@ type State struct {
 	UseSlash        bool
 	UserAgent       string
 	UserAgentsFile  string
+	UserAgentsList  []string
 	RandomUserAgent bool
 	Username        string
 	Verbose         bool

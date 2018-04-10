@@ -56,6 +56,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.BoolVar(&s.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&s.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&s.InsecureSSL, "k", false, "Skip SSL certificate verification")
+	flag.BoolVar(&s.ExpandRanges, "xr", false, "Expand words in wordlist that contain range patterns")
 
 	flag.Parse()
 

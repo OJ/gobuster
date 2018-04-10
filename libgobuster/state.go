@@ -69,6 +69,7 @@ type State struct {
 	Terminate      bool
 	StdIn          bool
 	InsecureSSL    bool
+	ExpandRanges   bool
 }
 
 // Process the busting of the website with the given
@@ -107,8 +108,16 @@ func Process(s *State) {
 					break
 				}
 
-				// Mode-specific processing
-				s.Processor(s, word, resultChan)
+				if s.ExpandRanges == true {
+					parts := ParseTokens(word)
+					for _, expandedWord := range ExpandWords(parts) {
+						s.Processor(s, expandedWord, resultChan)
+					}
+
+				} else {
+					// Mode-specific processing
+					s.Processor(s, word, resultChan)
+				}
 			}
 
 			// Indicate to the wait group that the thread

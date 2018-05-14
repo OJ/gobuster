@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // A single result which comes from an individual web
@@ -36,39 +37,42 @@ type StringSet struct {
 // Contains State that are read in from the command
 // line when the program is invoked.
 type State struct {
-	Client         *http.Client
-	Cookies        string
-	Expanded       bool
-	Extensions     []string
-	FollowRedirect bool
-	IncludeLength  bool
-	Mode           string
-	NoStatus       bool
-	Password       string
-	Printer        PrintResultFunc
-	Processor      ProcessorFunc
-	ProxyUrl       *url.URL
-	Quiet          bool
-	Setup          SetupFunc
-	ShowIPs        bool
-	ShowCNAME      bool
-	StatusCodes    IntSet
-	Threads        int
-	Url            string
-	UseSlash       bool
-	UserAgent      string
-	Username       string
-	Verbose        bool
-	Wordlist       string
-	OutputFileName string
-	OutputFile     *os.File
-	IsWildcard     bool
-	WildcardForced bool
-	WildcardIps    StringSet
-	SignalChan     chan os.Signal
-	Terminate      bool
-	StdIn          bool
-	InsecureSSL    bool
+	Client           *http.Client
+	Cookies          string
+	Expanded         bool
+	Extensions       []string
+	FollowRedirect   bool
+	IncludeLength    bool
+	Mode             string
+	NoStatus         bool
+	Password         string
+	Printer          PrintResultFunc
+	Processor        ProcessorFunc
+	ProxyURL         *url.URL
+	Quiet            bool
+	Setup            SetupFunc
+	ShowIPs          bool
+	ShowCNAME        bool
+	StatusCodes      IntSet
+	Threads          int
+	URL              string
+	UseSlash         bool
+	UserAgent        string
+	Username         string
+	Verbose          bool
+	Wordlist         string
+	OutputFileName   string
+	OutputFile       *os.File
+	IsWildcard       bool
+	WildcardForced   bool
+	WildcardIps      StringSet
+	SignalChan       chan os.Signal
+	Terminate        bool
+	StdIn            bool
+	InsecureSSL      bool
+	WordlistSize     int
+	WordlistPosition int
+	Mu               sync.RWMutex
 }
 
 // Process the busting of the website with the given
@@ -87,6 +91,7 @@ func Process(s *State) {
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
 	resultChan := make(chan Result)
+	quitChan := make(chan int)
 
 	// Use a wait group for waiting for all threads
 	// to finish
@@ -120,10 +125,19 @@ func Process(s *State) {
 	// Single goroutine which handles the results as they
 	// appear from the worker threads.
 	go func() {
-		for r := range resultChan {
-			s.Printer(s, &r)
+		tick := time.Tick(1 * time.Second)
+		defer printerGroup.Done()
+		for {
+			select {
+			case <-quitChan:
+				s.printStatus(true)
+				return
+			case r := <-resultChan:
+				s.Printer(s, &r)
+			case <-tick:
+				s.printStatus(false)
+			}
 		}
-		printerGroup.Done()
 	}()
 
 	var scanner *bufio.Scanner
@@ -138,6 +152,18 @@ func Process(s *State) {
 			panic("Failed to open wordlist")
 		}
 		defer wordlist.Close()
+
+		lines, err := lineCounter(wordlist)
+		if err != nil {
+			panic("Failed to get number of lines")
+		}
+		s.WordlistSize = lines
+
+		// rewind wordlist
+		_, err = wordlist.Seek(0, 0)
+		if err != nil {
+			panic("Failed to rewind wordlist")
+		}
 
 		// Lazy reading of the wordlist line by line
 		scanner = bufio.NewScanner(wordlist)
@@ -170,9 +196,19 @@ func Process(s *State) {
 	close(wordChan)
 	processorGroup.Wait()
 	close(resultChan)
+	close(quitChan)
 	printerGroup.Wait()
 	if s.OutputFile != nil {
 		outputFile.Close()
 	}
 	Ruler(s)
+}
+
+func (s *State) printStatus(newline bool) {
+	s.Mu.RLock()
+	fmt.Printf("\rStatus: %d / %d", s.WordlistPosition, s.WordlistSize)
+	if newline {
+		fmt.Println()
+	}
+	s.Mu.RUnlock()
 }

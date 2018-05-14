@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -101,16 +102,16 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 // Small helper to combine URL with URI then make a
 // request to the generated location.
 func GoGet(s *State, url, uri, cookie string) (*int, *int64) {
-	return MakeRequest(s, url+uri, cookie)
+	return MakeRequest(s, fmt.Sprintf("%s%s", url, uri), cookie)
 }
 
 func SetupDir(s *State) bool {
 	guid := uuid.Must(uuid.NewV4())
-	wildcardResp, _ := GoGet(s, s.Url, fmt.Sprintf("%s", guid), s.Cookies)
+	wildcardResp, _ := GoGet(s, s.URL, fmt.Sprintf("%s", guid), s.Cookies)
 
 	if s.StatusCodes.Contains(*wildcardResp) {
 		s.IsWildcard = true
-		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.Url, guid), "=>", *wildcardResp)
+		fmt.Println("[-] Wildcard response found:", fmt.Sprintf("%s%s", s.URL, guid), "=>", *wildcardResp)
 		if !s.WildcardForced {
 			fmt.Println("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
 		}
@@ -126,11 +127,15 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 		suffix = "/"
 	}
 
+	s.Mu.Lock()
+	s.WordlistPosition++
+	s.Mu.Unlock()
+
 	// Try the DIR first
-	dirResp, dirSize := GoGet(s, s.Url, word+suffix, s.Cookies)
+	dirResp, dirSize := GoGet(s, s.URL, fmt.Sprintf("%s%s", word, suffix), s.Cookies)
 	if dirResp != nil {
 		resultChan <- Result{
-			Entity: word + suffix,
+			Entity: fmt.Sprintf("%s%s", word, suffix),
 			Status: *dirResp,
 			Size:   dirSize,
 		}
@@ -138,8 +143,8 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 
 	// Follow up with files using each ext.
 	for ext := range s.Extensions {
-		file := word + s.Extensions[ext]
-		fileResp, fileSize := GoGet(s, s.Url, file, s.Cookies)
+		file := fmt.Sprintf("%s%s", word, s.Extensions[ext])
+		fileResp, fileSize := GoGet(s, s.URL, file, s.Cookies)
 
 		if fileResp != nil {
 			resultChan <- Result{
@@ -152,33 +157,37 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDirResult(s *State, r *Result) {
-	output := ""
+	buf := &bytes.Buffer{}
+	// remove status output
+	fmt.Fprintf(buf, "\r")
 
 	// Prefix if we're in verbose mode
 	if s.Verbose {
 		if s.StatusCodes.Contains(r.Status) {
-			output = "Found : "
+			fmt.Fprintf(buf, "Found: ")
 		} else {
-			output = "Missed: "
+			fmt.Fprintf(buf, "Missed: ")
 		}
 	}
 
 	if s.StatusCodes.Contains(r.Status) || s.Verbose {
 		if s.Expanded {
-			output += s.Url
+			fmt.Fprintf(buf, s.URL)
 		} else {
-			output += "/"
+			fmt.Fprintf(buf, "/")
 		}
-		output += r.Entity
+		fmt.Fprintf(buf, r.Entity)
 
 		if !s.NoStatus {
-			output += fmt.Sprintf(" (Status: %d)", r.Status)
+			fmt.Fprintf(buf, " (Status: %d)", r.Status)
 		}
 
 		if r.Size != nil {
-			output += fmt.Sprintf(" [Size: %d]", *r.Size)
+			fmt.Fprintf(buf, " [Size: %d]", *r.Size)
 		}
-		output += "\n"
+		fmt.Fprintf(buf, "\n")
+
+		output := buf.String()
 
 		fmt.Printf(output)
 

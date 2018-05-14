@@ -1,7 +1,9 @@
 package libgobuster
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strconv"
@@ -45,7 +47,7 @@ func ShowConfig(s *State) {
 
 	if s != nil {
 		fmt.Printf("[+] Mode         : %s\n", s.Mode)
-		fmt.Printf("[+] Url/Domain   : %s\n", s.Url)
+		fmt.Printf("[+] Url/Domain   : %s\n", s.URL)
 		fmt.Printf("[+] Threads      : %d\n", s.Threads)
 
 		wordlist := "stdin (pipe)"
@@ -61,8 +63,8 @@ func ShowConfig(s *State) {
 		if s.Mode == "dir" {
 			fmt.Printf("[+] Status codes : %s\n", s.StatusCodes.Stringify())
 
-			if s.ProxyUrl != nil {
-				fmt.Printf("[+] Proxy        : %s\n", s.ProxyUrl)
+			if s.ProxyURL != nil {
+				fmt.Printf("[+] Proxy        : %s\n", s.ProxyURL)
 			}
 
 			if s.Cookies != "" {
@@ -143,7 +145,7 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 // Stringify the set
 func (set *StringSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.Set {
+	for s := range set.Set {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
@@ -165,8 +167,27 @@ func (set *IntSet) Contains(i int) bool {
 // Stringify the set
 func (set *IntSet) Stringify() string {
 	values := []string{}
-	for s, _ := range set.Set {
+	for s := range set.Set {
 		values = append(values, strconv.Itoa(s))
 	}
 	return strings.Join(values, ",")
+}
+
+func lineCounter(r io.Reader) (int, error) {
+	buf := make([]byte, 32*1024)
+	count := 0
+	lineSep := []byte{'\n'}
+
+	for {
+		c, err := r.Read(buf)
+		count += bytes.Count(buf[:c], lineSep)
+
+		switch {
+		case err == io.EOF:
+			return count, nil
+
+		case err != nil:
+			return count, err
+		}
+	}
 }

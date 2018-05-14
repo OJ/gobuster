@@ -11,7 +11,7 @@ import (
 func SetupDns(s *State) bool {
 	// Resolve a subdomain that probably shouldn't exist
 	guid := uuid.Must(uuid.NewV4())
-	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.Url))
+	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, s.URL))
 	if err == nil {
 		s.IsWildcard = true
 		s.WildcardIps.AddRange(wildcardIps)
@@ -24,10 +24,10 @@ func SetupDns(s *State) bool {
 
 	if !s.Quiet {
 		// Provide a warning if the base domain doesn't resolve (in case of typo)
-		_, err = net.LookupHost(s.Url)
+		_, err = net.LookupHost(s.URL)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
-			fmt.Println("[-] Unable to validate base domain:", s.Url)
+			fmt.Println("[-] Unable to validate base domain:", s.URL)
 		}
 	}
 
@@ -35,7 +35,7 @@ func SetupDns(s *State) bool {
 }
 
 func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
-	subdomain := word + "." + s.Url
+	subdomain := fmt.Sprintf("%s.%s", word, s.URL)
 	ips, err := net.LookupHost(subdomain)
 
 	if err == nil {
@@ -63,7 +63,7 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	output := ""
+	var output string
 	if r.Status == 404 {
 		output = fmt.Sprintf("Missing: %s\n", r.Entity)
 	} else if s.ShowIPs {

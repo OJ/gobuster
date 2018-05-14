@@ -38,7 +38,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.StringVar(&s.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&codes, "s", "200,204,301,302,307", "Positive status codes (dir mode only)")
 	flag.StringVar(&s.OutputFileName, "o", "", "Output file to write results to (defaults to stdout)")
-	flag.StringVar(&s.Url, "u", "", "The target URL or Domain")
+	flag.StringVar(&s.URL, "u", "", "The target URL or Domain")
 	flag.StringVar(&s.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&s.Username, "U", "", "Username for Basic Auth (dir mode only)")
 	flag.StringVar(&s.Password, "P", "", "Password for Basic Auth (dir mode only)")
@@ -64,10 +64,9 @@ func ParseCmdLine() *libgobuster.State {
 	if err := libgobuster.ValidateState(&s, extensions, codes, proxy); err.ErrorOrNil() != nil {
 		fmt.Printf("%s\n", err.Error())
 		return nil
-	} else {
-		libgobuster.Ruler(&s)
-		return &s
 	}
+	libgobuster.Ruler(&s)
+	return &s
 }
 
 func main() {

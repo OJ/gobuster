@@ -19,8 +19,6 @@ package libgobuster
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"golang.org/x/crypto/ssh/terminal"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,6 +26,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/hashicorp/go-multierror"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func InitState() State {
@@ -61,7 +62,7 @@ func ValidateState(
 	}
 
 	if s.Threads < 0 {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %s", s.Threads))
+		errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %d", s.Threads))
 	}
 
 	stdin, err := os.Stdin.Stat()
@@ -81,7 +82,7 @@ func ValidateState(
 		errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w) specified with pipe from stdin. Can't have both!"))
 	}
 
-	if s.Url == "" {
+	if s.URL == "" {
 		errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Must be specified"))
 	}
 
@@ -108,26 +109,26 @@ func ValidateDirModeState(
 		errorList = multierror.Append(errorList, previousErrors)
 	}
 
-	if strings.HasSuffix(s.Url, "/") == false {
-		s.Url = s.Url + "/"
+	if strings.HasSuffix(s.URL, "/") == false {
+		s.URL = fmt.Sprintf("%s/", s.URL)
 	}
 
-	if strings.HasPrefix(s.Url, "http") == false {
+	if strings.HasPrefix(s.URL, "http") == false {
 		// check to see if a port was specified
 		re := regexp.MustCompile(`^[^/]+:(\d+)`)
-		match := re.FindStringSubmatch(s.Url)
+		match := re.FindStringSubmatch(s.URL)
 
 		if len(match) < 2 {
 			// no port, default to http on 80
-			s.Url = "http://" + s.Url
+			s.URL = fmt.Sprintf("http://%s", s.URL)
 		} else {
 			port, err := strconv.Atoi(match[1])
 			if err != nil || (port != 80 && port != 443) {
 				errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Scheme not specified."))
 			} else if port == 80 {
-				s.Url = "http://" + s.Url
+				s.URL = fmt.Sprintf("http://%s", s.URL)
 			} else {
-				s.Url = "https://" + s.Url
+				s.URL = fmt.Sprintf("https://%s", s.URL)
 			}
 		}
 	}
@@ -137,7 +138,7 @@ func ValidateDirModeState(
 		s.Extensions = strings.Split(extensions, ",")
 		for i := range s.Extensions {
 			if s.Extensions[i][0] != '.' {
-				s.Extensions[i] = "." + s.Extensions[i]
+				s.Extensions[i] = fmt.Sprintf(".%s", s.Extensions[i])
 			}
 		}
 	}
@@ -171,33 +172,33 @@ func ValidateDirModeState(
 	}
 
 	if errorList.ErrorOrNil() == nil {
-		var proxyUrlFunc func(*http.Request) (*url.URL, error)
-		proxyUrlFunc = http.ProxyFromEnvironment
+		var proxyURLFunc func(*http.Request) (*url.URL, error)
+		proxyURLFunc = http.ProxyFromEnvironment
 
 		if proxy != "" {
-			proxyUrl, err := url.Parse(proxy)
+			proxyURL, err := url.Parse(proxy)
 			if err != nil {
 				errorList = multierror.Append(errorList, fmt.Errorf("[!] Proxy URL is invalid"))
 				panic("[!] Proxy URL is invalid") // TODO: Does this need to be a panic? Could be a standard error?
 			}
-			s.ProxyUrl = proxyUrl
-			proxyUrlFunc = http.ProxyURL(s.ProxyUrl)
+			s.ProxyURL = proxyURL
+			proxyURLFunc = http.ProxyURL(s.ProxyURL)
 		}
 
 		s.Client = &http.Client{
 			Transport: &RedirectHandler{
 				State: s,
 				Transport: &http.Transport{
-					Proxy: proxyUrlFunc,
+					Proxy: proxyURLFunc,
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: s.InsecureSSL,
 					},
 				},
 			}}
 
-		code, _ := GoGet(s, s.Url, "", s.Cookies)
+		code, _ := GoGet(s, s.URL, "", s.Cookies)
 		if code == nil {
-			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.Url))
+			errorList = multierror.Append(errorList, fmt.Errorf("[-] Unable to connect: %s", s.URL))
 		}
 	}
 

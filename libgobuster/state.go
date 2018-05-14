@@ -130,12 +130,13 @@ func Process(s *State) {
 		for {
 			select {
 			case <-quitChan:
-				s.printStatus(true)
+				// remove last status output
+				fmt.Printf("\r")
 				return
 			case r := <-resultChan:
 				s.Printer(s, &r)
 			case <-tick:
-				s.printStatus(false)
+				s.printStatus()
 			}
 		}
 	}()
@@ -204,11 +205,8 @@ func Process(s *State) {
 	Ruler(s)
 }
 
-func (s *State) printStatus(newline bool) {
+func (s *State) printStatus() {
 	s.Mu.RLock()
 	fmt.Printf("\rStatus: %d / %d", s.WordlistPosition, s.WordlistSize)
-	if newline {
-		fmt.Println()
-	}
 	s.Mu.RUnlock()
 }

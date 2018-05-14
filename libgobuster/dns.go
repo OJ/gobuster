@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"strings"
@@ -63,16 +64,22 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 }
 
 func PrintDnsResult(s *State, r *Result) {
-	var output string
+	buf := &bytes.Buffer{}
+	// remove status output
+	fmt.Fprintf(buf, "\r")
+
 	if r.Status == 404 {
-		output = fmt.Sprintf("Missing: %s\n", r.Entity)
+		fmt.Fprintf(buf, "Missing: %s\n", r.Entity)
 	} else if s.ShowIPs {
-		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		fmt.Fprintf(buf, "Found: %s [%s]\n", r.Entity, r.Extra)
 	} else if s.ShowCNAME {
-		output = fmt.Sprintf("Found: %s [%s]\n", r.Entity, r.Extra)
+		fmt.Fprintf(buf, "Found: %s [%s]\n", r.Entity, r.Extra)
 	} else {
-		output = fmt.Sprintf("Found: %s\n", r.Entity)
+		fmt.Fprintf(buf, "Found: %s\n", r.Entity)
 	}
+
+	output := buf.String()
+
 	fmt.Printf("%s", output)
 
 	if s.OutputFile != nil {

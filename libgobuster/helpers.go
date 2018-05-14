@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"strconv"
+	"sort"
 	"strings"
 )
 
@@ -166,11 +166,14 @@ func (set *IntSet) Contains(i int) bool {
 
 // Stringify the set
 func (set *IntSet) Stringify() string {
-	values := []string{}
+	values := []int{}
 	for s := range set.Set {
-		values = append(values, strconv.Itoa(s))
+		values = append(values, s)
 	}
-	return strings.Join(values, ",")
+	sort.Ints(values)
+
+	delim := ","
+	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(values)), delim), "[]")
 }
 
 func lineCounter(r io.Reader) (int, error) {

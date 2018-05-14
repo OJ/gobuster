@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/OJ/gobuster/libgobuster"
 )
@@ -45,6 +46,7 @@ func ParseCmdLine() *libgobuster.State {
 	flag.StringVar(&extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&s.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
+	flag.DurationVar(&s.Timeout, "to", 10*time.Second, "HTTP Timeout in seconds (dir mode only)")
 	flag.BoolVar(&s.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&s.ShowIPs, "i", false, "Show IP addresses (dns mode only)")
 	flag.BoolVar(&s.ShowCNAME, "cn", false, "Show CNAME records (dns mode only, cannot be used with '-i' option)")

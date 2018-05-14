@@ -186,6 +186,7 @@ func ValidateDirModeState(
 		}
 
 		s.Client = &http.Client{
+			Timeout: s.Timeout,
 			Transport: &RedirectHandler{
 				State: s,
 				Transport: &http.Transport{

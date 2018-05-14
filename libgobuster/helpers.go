@@ -106,6 +106,8 @@ func ShowConfig(s *State) {
 			if s.Verbose {
 				fmt.Printf("[+] Verbose      : true\n")
 			}
+
+			fmt.Printf("[+] Timeout      : %s\n", s.Timeout.String())
 		}
 
 		Ruler(s)

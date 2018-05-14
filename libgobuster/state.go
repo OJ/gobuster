@@ -73,6 +73,7 @@ type State struct {
 	WordlistSize     int
 	WordlistPosition int
 	Mu               sync.RWMutex
+	Timeout          time.Duration
 }
 
 // Process the busting of the website with the given

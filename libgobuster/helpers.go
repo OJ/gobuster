@@ -4,25 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
-	"os/signal"
 	"sort"
 	"strings"
 )
-
-func PrepareSignalHandler(s *State) {
-	s.SignalChan = make(chan os.Signal, 1)
-	signal.Notify(s.SignalChan, os.Interrupt)
-	go func() {
-		for _ = range s.SignalChan {
-			// caught CTRL+C
-			if !s.Quiet {
-				fmt.Println("[!] Keyboard interrupt detected, terminating.")
-				s.Terminate = true
-			}
-		}
-	}()
-}
 
 func Ruler(s *State) {
 	if !s.Quiet {

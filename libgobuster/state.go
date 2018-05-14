@@ -2,6 +2,7 @@ package libgobuster
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -66,8 +67,7 @@ type State struct {
 	IsWildcard       bool
 	WildcardForced   bool
 	WildcardIps      StringSet
-	SignalChan       chan os.Signal
-	Terminate        bool
+	Context          context.Context
 	StdIn            bool
 	InsecureSSL      bool
 	WordlistSize     int
@@ -87,8 +87,6 @@ func Process(s *State) {
 		return
 	}
 
-	PrepareSignalHandler(s)
-
 	// channels used for comms
 	wordChan := make(chan string, s.Threads)
 	resultChan := make(chan Result)
@@ -105,21 +103,22 @@ func Process(s *State) {
 	// specified.
 	for i := 0; i < s.Threads; i++ {
 		go func() {
-			for {
-				word := <-wordChan
-
-				// Did we reach the end? If so break.
-				if word == "" {
-					break
-				}
-
-				// Mode-specific processing
-				s.Processor(s, word, resultChan)
-			}
-
 			// Indicate to the wait group that the thread
 			// has finished.
-			processorGroup.Done()
+			defer processorGroup.Done()
+			for {
+				select {
+				case word := <-wordChan:
+					// Did we reach the end? If so return.
+					if word == "" {
+						return
+					}
+					// Mode-specific processing
+					s.Processor(s, word, resultChan)
+				case <-s.Context.Done():
+					return
+				}
+			}
 		}()
 	}
 
@@ -130,6 +129,8 @@ func Process(s *State) {
 		defer printerGroup.Done()
 		for {
 			select {
+			case <-s.Context.Done():
+				return
 			case <-quitChan:
 				// remove last status output
 				fmt.Printf("\r")
@@ -184,18 +185,19 @@ func Process(s *State) {
 	}
 
 	for scanner.Scan() {
-		if s.Terminate {
+		select {
+		case <-s.Context.Done():
 			break
-		}
-		word := strings.TrimSpace(scanner.Text())
-
-		// Skip "comment" (starts with #), as well as empty lines
-		if !strings.HasPrefix(word, "#") && len(word) > 0 {
-			wordChan <- word
+		default:
+			word := strings.TrimSpace(scanner.Text())
+			// Skip "comment" (starts with #), as well as empty lines
+			if !strings.HasPrefix(word, "#") && len(word) > 0 {
+				wordChan <- word
+			}
 		}
 	}
-
 	close(wordChan)
+
 	processorGroup.Wait()
 	close(resultChan)
 	close(quitChan)

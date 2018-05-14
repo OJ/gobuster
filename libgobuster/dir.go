@@ -52,6 +52,9 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 		return nil, nil
 	}
 
+	// add the context so we can easily cancel out
+	req = req.WithContext(s.Context)
+
 	if cookie != "" {
 		req.Header.Set("Cookie", cookie)
 	}

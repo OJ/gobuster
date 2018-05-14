@@ -17,8 +17,11 @@ package main
 //----------------------------------------------------
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/OJ/gobuster/libgobuster"
@@ -26,7 +29,7 @@ import (
 
 // Parse all the command line options into a settings
 // instance for future use.
-func ParseCmdLine() *libgobuster.State {
+func ParseCmdLine() (*libgobuster.State, context.CancelFunc) {
 	var extensions string
 	var codes string
 	var proxy string
@@ -63,17 +66,33 @@ func ParseCmdLine() *libgobuster.State {
 
 	libgobuster.Banner(&s)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Context = ctx
+
 	if err := libgobuster.ValidateState(&s, extensions, codes, proxy); err.ErrorOrNil() != nil {
 		fmt.Printf("%s\n", err.Error())
-		return nil
+		return nil, cancel
 	}
+
 	libgobuster.Ruler(&s)
-	return &s
+	return &s, cancel
 }
 
 func main() {
-	state := ParseCmdLine()
+	state, cancel := ParseCmdLine()
 	if state != nil {
+		defer cancel()
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt)
+		go func() {
+			for _ = range signalChan {
+				// caught CTRL+C
+				if !state.Quiet {
+					fmt.Println("[!] Keyboard interrupt detected, terminating.")
+				}
+				cancel()
+			}
+		}()
 		libgobuster.Process(state)
 	}
 }

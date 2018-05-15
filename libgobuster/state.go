@@ -133,7 +133,7 @@ func Process(s *State) {
 				return
 			case <-quitChan:
 				// remove last status output
-				fmt.Printf("\r")
+				s.clearStatus()
 				return
 			case r := <-resultChan:
 				s.Printer(s, &r)
@@ -210,6 +210,10 @@ func Process(s *State) {
 
 func (s *State) printStatus() {
 	s.Mu.RLock()
-	fmt.Printf("\rStatus: %d / %d", s.WordlistPosition, s.WordlistSize)
+	fmt.Fprintf(os.Stderr, "\rStatus: %d / %d", s.WordlistPosition, s.WordlistSize)
 	s.Mu.RUnlock()
+}
+
+func (s *State) clearStatus() {
+	fmt.Fprint(os.Stderr, "\r")
 }

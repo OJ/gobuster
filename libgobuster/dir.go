@@ -161,8 +161,6 @@ func ProcessDirEntry(s *State, word string, resultChan chan<- Result) {
 
 func PrintDirResult(s *State, r *Result) {
 	buf := &bytes.Buffer{}
-	// remove status output
-	fmt.Fprintf(buf, "\r")
 
 	// Prefix if we're in verbose mode
 	if s.Verbose {
@@ -192,6 +190,7 @@ func PrintDirResult(s *State, r *Result) {
 
 		output := buf.String()
 
+		s.clearStatus()
 		fmt.Printf(output)
 
 		if s.OutputFile != nil {

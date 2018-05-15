@@ -65,8 +65,6 @@ func ProcessDnsEntry(s *State, word string, resultChan chan<- Result) {
 
 func PrintDnsResult(s *State, r *Result) {
 	buf := &bytes.Buffer{}
-	// remove status output
-	fmt.Fprintf(buf, "\r")
 
 	if r.Status == 404 {
 		fmt.Fprintf(buf, "Missing: %s\n", r.Entity)
@@ -80,6 +78,7 @@ func PrintDnsResult(s *State, r *Result) {
 
 	output := buf.String()
 
+	s.clearStatus()
 	fmt.Printf("%s", output)
 
 	if s.OutputFile != nil {

@@ -59,9 +59,11 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 		req.Header.Set("Cookie", cookie)
 	}
 
+	ua := "gobuster"
 	if s.UserAgent != "" {
-		req.Header.Set("User-Agent", s.UserAgent)
+		ua = s.UserAgent
 	}
+	req.Header.Set("User-Agent", ua)
 
 	if s.Username != "" {
 		req.SetBasicAuth(s.Username, s.Password)

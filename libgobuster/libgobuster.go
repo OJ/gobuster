@@ -30,8 +30,8 @@ type Gobuster struct {
 	http             *httpClient
 	WildcardIps      stringSet
 	context          context.Context
-	wordlistSize     int
-	wordlistPosition int
+	requestsExpected int
+	requestsIssued   int
 	mu               *sync.RWMutex
 	funcResToString  ResultToStringFunc
 	funcProcessor    ProcessFunc
@@ -73,9 +73,9 @@ func (g *Gobuster) Results() <-chan Result {
 	return g.resultChan
 }
 
-func (g *Gobuster) incrementWordlistPosition() {
+func (g *Gobuster) incrementRequests() {
 	g.mu.Lock()
-	g.wordlistPosition++
+	g.requestsIssued++
 	g.mu.Unlock()
 }
 
@@ -83,9 +83,9 @@ func (g *Gobuster) incrementWordlistPosition() {
 func (g *Gobuster) PrintProgress() {
 	g.mu.RLock()
 	if g.Opts.Wordlist == "-" {
-		fmt.Fprintf(os.Stderr, "\rProgress: %d", g.wordlistPosition)
+		fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
 	} else {
-		fmt.Fprintf(os.Stderr, "\rProgress: %d / %d", g.wordlistPosition, g.wordlistSize)
+		fmt.Fprintf(os.Stderr, "\rProgress: %d / %d", g.requestsIssued, g.requestsExpected)
 	}
 	g.mu.RUnlock()
 }
@@ -108,7 +108,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 		case <-g.context.Done():
 			return
 		case word := <-wordChan:
-			g.incrementWordlistPosition()
+			g.incrementRequests()
 			// Mode-specific processing
 			res, err := g.funcProcessor(g, word)
 			if err != nil {
@@ -139,7 +139,12 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
-	g.wordlistSize = lines
+
+	// mutiply by extensions to get the total number of requests
+	if len(g.Opts.ExtensionsParsed) > 0 {
+		lines = lines + (lines * len(g.Opts.ExtensionsParsed))
+	}
+	g.requestsExpected = lines
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)

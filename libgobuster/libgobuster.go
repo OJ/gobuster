@@ -98,6 +98,7 @@ func (g *Gobuster) ClearProgress() {
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (g *Gobuster) GetRequest(url string) (*int, *int64, error) {
+	g.incrementRequests()
 	return g.http.makeRequest(url, g.Opts.Cookies)
 }
 
@@ -108,7 +109,6 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 		case <-g.context.Done():
 			return
 		case word := <-wordChan:
-			g.incrementRequests()
 			// Mode-specific processing
 			res, err := g.funcProcessor(g, word)
 			if err != nil {
@@ -145,6 +145,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		lines = lines + (lines * len(g.Opts.ExtensionsParsed))
 	}
 	g.requestsExpected = lines
+	g.requestsIssued = 0
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)

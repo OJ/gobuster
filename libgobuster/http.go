@@ -11,10 +11,6 @@ import (
 	"unicode/utf8"
 )
 
-const (
-	userAgent = "gobuster"
-)
-
 type httpClient struct {
 	client        *http.Client
 	context       context.Context
@@ -60,6 +56,7 @@ func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
 	client.username = opt.Username
 	client.password = opt.Password
 	client.includeLength = opt.IncludeLength
+	client.userAgent = opt.UserAgent
 	return &client, nil
 }
 
@@ -78,7 +75,7 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		req.Header.Set("Cookie", cookie)
 	}
 
-	ua := userAgent
+	ua := fmt.Sprintf("gobuster %s", VERSION)
 	if client.userAgent != "" {
 		ua = client.userAgent
 	}

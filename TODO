@@ -1,0 +1,1 @@
+return specific errors and do not mention command line switches in libgobuster

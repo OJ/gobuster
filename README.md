@@ -80,9 +80,9 @@ gobuster$ go run main.go <parameters>
 ```
 
 ### Wordlists via STDIN
-Wordlists can be piped into `gobuster` via stdin:
+Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
 ```
-hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
+hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com -w -
 ```
 Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
 

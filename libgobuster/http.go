@@ -29,7 +29,7 @@ func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
 	if opt.Proxy != "" {
 		proxyURL, err := url.Parse(opt.Proxy)
 		if err != nil {
-			return nil, fmt.Errorf("[!] Proxy URL is invalid (%v)", err)
+			return nil, fmt.Errorf("proxy URL is invalid (%v)", err)
 		}
 		proxyURLFunc = http.ProxyURL(proxyURL)
 	}

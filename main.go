@@ -156,7 +156,11 @@ func main() {
 		ruler()
 		banner()
 		ruler()
-		gobuster.ShowConfig()
+		c, err := gobuster.GetConfigString()
+		if err != nil {
+			log.Fatalf("error on creating config string: %v", err)
+		}
+		log.Println(c)
 		ruler()
 		log.Println("Starting gobuster")
 		ruler()

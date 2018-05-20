@@ -2,6 +2,7 @@ package libgobuster
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -113,7 +114,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			res, err := g.funcProcessor(g, word)
 			if err != nil {
 				// do not exit and continue
-				log.Printf("ERROR on word %s: %v", word, err)
+				log.Printf("error on word %s: %v", word, err)
 				continue
 			} else {
 				for _, r := range res {
@@ -197,66 +198,103 @@ Scan:
 	return nil
 }
 
-// ShowConfig prints the current config to the screen
-func (g *Gobuster) ShowConfig() {
+// GetConfigString returns the current config as a printable string
+func (g *Gobuster) GetConfigString() (string, error) {
+	buf := &bytes.Buffer{}
 	o := g.Opts
-	fmt.Printf("[+] Mode         : %s\n", o.Mode)
-	fmt.Printf("[+] Url/Domain   : %s\n", o.URL)
-	fmt.Printf("[+] Threads      : %d\n", o.Threads)
+	if _, err := fmt.Fprintf(buf, "[+] Mode         : %s\n", o.Mode); err != nil {
+		return "", err
+	}
+	if _, err := fmt.Fprintf(buf, "[+] Url/Domain   : %s\n", o.URL); err != nil {
+		return "", err
+	}
+	if _, err := fmt.Fprintf(buf, "[+] Threads      : %d\n", o.Threads); err != nil {
+		return "", err
+	}
 
 	wordlist := "stdin (pipe)"
 	if o.Wordlist != "-" {
 		wordlist = o.Wordlist
 	}
-	fmt.Printf("[+] Wordlist     : %s\n", wordlist)
+	if _, err := fmt.Fprintf(buf, "[+] Wordlist     : %s\n", wordlist); err != nil {
+		return "", err
+	}
 
 	if o.Mode == ModeDir {
-		fmt.Printf("[+] Status codes : %s\n", o.StatusCodesParsed.Stringify())
+		if _, err := fmt.Fprintf(buf, "[+] Status codes : %s\n", o.StatusCodesParsed.Stringify()); err != nil {
+			return "", err
+		}
 
 		if o.Proxy != "" {
-			fmt.Printf("[+] Proxy        : %s\n", o.Proxy)
+			if _, err := fmt.Fprintf(buf, "[+] Proxy        : %s\n", o.Proxy); err != nil {
+				return "", err
+			}
 		}
 
 		if o.Cookies != "" {
-			fmt.Printf("[+] Cookies      : %s\n", o.Cookies)
+			if _, err := fmt.Fprintf(buf, "[+] Cookies      : %s\n", o.Cookies); err != nil {
+				return "", err
+			}
 		}
 
 		if o.UserAgent != "" {
-			fmt.Printf("[+] User Agent   : %s\n", o.UserAgent)
+			if _, err := fmt.Fprintf(buf, "[+] User Agent   : %s\n", o.UserAgent); err != nil {
+				return "", err
+			}
 		}
 
 		if o.IncludeLength {
-			fmt.Printf("[+] Show length  : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] Show length  : true\n"); err != nil {
+				return "", err
+			}
 		}
 
 		if o.Username != "" {
-			fmt.Printf("[+] Auth User    : %s\n", o.Username)
+			if _, err := fmt.Fprintf(buf, "[+] Auth User    : %s\n", o.Username); err != nil {
+				return "", err
+			}
 		}
 
 		if len(o.Extensions) > 0 {
-			fmt.Printf("[+] Extensions   : %s\n", strings.Join(o.ExtensionsParsed, ","))
+			if _, err := fmt.Fprintf(buf, "[+] Extensions   : %s\n", strings.Join(o.ExtensionsParsed, ",")); err != nil {
+				return "", err
+			}
 		}
 
 		if o.UseSlash {
-			fmt.Printf("[+] Add Slash    : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] Add Slash    : true\n"); err != nil {
+				return "", err
+			}
 		}
 
 		if o.FollowRedirect {
-			fmt.Printf("[+] Follow Redir : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] Follow Redir : true\n"); err != nil {
+				return "", err
+			}
 		}
 
 		if o.Expanded {
-			fmt.Printf("[+] Expanded     : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] Expanded     : true\n"); err != nil {
+				return "", err
+			}
 		}
 
 		if o.NoStatus {
-			fmt.Printf("[+] No status    : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] No status    : true\n"); err != nil {
+				return "", err
+			}
 		}
 
 		if o.Verbose {
-			fmt.Printf("[+] Verbose      : true\n")
+			if _, err := fmt.Fprintf(buf, "[+] Verbose      : true\n"); err != nil {
+				return "", err
+			}
 		}
 
-		fmt.Printf("[+] Timeout      : %s\n", o.Timeout.String())
+		if _, err := fmt.Fprintf(buf, "[+] Timeout      : %s\n", o.Timeout.String()); err != nil {
+			return "", err
+		}
 	}
+
+	return strings.TrimSpace(buf.String()), nil
 }

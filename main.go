@@ -73,7 +73,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string) {
 func progressWorker(g *libgobuster.Gobuster) {
 	tick := time.NewTicker(1 * time.Second)
 
-	for _ = range tick.C {
+	for range tick.C {
 		g.PrintProgress()
 	}
 }

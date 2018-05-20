@@ -149,7 +149,7 @@ func main() {
 
 	gobuster, err := libgobuster.NewGobuster(ctx, o, funcSetup, funcProcessor, funcResToString)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[!] %v", err)
 	}
 
 	if !o.Quiet {
@@ -185,7 +185,7 @@ func main() {
 	}
 
 	if err := gobuster.Start(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("[!] %v", err)
 	}
 
 	if !o.Quiet {

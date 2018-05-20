@@ -59,23 +59,23 @@ func (opt *Options) validate() *multierror.Error {
 	var errorList *multierror.Error
 
 	if strings.ToLower(opt.Mode) != ModeDir && strings.ToLower(opt.Mode) != ModeDNS {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Mode (-m): Invalid value: %s", opt.Mode))
+		errorList = multierror.Append(errorList, fmt.Errorf("Mode (-m): Invalid value: %s", opt.Mode))
 	}
 
 	if opt.Threads < 0 {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %d", opt.Threads))
+		errorList = multierror.Append(errorList, fmt.Errorf("Threads (-t): Invalid value: %d", opt.Threads))
 	}
 
 	if opt.Wordlist == "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] WordList (-w): Must be specified"))
+		errorList = multierror.Append(errorList, fmt.Errorf("WordList (-w): Must be specified"))
 	} else if opt.Wordlist == "-" {
 		// STDIN
 	} else if _, err := os.Stat(opt.Wordlist); os.IsNotExist(err) {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Wordlist (-w): File does not exist: %s", opt.Wordlist))
+		errorList = multierror.Append(errorList, fmt.Errorf("Wordlist (-w): File does not exist: %s", opt.Wordlist))
 	}
 
 	if opt.URL == "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Url/Domain (-u): Must be specified"))
+		errorList = multierror.Append(errorList, fmt.Errorf("Url/Domain (-u): Must be specified"))
 	}
 
 	if opt.StatusCodes != "" {
@@ -145,7 +145,7 @@ func (opt *Options) validateDirMode() error {
 		} else {
 			port, err := strconv.Atoi(match[1])
 			if err != nil || (port != 80 && port != 443) {
-				return fmt.Errorf("[!] Url/Domain (-u): Scheme not specified.")
+				return fmt.Errorf("url scheme not specified")
 			} else if port == 80 {
 				opt.URL = fmt.Sprintf("http://%s", opt.URL)
 			} else {

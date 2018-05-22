@@ -94,7 +94,7 @@ func (g *Gobuster) PrintProgress() {
 
 // ClearProgress removes the last status line from stderr
 func (g *Gobuster) ClearProgress() {
-	fmt.Fprint(os.Stderr, "\r\r")
+	fmt.Fprint(os.Stderr, resetTerminal())
 }
 
 // GetRequest issues a GET request to the target and returns

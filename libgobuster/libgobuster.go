@@ -85,7 +85,8 @@ func (g *Gobuster) PrintProgress() {
 	g.mu.RLock()
 	if g.Opts.Wordlist == "-" {
 		fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
-	} else {
+		// only print status if we already read in the wordlist
+	} else if g.requestsExpected > 0 {
 		fmt.Fprintf(os.Stderr, "\rProgress: %d / %d", g.requestsIssued, g.requestsExpected)
 	}
 	g.mu.RUnlock()

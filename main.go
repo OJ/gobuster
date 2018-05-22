@@ -160,7 +160,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("error on creating config string: %v", err)
 		}
-		log.Println(c)
+		fmt.Println(c)
 		ruler()
 		log.Println("Starting gobuster")
 		ruler()

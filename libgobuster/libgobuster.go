@@ -94,7 +94,7 @@ func (g *Gobuster) PrintProgress() {
 
 // ClearProgress removes the last status line from stderr
 func (g *Gobuster) ClearProgress() {
-	fmt.Fprint(os.Stderr, "\r")
+	fmt.Fprint(os.Stderr, "\r\r")
 }
 
 // GetRequest issues a GET request to the target and returns
@@ -111,6 +111,10 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 		case <-g.context.Done():
 			return
 		case word := <-wordChan:
+			// worker finished
+			if word == "" {
+				return
+			}
 			// Mode-specific processing
 			res, err := g.funcProcessor(g, word)
 			if err != nil {
@@ -164,8 +168,6 @@ func (g *Gobuster) Start() error {
 		return err
 	}
 
-	var printerGroup sync.WaitGroup
-	printerGroup.Add(1)
 	var workerGroup sync.WaitGroup
 	workerGroup.Add(g.Opts.Threads)
 
@@ -196,6 +198,7 @@ Scan:
 		}
 	}
 	close(wordChan)
+	workerGroup.Wait()
 	return nil
 }
 

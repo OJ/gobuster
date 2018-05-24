@@ -70,6 +70,13 @@ func resultWorker(g *libgobuster.Gobuster, filename string) {
 	}
 }
 
+func errorWorker(g *libgobuster.Gobuster) {
+	for e := range g.Errors() {
+		g.ClearProgress()
+		log.Printf("[!] %v", e)
+	}
+}
+
 func progressWorker(g *libgobuster.Gobuster) {
 	tick := time.NewTicker(1 * time.Second)
 
@@ -178,6 +185,7 @@ func main() {
 		}
 	}()
 
+	go errorWorker(gobuster)
 	go resultWorker(gobuster, outputFilename)
 
 	if !o.Quiet {

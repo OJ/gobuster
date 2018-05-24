@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -39,6 +38,7 @@ type Gobuster struct {
 	funcSetup        SetupFunc
 	IsWildcard       bool
 	resultChan       chan Result
+	errorChan        chan error
 }
 
 // NewGobuster returns a new Gobuster object
@@ -65,6 +65,7 @@ func NewGobuster(c context.Context, opts *Options, setupFunc SetupFunc, processF
 	g.mu = new(sync.RWMutex)
 
 	g.resultChan = make(chan Result)
+	g.errorChan = make(chan error)
 
 	return &g, nil
 }
@@ -72,6 +73,11 @@ func NewGobuster(c context.Context, opts *Options, setupFunc SetupFunc, processF
 // Results returns a channel of Results
 func (g *Gobuster) Results() <-chan Result {
 	return g.resultChan
+}
+
+// Errors returns a channel of errors
+func (g *Gobuster) Errors() <-chan error {
+	return g.errorChan
 }
 
 func (g *Gobuster) incrementRequests() {
@@ -119,7 +125,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			res, err := g.funcProcessor(g, word)
 			if err != nil {
 				// do not exit and continue
-				log.Printf("error on word %s: %v", word, err)
+				g.errorChan <- err
 				continue
 			} else {
 				for _, r := range res {
@@ -199,6 +205,8 @@ Scan:
 	}
 	close(wordChan)
 	workerGroup.Wait()
+	close(g.resultChan)
+	close(g.errorChan)
 	return nil
 }
 

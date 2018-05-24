@@ -80,11 +80,14 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
-func progressWorker(g *libgobuster.Gobuster) {
+func progressWorker(c context.Context, g *libgobuster.Gobuster) {
 	tick := time.NewTicker(1 * time.Second)
 
-	for range tick.C {
+	select {
+	case <-tick.C:
 		g.PrintProgress()
+	case <-c.Done():
+		return
 	}
 }
 
@@ -194,14 +197,16 @@ func main() {
 	go resultWorker(gobuster, outputFilename, &wg)
 
 	if !o.Quiet {
-		go progressWorker(gobuster)
+		go progressWorker(ctx, gobuster)
 	}
 
 	if err := gobuster.Start(); err != nil {
 		log.Fatalf("[!] %v", err)
 	}
 
-	// wait for all funcs to finish
+	// call cancel func to free ressources and stop progressFunc
+	cancel()
+	// wait for all output funcs to finish
 	wg.Wait()
 
 	if !o.Quiet {

@@ -46,7 +46,7 @@ func ProcessDirEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result
 	url := fmt.Sprintf("%s%s%s", g.Opts.URL, word, suffix)
 	dirResp, dirSize, err := g.GetRequest(url)
 	if err != nil {
-		return nil, fmt.Errorf("can not call URL %s: %v", url, err)
+		return nil, err
 	}
 	var ret []libgobuster.Result
 	if dirResp != nil {
@@ -63,7 +63,7 @@ func ProcessDirEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result
 		url = fmt.Sprintf("%s%s", g.Opts.URL, file)
 		fileResp, fileSize, err := g.GetRequest(url)
 		if err != nil {
-			return nil, fmt.Errorf("can not call URL %s: %v", url, err)
+			return nil, err
 		}
 
 		if fileResp != nil {

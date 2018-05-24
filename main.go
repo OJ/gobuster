@@ -83,11 +83,13 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 func progressWorker(c context.Context, g *libgobuster.Gobuster) {
 	tick := time.NewTicker(1 * time.Second)
 
-	select {
-	case <-tick.C:
-		g.PrintProgress()
-	case <-c.Done():
-		return
+	for {
+		select {
+		case <-tick.C:
+			g.PrintProgress()
+		case <-c.Done():
+			return
+		}
 	}
 }
 

@@ -203,12 +203,13 @@ func main() {
 		log.Fatalf("[!] %v", err)
 	}
 
+	// wait for all funcs to finish
+	wg.Wait()
+
 	if !o.Quiet {
 		gobuster.ClearProgress()
 		ruler()
 		log.Println("Finished")
 		ruler()
 	}
-	// wait for all funcs to finish
-	wg.Wait()
 }

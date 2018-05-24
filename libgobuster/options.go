@@ -109,7 +109,11 @@ func (opt *Options) parseExtensions() error {
 		return fmt.Errorf("invalid extension string provided")
 	}
 
-	opt.ExtensionsParsed = append(opt.ExtensionsParsed, strings.Split(opt.Extensions, ",")...)
+	exts := strings.Split(opt.Extensions, ",")
+	for _, e := range exts {
+		// remove leading . from extensions
+		opt.ExtensionsParsed = append(opt.ExtensionsParsed, strings.TrimPrefix(e, "."))
+	}
 	return nil
 }
 

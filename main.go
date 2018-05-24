@@ -80,8 +80,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
-func progressWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
-	defer wg.Done()
+func progressWorker(g *libgobuster.Gobuster) {
 	tick := time.NewTicker(1 * time.Second)
 
 	for range tick.C {
@@ -195,8 +194,7 @@ func main() {
 	go resultWorker(gobuster, outputFilename, &wg)
 
 	if !o.Quiet {
-		wg.Add(1)
-		go progressWorker(gobuster, &wg)
+		go progressWorker(gobuster)
 	}
 
 	if err := gobuster.Start(); err != nil {

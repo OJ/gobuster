@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -42,7 +43,8 @@ func banner() {
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
-func resultWorker(g *libgobuster.Gobuster, filename string) {
+func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	var f *os.File
 	var err error
 	if filename != "" {
@@ -70,14 +72,16 @@ func resultWorker(g *libgobuster.Gobuster, filename string) {
 	}
 }
 
-func errorWorker(g *libgobuster.Gobuster) {
+func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for e := range g.Errors() {
 		g.ClearProgress()
 		log.Printf("[!] %v", e)
 	}
 }
 
-func progressWorker(g *libgobuster.Gobuster) {
+func progressWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
+	defer wg.Done()
 	tick := time.NewTicker(1 * time.Second)
 
 	for range tick.C {
@@ -185,11 +189,14 @@ func main() {
 		}
 	}()
 
-	go errorWorker(gobuster)
-	go resultWorker(gobuster, outputFilename)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go errorWorker(gobuster, &wg)
+	go resultWorker(gobuster, outputFilename, &wg)
 
 	if !o.Quiet {
-		go progressWorker(gobuster)
+		wg.Add(1)
+		go progressWorker(gobuster, &wg)
 	}
 
 	if err := gobuster.Start(); err != nil {
@@ -202,4 +209,6 @@ func main() {
 		log.Println("Finished")
 		ruler()
 	}
+	// wait for all funcs to finish
+	wg.Wait()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -110,6 +111,9 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		} else {
 			*length = resp.ContentLength
 		}
+	} else {
+		// absolutely needed so golang will reuse connections!
+		io.Copy(ioutil.Discard, resp.Body)
 	}
 
 	return &resp.StatusCode, length, nil

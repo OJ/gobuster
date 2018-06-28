@@ -113,7 +113,10 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		}
 	} else {
 		// absolutely needed so golang will reuse connections!
-		io.Copy(ioutil.Discard, resp.Body)
+		_, err = io.Copy(ioutil.Discard, resp.Body)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return &resp.StatusCode, length, nil

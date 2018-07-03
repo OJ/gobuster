@@ -10,7 +10,7 @@ type Result struct {
 
 // ToString converts the Result to it's textual representation
 func (r *Result) ToString(g *Gobuster) (string, error) {
-	s, err := g.funcResToString(g, r)
+	s, err := g.plugin.ResultToString(g, r)
 	if err != nil {
 		return "", err
 	}

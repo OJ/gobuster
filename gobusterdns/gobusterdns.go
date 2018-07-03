@@ -11,8 +11,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// SetupDNS is the setup implementation of gobusterdns
-func SetupDNS(g *libgobuster.Gobuster) error {
+// GobusterDNS is the main type
+type GobusterDNS struct{}
+
+// Setup is the setup implementation of gobusterdns
+func (d GobusterDNS) Setup(g *libgobuster.Gobuster) error {
 	// Resolve a subdomain sthat probably shouldn't exist
 	guid := uuid.Must(uuid.NewV4())
 	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, g.Opts.URL))
@@ -37,8 +40,8 @@ func SetupDNS(g *libgobuster.Gobuster) error {
 	return nil
 }
 
-// ProcessDNSEntry is the process implementation of gobusterdns
-func ProcessDNSEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result, error) {
+// Process is the process implementation of gobusterdns
+func (d GobusterDNS) Process(g *libgobuster.Gobuster, word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, g.Opts.URL)
 	ips, err := net.LookupHost(subdomain)
 	var ret []libgobuster.Result
@@ -66,8 +69,8 @@ func ProcessDNSEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result
 	return ret, nil
 }
 
-// DNSResultToString is the to string implementation of gobusterdns
-func DNSResultToString(g *libgobuster.Gobuster, r *libgobuster.Result) (*string, error) {
+// ResultToString is the to string implementation of gobusterdns
+func (d GobusterDNS) ResultToString(g *libgobuster.Gobuster, r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
 
 	if r.Status == 404 {

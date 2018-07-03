@@ -147,22 +147,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var funcSetup func(*libgobuster.Gobuster) error
-	var funcProcessor func(*libgobuster.Gobuster, string) ([]libgobuster.Result, error)
-	var funcResToString func(*libgobuster.Gobuster, *libgobuster.Result) (*string, error)
-
+	var plugin libgobuster.GobusterPlugin
 	switch o.Mode {
 	case libgobuster.ModeDir:
-		funcSetup = gobusterdir.SetupDir
-		funcProcessor = gobusterdir.ProcessDirEntry
-		funcResToString = gobusterdir.DirResultToString
+		plugin = gobusterdir.GobusterDir{}
 	case libgobuster.ModeDNS:
-		funcSetup = gobusterdns.SetupDNS
-		funcProcessor = gobusterdns.ProcessDNSEntry
-		funcResToString = gobusterdns.DNSResultToString
+		plugin = gobusterdns.GobusterDNS{}
 	}
 
-	gobuster, err := libgobuster.NewGobuster(ctx, o, funcSetup, funcProcessor, funcResToString)
+	gobuster, err := libgobuster.NewGobuster(ctx, o, plugin)
 	if err != nil {
 		log.Fatalf("[!] %v", err)
 	}

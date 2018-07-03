@@ -33,16 +33,21 @@ type Gobuster struct {
 	requestsExpected int
 	requestsIssued   int
 	mu               *sync.RWMutex
-	funcResToString  ResultToStringFunc
-	funcProcessor    ProcessFunc
-	funcSetup        SetupFunc
+	plugin           GobusterPlugin
 	IsWildcard       bool
 	resultChan       chan Result
 	errorChan        chan error
 }
 
+// GobusterPlugin is an interface which plugins must implement
+type GobusterPlugin interface {
+	Setup(*Gobuster) error
+	Process(*Gobuster, string) ([]Result, error)
+	ResultToString(*Gobuster, *Result) (*string, error)
+}
+
 // NewGobuster returns a new Gobuster object
-func NewGobuster(c context.Context, opts *Options, setupFunc SetupFunc, processFunc ProcessFunc, resultFunc ResultToStringFunc) (*Gobuster, error) {
+func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
 	// validate given options
 	multiErr := opts.validate()
 	if multiErr != nil {
@@ -59,9 +64,7 @@ func NewGobuster(c context.Context, opts *Options, setupFunc SetupFunc, processF
 	}
 	g.http = h
 
-	g.funcSetup = setupFunc
-	g.funcProcessor = processFunc
-	g.funcResToString = resultFunc
+	g.plugin = plugin
 	g.mu = new(sync.RWMutex)
 
 	g.resultChan = make(chan Result)
@@ -122,7 +125,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				return
 			}
 			// Mode-specific processing
-			res, err := g.funcProcessor(g, word)
+			res, err := g.plugin.Process(g, word)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err
@@ -170,7 +173,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 // Start the busting of the website with the given
 // set of settings from the command line.
 func (g *Gobuster) Start() error {
-	if err := g.funcSetup(g); err != nil {
+	if err := g.plugin.Setup(g); err != nil {
 		return err
 	}
 

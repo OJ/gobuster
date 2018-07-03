@@ -9,8 +9,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// SetupDir is the setup implementation of gobusterdir
-func SetupDir(g *libgobuster.Gobuster) error {
+// GobusterDir is the main type to implement the interface
+type GobusterDir struct{}
+
+// Setup is the setup implementation of gobusterdir
+func (d GobusterDir) Setup(g *libgobuster.Gobuster) error {
 	_, _, err := g.GetRequest(g.Opts.URL)
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", g.Opts.URL, err)
@@ -35,8 +38,8 @@ func SetupDir(g *libgobuster.Gobuster) error {
 	return nil
 }
 
-// ProcessDirEntry is the process implementation of gobusterdir
-func ProcessDirEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result, error) {
+// Process is the process implementation of gobusterdir
+func (d GobusterDir) Process(g *libgobuster.Gobuster, word string) ([]libgobuster.Result, error) {
 	suffix := ""
 	if g.Opts.UseSlash {
 		suffix = "/"
@@ -77,8 +80,8 @@ func ProcessDirEntry(g *libgobuster.Gobuster, word string) ([]libgobuster.Result
 	return ret, nil
 }
 
-// DirResultToString is the to string implementation of gobusterdir
-func DirResultToString(g *libgobuster.Gobuster, r *libgobuster.Result) (*string, error) {
+// ResultToString is the to string implementation of gobusterdir
+func (d GobusterDir) ResultToString(g *libgobuster.Gobuster, r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
 
 	// Prefix if we're in verbose mode

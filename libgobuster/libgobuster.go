@@ -156,8 +156,8 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	}
 
 	// mutiply by extensions to get the total number of requests
-	if len(g.Opts.ExtensionsParsed) > 0 {
-		lines = lines + (lines * len(g.Opts.ExtensionsParsed))
+	if len(g.Opts.ExtensionsParsed.Set) > 0 {
+		lines = lines + (lines * len(g.Opts.ExtensionsParsed.Set))
 	}
 	g.requestsExpected = lines
 	g.requestsIssued = 0
@@ -271,7 +271,7 @@ func (g *Gobuster) GetConfigString() (string, error) {
 		}
 
 		if len(o.Extensions) > 0 {
-			if _, err := fmt.Fprintf(buf, "[+] Extensions   : %s\n", strings.Join(o.ExtensionsParsed, ",")); err != nil {
+			if _, err := fmt.Fprintf(buf, "[+] Extensions   : %s\n", o.ExtensionsParsed.Stringify()); err != nil {
 				return "", err
 			}
 		}

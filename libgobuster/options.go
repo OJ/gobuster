@@ -21,7 +21,7 @@ const (
 // Options helds all options that can be passed to libgobuster
 type Options struct {
 	Extensions        string
-	ExtensionsParsed  []string
+	ExtensionsParsed  stringSet
 	Mode              string
 	Password          string
 	StatusCodes       string
@@ -51,6 +51,7 @@ type Options struct {
 func NewOptions() *Options {
 	return &Options{
 		StatusCodesParsed: intSet{Set: map[int]bool{}},
+		ExtensionsParsed:  stringSet{Set: map[string]bool{}},
 	}
 }
 
@@ -111,8 +112,9 @@ func (opt *Options) parseExtensions() error {
 
 	exts := strings.Split(opt.Extensions, ",")
 	for _, e := range exts {
+		e := strings.TrimSpace(e)
 		// remove leading . from extensions
-		opt.ExtensionsParsed = append(opt.ExtensionsParsed, strings.TrimPrefix(e, "."))
+		opt.ExtensionsParsed.Add(strings.TrimPrefix(e, "."))
 	}
 	return nil
 }
@@ -124,6 +126,7 @@ func (opt *Options) parseStatusCodes() error {
 	}
 
 	for _, c := range strings.Split(opt.StatusCodes, ",") {
+		c = strings.TrimSpace(c)
 		i, err := strconv.Atoi(c)
 		if err != nil {
 			return fmt.Errorf("invalid status code given: %s", c)

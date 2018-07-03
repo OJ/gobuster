@@ -11,7 +11,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// GobusterDNS is the main type
+// GobusterDNS is the main type to implement the interface
 type GobusterDNS struct{}
 
 // Setup is the setup implementation of gobusterdns

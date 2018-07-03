@@ -1,6 +1,6 @@
 @echo off
-set GOOS=linux
+set GOOS=windows
 set GOARCH=amd64
 
 go test -v -race ./...
-go build -o gobuster
+go build -o gobuster.exe

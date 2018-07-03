@@ -61,7 +61,7 @@ func (d GobusterDir) Process(g *libgobuster.Gobuster, word string) ([]libgobuste
 	}
 
 	// Follow up with files using each ext.
-	for _, ext := range g.Opts.ExtensionsParsed {
+	for ext := range g.Opts.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
 		url = fmt.Sprintf("%s%s", g.Opts.URL, file)
 		fileResp, fileSize, err := g.GetRequest(url)

@@ -104,8 +104,8 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 	if client.includeLength {
 		length = new(int64)
 		if resp.ContentLength <= 0 {
-			body, err := ioutil.ReadAll(resp.Body)
-			if err == nil {
+			body, err2 := ioutil.ReadAll(resp.Body)
+			if err2 == nil {
 				*length = int64(utf8.RuneCountInString(string(body)))
 			}
 		} else {

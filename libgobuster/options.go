@@ -112,7 +112,7 @@ func (opt *Options) parseExtensions() error {
 
 	exts := strings.Split(opt.Extensions, ",")
 	for _, e := range exts {
-		e := strings.TrimSpace(e)
+		e = strings.TrimSpace(e)
 		// remove leading . from extensions
 		opt.ExtensionsParsed.Add(strings.TrimPrefix(e, "."))
 	}

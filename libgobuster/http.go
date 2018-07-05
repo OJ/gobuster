@@ -112,6 +112,7 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 			*length = resp.ContentLength
 		}
 	} else {
+		// DO NOT REMOVE!
 		// absolutely needed so golang will reuse connections!
 		_, err = io.Copy(ioutil.Discard, resp.Body)
 		if err != nil {

@@ -61,7 +61,7 @@ func ValidateState(
 	}
 
 	if s.Threads < 0 {
-		errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %s", s.Threads))
+		errorList = multierror.Append(errorList, fmt.Errorf("[!] Threads (-t): Invalid value: %d", s.Threads))
 	}
 
 	stdin, err := os.Stdin.Stat()

@@ -1,5 +1,6 @@
 @0x42424242 - initial DNS support
 @0xdevalias - Refactoring of code, and lots of other stuff
+@FireFart - Supporting connection reuse, resulting in been speed ups
 @Ne0nd0g - STDIN support for wordlists
 @UID1K - initial DNS wildcard check support
 @averagesecurityguy - quiet mode support

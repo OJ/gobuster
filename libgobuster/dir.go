@@ -2,6 +2,7 @@ package libgobuster
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -92,6 +93,13 @@ func MakeRequest(s *State, fullUrl, cookie string) (*int, *int64) {
 			}
 		} else {
 			*length = resp.ContentLength
+		}
+	} else {
+		// DO NOT REMOVE!
+		// absolutely needed so golang will reuse connections!
+		_, err = io.Copy(ioutil.Discard, resp.Body)
+		if err != nil {
+			return nil, nil
 		}
 	}
 

@@ -6,6 +6,10 @@ Gobuster is a tool used to brute-force:
 * URIs (directories and files) in web sites.
 * DNS subdomains (with wildcard support).
 
+### Travis CI Status
+
+Because all the cool kids are doing it: [![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster)
+
 ### Oh dear God.. WHY!?
 
 Because I wanted:

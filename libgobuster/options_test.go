@@ -10,11 +10,11 @@ func TestNewOptions(t *testing.T) {
 
 	o := NewOptions()
 	if o.StatusCodesParsed.Set == nil {
-		t.Fatalf("StatusCodesParsed not initialized")
+		t.Fatal("StatusCodesParsed not initialized")
 	}
 
 	if o.ExtensionsParsed.Set == nil {
-		t.Fatalf("ExtensionsParsed not initialized")
+		t.Fatal("ExtensionsParsed not initialized")
 	}
 }
 

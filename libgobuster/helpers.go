@@ -16,6 +16,10 @@ type stringSet struct {
 	Set map[string]bool
 }
 
+func newStringSet() stringSet {
+	return stringSet{Set: map[string]bool{}}
+}
+
 // Add an element to a set
 func (set *stringSet) Add(s string) bool {
 	_, found := set.Set[s]
@@ -53,6 +57,10 @@ func (set *stringSet) Stringify() string {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
+}
+
+func newIntSet() intSet {
+	return intSet{Set: map[int]bool{}}
 }
 
 // Add an element to a set

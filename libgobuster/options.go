@@ -50,8 +50,8 @@ type Options struct {
 // NewOptions returns a new initialized Options object
 func NewOptions() *Options {
 	return &Options{
-		StatusCodesParsed: intSet{Set: map[int]bool{}},
-		ExtensionsParsed:  stringSet{Set: map[string]bool{}},
+		StatusCodesParsed: newIntSet(),
+		ExtensionsParsed:  newStringSet(),
 	}
 }
 

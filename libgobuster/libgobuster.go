@@ -55,7 +55,7 @@ func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobu
 	}
 
 	var g Gobuster
-	g.WildcardIps = stringSet{Set: map[string]bool{}}
+	g.WildcardIps = newStringSet()
 	g.context = c
 	g.Opts = opts
 	h, err := newHTTPClient(c, opts)

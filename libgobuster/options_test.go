@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestNewOptions(t *testing.T) {
+	t.Parallel()
+
+	o := NewOptions()
+	if o.StatusCodesParsed.Set == nil {
+		t.Fatalf("StatusCodesParsed not initialized")
+	}
+
+	if o.ExtensionsParsed.Set == nil {
+		t.Fatalf("ExtensionsParsed not initialized")
+	}
+}
+
 func TestParseExtensions(t *testing.T) {
 	t.Parallel()
 
@@ -51,6 +64,7 @@ func TestParseStatusCodes(t *testing.T) {
 		{"Double codes", "200, 100, 202, 100", intSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Invalid code", "200,AAA", intSet{Set: map[int]bool{}}, "invalid status code given: AAA"},
 		{"Invalid integer", "2000000000000000000000000000000", intSet{Set: map[int]bool{}}, "invalid status code given: 2000000000000000000000000000000"},
+		{"Empty string", "", intSet{Set: map[int]bool{}}, "invalid status code string provided"},
 	}
 
 	for _, x := range tt {

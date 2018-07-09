@@ -27,6 +27,10 @@ func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
 	var client httpClient
 	proxyURLFunc = http.ProxyFromEnvironment
 
+	if opt == nil {
+		return nil, fmt.Errorf("options is nil")
+	}
+
 	if opt.Proxy != "" {
 		proxyURL, err := url.Parse(opt.Proxy)
 		if err != nil {

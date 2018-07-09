@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"strings"
 	"testing"
+	"testing/iotest"
 )
 
 func TestNewStringSet(t *testing.T) {
@@ -129,5 +130,39 @@ func TestIntSetStringify(t *testing.T) {
 	// should be sorted
 	if expected != z {
 		t.Fatalf("Expected %q got %q", expected, z)
+	}
+}
+
+func TestLineCounter(t *testing.T) {
+	var tt = []struct {
+		testName string
+		s        string
+		expected int
+	}{
+		{"One Line", "test", 1},
+		{"3 Lines", "TestString\nTest\n1234", 3},
+		{"Trailing newline", "TestString\nTest\n1234\n", 4},
+		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
+		{"Empty", "", 1},
+	}
+	for _, x := range tt {
+		t.Run(x.testName, func(t *testing.T) {
+			r := strings.NewReader(x.s)
+			l, err := lineCounter(r)
+			if err != nil {
+				t.Fatalf("Got error: %v", err)
+			}
+			if l != x.expected {
+				t.Fatalf("wrong line count! Got %d expected %d", l, x.expected)
+			}
+		})
+	}
+}
+
+func TestLineCounterError(t *testing.T) {
+	r := iotest.TimeoutReader(strings.NewReader("test"))
+	_, err := lineCounter(r)
+	if err != iotest.ErrTimeout {
+		t.Fatalf("Got wrong error! %v", err)
 	}
 }

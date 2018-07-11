@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/OJ/gobuster/libgobuster"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 // GobusterDir is the main type to implement the interface
@@ -19,7 +19,7 @@ func (d GobusterDir) Setup(g *libgobuster.Gobuster) error {
 		return fmt.Errorf("unable to connect to %s: %v", g.Opts.URL, err)
 	}
 
-	guid := uuid.Must(uuid.NewV4())
+	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", g.Opts.URL, guid)
 	wildcardResp, _, err := g.GetRequest(url)
 

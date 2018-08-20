@@ -119,9 +119,9 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 		select {
 		case <-g.context.Done():
 			return
-		case word := <-wordChan:
+		case word, ok := <-wordChan:
 			// worker finished
-			if word == "" {
+			if !ok {
 				return
 			}
 			// Mode-specific processing

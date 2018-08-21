@@ -40,6 +40,7 @@ Yes, you're probably correct. Feel free to:
 * `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-v` - verbose output (show all results).
 * `-w <wordlist>` - path to the wordlist used for brute forcing.
+* `-xr` - expand numeric ranges in wordlist (example: foo-[1-10]).
 
 ### Command line options for `dns` mode
 

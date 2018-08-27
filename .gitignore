@@ -24,3 +24,5 @@ _testmain.go
 *.prof
 *.txt
 *.swp
+
+gobuster

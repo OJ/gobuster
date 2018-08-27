@@ -1,4 +1,4 @@
-Gobuster v1.4.2 (OJ Reeves @TheColonial)
+Gobuster v2.0.0 (OJ Reeves @TheColonial)
 ========================================
 
 Gobuster is a tool used to brute-force:
@@ -33,13 +33,14 @@ Yes, you're probably correct. Feel free to:
 
 ### Common Command line options
 
-* `-fw` - Force processing of a domain with wildcard results.
-* `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`)
+* `-fw` - force processing of a domain with wildcard results.
+* `-np` - hide the progress output.
+* `-m <mode>` - which mode to use, either `dir` or `dns` (default: `dir`).
 * `-q` - disables banner/underline output.
 * `-t <threads>` - number of threads to run (default: `10`).
 * `-u <url/domain>` - full URL (including scheme), or base domain name.
 * `-v` - verbose output (show all results).
-* `-w <wordlist>` - path to the wordlist used for brute forcing.
+* `-w <wordlist>` - path to the wordlist used for brute forcing (use `-` for stdin).
 
 ### Command line options for `dns` mode
 
@@ -62,6 +63,7 @@ Yes, you're probably correct. Feel free to:
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
+* `-to <timeout>` - HTTP timeout. Examples: 10s, 100ms, 1m (default: 10s).
 
 ### Building
 
@@ -79,13 +81,13 @@ gobuster $ go install
 
 #### Running as a script
 ```
-gobuster$ go run main.go <parameters>
+gobuster $ go run main.go <parameters>
 ```
 
 ### Wordlists via STDIN
-Wordlists can be piped into `gobuster` via stdin:
+Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
 ```
-hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
+hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com -w -
 ```
 Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
 
@@ -99,82 +101,112 @@ $ gobuster -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w com
 ```
 Default options looks like this:
 ```
-$ gobuster -u http://buffered.io/ -w words.txt
+$ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
-[+] Url/Domain   : http://buffered.io/
+[+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
-[+] Wordlist     : words.txt
-[+] Status codes : 200,204,301,302,307
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Timeout      : 10s
 =====================================================
-/index (Status: 200)
-/posts (Status: 301)
+2018/08/27 11:49:43 Starting gobuster
+=====================================================
+/categories (Status: 301)
 /contact (Status: 301)
+/posts (Status: 301)
+/index (Status: 200)
+=====================================================
+2018/08/27 11:49:44 Finished
 =====================================================
 ```
 Default options with status codes disabled looks like this:
 ```
-$ gobuster -u http://buffered.io/ -w words.txt -n
+$ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -n
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
-[+] Url/Domain   : http://buffered.io/
+[+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
-[+] Wordlist     : words.txt
-[+] Status codes : 200,204,301,302,307
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,403
 [+] No status    : true
+[+] Timeout      : 10s
 =====================================================
+2018/08/27 11:50:18 Starting gobuster
+=====================================================
+/categories
+/contact
 /index
 /posts
-/contact
+=====================================================
+2018/08/27 11:50:18 Finished
 =====================================================
 ```
 Verbose output looks like this:
 ```
-$ gobuster -u http://buffered.io/ -w words.txt -v
+$ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -v
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
-[+] Url/Domain   : http://buffered.io/
+[+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
-[+] Wordlist     : words.txt
-[+] Status codes : 200,204,301,302,307
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,403
 [+] Verbose      : true
+[+] Timeout      : 10s
 =====================================================
-Found : /index (Status: 200)
-Missed: /derp (Status: 404)
-Found : /posts (Status: 301)
-Found : /contact (Status: 301)
+2018/08/27 11:50:51 Starting gobuster
+=====================================================
+Missed: /alsodoesnotexist (Status: 404)
+Found: /index (Status: 200)
+Missed: /doesnotexist (Status: 404)
+Found: /categories (Status: 301)
+Found: /posts (Status: 301)
+Found: /contact (Status: 301)
+=====================================================
+2018/08/27 11:50:51 Finished
 =====================================================
 ```
 Example showing content length:
 ```
-$ gobuster -u http://buffered.io/ -w words.txt -l
+$ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -l
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
-[+] Url/Domain   : http://buffered.io/
+[+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
-[+] Wordlist     : /tmp/words
-[+] Status codes : 301,302,307,200,204
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,403
 [+] Show length  : true
+[+] Timeout      : 10s
 =====================================================
-/contact (Status: 301)
-/posts (Status: 301)
-/index (Status: 200) [Size: 61481]
+2018/08/27 11:51:16 Starting gobuster
+=====================================================
+/categories (Status: 301) [Size: 178]
+/posts (Status: 301) [Size: 178]
+/contact (Status: 301) [Size: 178]
+/index (Status: 200) [Size: 51759]
+=====================================================
+2018/08/27 11:51:17 Finished
 =====================================================
 ```
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
 ```
-$ gobuster -u http://buffered.io/ -w words.txt -q -n -e
-http://buffered.io/posts
-http://buffered.io/contact
-http://buffered.io/index
+$ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -q -n -e
+https://buffered.io/index
+https://buffered.io/contact
+https://buffered.io/posts
+https://buffered.io/categories
 ```
 
 #### `dns` mode
@@ -185,111 +217,135 @@ $ gobuster -m dns -u mysite.com -t 50 -w common-names.txt
 ```
 Normal sample run goes like this:
 ```
-$ gobuster -m dns -w subdomains.txt -u google.com
+$ gobuster -m dns -w ~/wordlists/subdomains.txt -u google.com
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
 [+] Threads      : 10
-[+] Wordlist     : subdomains.txt
+[+] Wordlist     : /home/oj/wordlists/subdomains.txt
 =====================================================
-Found: m.google.com
-Found: admin.google.com
-Found: mobile.google.com
-Found: www.google.com
-Found: search.google.com
+2018/08/27 11:54:20 Starting gobuster
+=====================================================
 Found: chrome.google.com
 Found: ns1.google.com
-Found: store.google.com
-Found: wap.google.com
+Found: admin.google.com
+Found: www.google.com
+Found: m.google.com
 Found: support.google.com
-Found: directory.google.com
 Found: translate.google.com
+Found: cse.google.com
 Found: news.google.com
 Found: music.google.com
 Found: mail.google.com
-Found: blog.google.com
-Found: cse.google.com
+Found: store.google.com
+Found: mobile.google.com
+Found: search.google.com
+Found: wap.google.com
+Found: directory.google.com
 Found: local.google.com
+Found: blog.google.com
+=====================================================
+2018/08/27 11:54:20 Finished
 =====================================================
 ```
 Show IP sample run goes like this:
 ```
-$ gobuster -m dns -w subdomains.txt -u google.com -i
+$ gobuster -m dns -w ~/wordlists/subdomains.txt -u google.com -i
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
 [+] Threads      : 10
-[+] Wordlist     : subdomains.txt
-[+] Verbose      : true
+[+] Wordlist     : /home/oj/wordlists/subdomains.txt
 =====================================================
-Found: chrome.google.com [2404:6800:4006:801::200e, 216.58.220.110]
-Found: m.google.com [216.58.220.107, 2404:6800:4006:801::200b]
-Found: www.google.com [74.125.237.179, 74.125.237.177, 74.125.237.178, 74.125.237.180, 74.125.237.176, 2404:6800:4006:801::2004]
-Found: search.google.com [2404:6800:4006:801::200e, 216.58.220.110]
-Found: admin.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: store.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: mobile.google.com [216.58.220.107, 2404:6800:4006:801::200b]
-Found: ns1.google.com [216.239.32.10]
-Found: directory.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: translate.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: cse.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: local.google.com [2404:6800:4006:801::200e, 216.58.220.110]
-Found: music.google.com [2404:6800:4006:801::200e, 216.58.220.110]
-Found: wap.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: blog.google.com [216.58.220.105, 2404:6800:4006:801::2009]
-Found: support.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: news.google.com [216.58.220.110, 2404:6800:4006:801::200e]
-Found: mail.google.com [216.58.220.101, 2404:6800:4006:801::2005]
+2018/08/27 11:54:54 Starting gobuster
+=====================================================
+Found: www.google.com [172.217.25.36, 2404:6800:4006:802::2004]
+Found: admin.google.com [172.217.25.46, 2404:6800:4006:806::200e]
+Found: store.google.com [172.217.167.78, 2404:6800:4006:802::200e]
+Found: mobile.google.com [172.217.25.43, 2404:6800:4006:802::200b]
+Found: ns1.google.com [216.239.32.10, 2001:4860:4802:32::a]
+Found: m.google.com [172.217.25.43, 2404:6800:4006:802::200b]
+Found: cse.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
+Found: chrome.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: search.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: local.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
+Found: news.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: blog.google.com [216.58.199.73, 2404:6800:4006:806::2009]
+Found: support.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: wap.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: directory.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: translate.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: music.google.com [172.217.25.46, 2404:6800:4006:802::200e]
+Found: mail.google.com [172.217.25.37, 2404:6800:4006:802::2005]
+=====================================================
+2018/08/27 11:54:55 Finished
 =====================================================
 ```
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
 ```
-$ gobuster -m dns -w subdomains.txt -u yp.to -i
+$ gobuster -m dns -w ~/wordlists/subdomains.txt -u yp.to -i
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
 [+] Threads      : 10
-[+] Wordlist     : /tmp/test.txt
+[+] Wordlist     : /home/oj/wordlists/subdomains.txt
 =====================================================
-[-] Unable to validate base domain: yp.to
-Found: cr.yp.to [131.155.70.11, 131.155.70.13]
+2018/08/27 11:56:43 Starting gobuster
+=====================================================
+2018/08/27 11:56:53 [-] Unable to validate base domain: yp.to
+Found: cr.yp.to [131.193.32.108, 131.193.32.109]
+=====================================================
+2018/08/27 11:56:53 Finished
 =====================================================
 ```
 Wildcard DNS is also detected properly:
 ```
-$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns
+$ gobuster -m dns -w ~/wordlists/subdomains.txt -u 0.0.1.xip.io        
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
-[+] Url/Domain   : doesntexist.com
+[+] Url/Domain   : 0.0.1.xip.io
 [+] Threads      : 10
-[+] Wordlist     : subdomainsbig.txt
+[+] Wordlist     : /home/oj/wordlists/subdomains.txt
 =====================================================
-[-] Wildcard DNS found. IP address(es):  123.123.123.123
-[-] To force processing of Wildcard DNS, specify the '-fw' switch.
+2018/08/27 12:13:48 Starting gobuster
+=====================================================
+2018/08/27 12:13:48 [-] Wildcard DNS found. IP address(es): 1.0.0.0
+2018/08/27 12:13:48 [!] To force processing of Wildcard DNS, specify the '-fw' switch.
+=====================================================
+2018/08/27 12:13:48 Finished
 =====================================================
 ```
 If the user wants to force processing of a domain that has wildcard entries, use `-fw`:
 ```
-$ gobuster -w subdomainsbig.txt -u doesntexist.com -m dns -fw
+$ gobuster -m dns -w ~/wordlists/subdomains.txt -u 0.0.1.xip.io -fw
 
-Gobuster v1.4.2              OJ Reeves (@TheColonial)
+=====================================================
+Gobuster v2.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
-[+] Url/Domain   : doesntexist.com
+[+] Url/Domain   : 0.0.1.xip.io
 [+] Threads      : 10
-[+] Wordlist     : subdomainsbig.txt
+[+] Wordlist     : /home/oj/wordlists/subdomains.txt
 =====================================================
-[-] Wildcard DNS found. IP address(es):  123.123.123.123
-Found: email.doesntexist.com
-^C[!] Keyboard interrupt detected, terminating.
+2018/08/27 12:13:51 Starting gobuster
+=====================================================
+2018/08/27 12:13:51 [-] Wildcard DNS found. IP address(es): 1.0.0.0
+Found: 127.0.0.1.xip.io
+Found: test.127.0.0.1.xip.io
+=====================================================
+2018/08/27 12:13:53 Finished
 =====================================================
 ```
 

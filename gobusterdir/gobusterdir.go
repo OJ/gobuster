@@ -31,7 +31,7 @@ func (d GobusterDir) Setup(g *libgobuster.Gobuster) error {
 		g.IsWildcard = true
 		log.Printf("[-] Wildcard response found: %s => %d", url, *wildcardResp)
 		if !g.Opts.WildcardForced {
-			return fmt.Errorf("[-] To force processing of Wildcard responses, specify the '-fw' switch.")
+			return fmt.Errorf("To force processing of Wildcard responses, specify the '-fw' switch.")
 		}
 	}
 

@@ -39,7 +39,6 @@ func ruler() {
 }
 
 func banner() {
-	fmt.Println("")
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
@@ -76,10 +75,10 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for e := range g.Errors() {
 		if !g.Opts.Quiet {
+			g.ClearProgress()
 			log.Printf("[!] %v", e)
 		}
 	}
-	g.ClearProgress()
 }
 
 func progressWorker(c context.Context, g *libgobuster.Gobuster) {
@@ -164,6 +163,7 @@ func main() {
 	}
 
 	if !o.Quiet {
+		fmt.Println("")
 		ruler()
 		banner()
 		ruler()
@@ -199,13 +199,13 @@ func main() {
 	}
 
 	if err := gobuster.Start(); err != nil {
-		log.Fatalf("[!] %v", err)
+		log.Printf("[!] %v", err)
+	} else {
+		// call cancel func to free ressources and stop progressFunc
+		cancel()
+		// wait for all output funcs to finish
+		wg.Wait()
 	}
-
-	// call cancel func to free ressources and stop progressFunc
-	cancel()
-	// wait for all output funcs to finish
-	wg.Wait()
 
 	if !o.Quiet {
 		gobuster.ClearProgress()

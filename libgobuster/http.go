@@ -95,7 +95,7 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		if ue, ok := err.(*url.Error); ok {
 
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
-				return nil, nil, fmt.Errorf("invalid certificate: %v", ue.Err)
+				return nil, nil, fmt.Errorf("Invalid certificate: %v", ue.Err)
 			}
 		}
 		return nil, nil, err

@@ -24,7 +24,7 @@ func (d GobusterDNS) Setup(g *libgobuster.Gobuster) error {
 		g.WildcardIps.AddRange(wildcardIps)
 		log.Printf("[-] Wildcard DNS found. IP address(es): %s", g.WildcardIps.Stringify())
 		if !g.Opts.WildcardForced {
-			return fmt.Errorf("[-] To force processing of Wildcard DNS, specify the '-fw' switch.")
+			return fmt.Errorf("To force processing of Wildcard DNS, specify the '-fw' switch.")
 		}
 	}
 

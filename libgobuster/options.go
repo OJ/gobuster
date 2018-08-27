@@ -91,11 +91,11 @@ func (opt *Options) validate() *multierror.Error {
 		}
 	}
 
-	if !strings.HasSuffix(opt.URL, "/") {
-		opt.URL = fmt.Sprintf("%s/", opt.URL)
-	}
-
 	if opt.Mode == ModeDir {
+		if !strings.HasSuffix(opt.URL, "/") {
+			opt.URL = fmt.Sprintf("%s/", opt.URL)
+		}
+
 		if err := opt.validateDirMode(); err != nil {
 			errorList = multierror.Append(errorList, err)
 		}

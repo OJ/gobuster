@@ -62,6 +62,7 @@ Yes, you're probably correct. Feel free to:
 * `-x <extensions>` - list of extensions to check for, if any.
 * `-P <password>` - HTTP Authorization password (Basic Auth only, prompted if missing).
 * `-U <username>` - HTTP Authorization username (Basic Auth only).
+* `-to <timeout>` - HTTP timeout. Examples: 10s, 100ms, 1m (default: 10s).
 
 ### Building
 
@@ -83,9 +84,9 @@ gobuster$ go run main.go <parameters>
 ```
 
 ### Wordlists via STDIN
-Wordlists can be piped into `gobuster` via stdin:
+Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
 ```
-hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com
+hashcat -a 3 --stdout ?l | gobuster -u https://mysite.com -w -
 ```
 Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
 

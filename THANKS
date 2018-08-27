@@ -1,6 +1,6 @@
 @0x42424242 - initial DNS support
 @0xdevalias - Refactoring of code, and lots of other stuff
-@FireFart - Supporting connection reuse, resulting in been speed ups
+@FireFart - Supporting connection reuse, resulting in been speed ups, refactoring, progress output
 @Ne0nd0g - STDIN support for wordlists
 @UID1K - initial DNS wildcard check support
 @averagesecurityguy - quiet mode support
@@ -13,3 +13,4 @@
 @knapsy - saving output to file, and CNAME resolution for DNS mode
 @rverton - CLI flag to skip SSL verification
 @viaMorgoth - base domain validation for DNS mode
+@FireFart - refactoring, progress output

@@ -12,7 +12,7 @@ import (
 
 const (
 	// VERSION contains the current gobuster version
-	VERSION = "1.4.2"
+	VERSION = "2.0.0"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -91,14 +91,16 @@ func (g *Gobuster) incrementRequests() {
 
 // PrintProgress outputs the current wordlist progress to stderr
 func (g *Gobuster) PrintProgress() {
-	g.mu.RLock()
-	if g.Opts.Wordlist == "-" {
-		fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
-		// only print status if we already read in the wordlist
-	} else if g.requestsExpected > 0 {
-		fmt.Fprintf(os.Stderr, "\rProgress: %d / %d", g.requestsIssued, g.requestsExpected)
+	if !g.Opts.Quiet && !g.Opts.NoProgress {
+		g.mu.RLock()
+		if g.Opts.Wordlist == "-" {
+			fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
+			// only print status if we already read in the wordlist
+		} else if g.requestsExpected > 0 {
+			fmt.Fprintf(os.Stderr, "\rProgress: %d / %d (%3.2f%%)", g.requestsIssued, g.requestsExpected, float32(g.requestsIssued)*100.0/float32(g.requestsExpected))
+		}
+		g.mu.RUnlock()
 	}
-	g.mu.RUnlock()
 }
 
 // ClearProgress removes the last status line from stderr

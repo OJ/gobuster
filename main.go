@@ -75,9 +75,11 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for e := range g.Errors() {
-		g.ClearProgress()
-		log.Printf("[!] %v", e)
+		if !g.Opts.Quiet {
+			log.Printf("[!] %v", e)
+		}
 	}
+	g.ClearProgress()
 }
 
 func progressWorker(c context.Context, g *libgobuster.Gobuster) {
@@ -128,6 +130,7 @@ func main() {
 	flag.BoolVar(&o.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&o.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&o.InsecureSSL, "k", false, "Skip SSL certificate verification")
+	flag.BoolVar(&o.NoProgress, "np", false, "Don't display progress")
 
 	flag.Parse()
 
@@ -191,7 +194,7 @@ func main() {
 	go errorWorker(gobuster, &wg)
 	go resultWorker(gobuster, outputFilename, &wg)
 
-	if !o.Quiet {
+	if !o.Quiet && !o.NoProgress {
 		go progressWorker(ctx, gobuster)
 	}
 

@@ -37,6 +37,7 @@ type Options struct {
 	FollowRedirect    bool
 	IncludeLength     bool
 	NoStatus          bool
+	NoProgress        bool
 	Expanded          bool
 	Quiet             bool
 	ShowIPs           bool
@@ -68,7 +69,7 @@ func (opt *Options) validate() *multierror.Error {
 	}
 
 	if opt.Wordlist == "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("WordList (-w): Must be specified"))
+		errorList = multierror.Append(errorList, fmt.Errorf("WordList (-w): Must be specified (use `-w -` for stdin)"))
 	} else if opt.Wordlist == "-" {
 		// STDIN
 	} else if _, err := os.Stat(opt.Wordlist); os.IsNotExist(err) {

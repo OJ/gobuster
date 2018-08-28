@@ -1,37 +1,80 @@
 @echo off
 
+SET ARG=%1
 SET TARGET=.\build
 
-IF %1=="test" (
+IF "%ARG%"=="test" (
   go test -v -race ./...
+  echo Done.
+  GOTO Done
 )
 
-IF %1=="clean" (
-  del /F %TARGET%\*.*
+IF "%ARG%"=="clean" (
+  del /F /Q %TARGET%\*.*
+  echo Done.
+  GOTO Done
 )
 
-IF %1=="" (
-  echo "Building for windows ..."
-  set GOOS=windows
-  set GOARCH=amd64
-  go build -o %TARGET%\gobuster-%GOARCH%.exe
-  set GOARCH=386
-  go build -o %TARGET%\gobuster-%GOARCH%.exe
-
-  echo "Building for osx ..."
-  set GOOS=osx
-  set GOARCH=amd64
-  go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
-  set GOARCH=386
-  go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
-
-  echo "Building for linux ..."
-  set GOOS=osx
-  set GOARCH=amd64
-  go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
-  set GOARCH=386
-  go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
-
-  echo "Done."
+IF "%ARG%"=="windows" (
+  CALL :Windows
+  GOTO Done
 )
 
+IF "%ARG%"=="darwin" (
+  CALL :Darwin
+  GOTO Done
+)
+
+IF "%ARG%"=="linux" (
+  CALL :Linux
+  GOTO Done
+)
+
+IF "%ARG%"=="all" (
+  CALL :Darwin
+  CALL :Linux
+  CALL :Windows
+  GOTO Done
+)
+
+IF "%ARG%"=="" (
+  go build -o .\gobuster.exe
+  GOTO Done
+)
+
+GOTO Done
+
+:Darwin
+set GOOS=darwin
+set GOARCH=amd64
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set GOARCH=386
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+echo Done.
+EXIT /B 0
+
+:Linux
+set GOOS=linux
+set GOARCH=amd64
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set GOARCH=386
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+echo Done.
+EXIT /B 0
+
+:Windows
+set GOOS=windows
+set GOARCH=amd64
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOARCH%.exe
+set GOARCH=386
+echo Building for %GOOS% %GOARCH% ...
+go build -o %TARGET%\gobuster-%GOARCH%.exe
+echo Done.
+EXIT /B 0
+
+:Done

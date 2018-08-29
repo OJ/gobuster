@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -114,6 +115,16 @@ func (g *Gobuster) GetRequest(url string) (*int, *int64, error) {
 	return g.http.makeRequest(url, g.Opts.Cookies)
 }
 
+// DNSLookup looks up a domain via system default DNS servers
+func (g *Gobuster) DNSLookup(domain string) ([]string, error) {
+	return net.LookupHost(domain)
+}
+
+// DNSLookupCname looks up a CNAME record via system default DNS servers
+func (g *Gobuster) DNSLookupCname(domain string) (string, error) {
+	return net.LookupCNAME(domain)
+}
+
 func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
@@ -157,10 +168,6 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
 
-	// mutiply by extensions to get the total number of requests
-	if len(g.Opts.ExtensionsParsed.Set) > 0 {
-		lines = lines + (lines * len(g.Opts.ExtensionsParsed.Set))
-	}
 	g.requestsExpected = lines
 	g.requestsIssued = 0
 

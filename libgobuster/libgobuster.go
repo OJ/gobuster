@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -12,7 +13,7 @@ import (
 
 const (
 	// VERSION contains the current gobuster version
-	VERSION = "2.0.0"
+	VERSION = "2.0.1"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -111,8 +112,17 @@ func (g *Gobuster) ClearProgress() {
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (g *Gobuster) GetRequest(url string) (*int, *int64, error) {
-	g.incrementRequests()
 	return g.http.makeRequest(url, g.Opts.Cookies)
+}
+
+// DNSLookup looks up a domain via system default DNS servers
+func (g *Gobuster) DNSLookup(domain string) ([]string, error) {
+	return net.LookupHost(domain)
+}
+
+// DNSLookupCname looks up a CNAME record via system default DNS servers
+func (g *Gobuster) DNSLookupCname(domain string) (string, error) {
+	return net.LookupCNAME(domain)
 }
 
 func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
@@ -126,6 +136,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
+			g.incrementRequests()
 			// Mode-specific processing
 			res, err := g.plugin.Process(g, word)
 			if err != nil {
@@ -157,10 +168,6 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
 
-	// mutiply by extensions to get the total number of requests
-	if len(g.Opts.ExtensionsParsed.Set) > 0 {
-		lines = lines + (lines * len(g.Opts.ExtensionsParsed.Set))
-	}
 	g.requestsExpected = lines
 	g.requestsIssued = 0
 

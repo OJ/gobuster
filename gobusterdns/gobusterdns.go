@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"net"
 	"strings"
 
 	"github.com/OJ/gobuster/libgobuster"
@@ -18,7 +17,7 @@ type GobusterDNS struct{}
 func (d GobusterDNS) Setup(g *libgobuster.Gobuster) error {
 	// Resolve a subdomain sthat probably shouldn't exist
 	guid := uuid.New()
-	wildcardIps, err := net.LookupHost(fmt.Sprintf("%s.%s", guid, g.Opts.URL))
+	wildcardIps, err := g.DNSLookup(fmt.Sprintf("%s.%s", guid, g.Opts.URL))
 	if err == nil {
 		g.IsWildcard = true
 		g.WildcardIps.AddRange(wildcardIps)
@@ -30,7 +29,7 @@ func (d GobusterDNS) Setup(g *libgobuster.Gobuster) error {
 
 	if !g.Opts.Quiet {
 		// Provide a warning if the base domain doesn't resolve (in case of typo)
-		_, err = net.LookupHost(g.Opts.URL)
+		_, err = g.DNSLookup(g.Opts.URL)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.py.to` does!
 			log.Printf("[-] Unable to validate base domain: %s", g.Opts.URL)
@@ -43,7 +42,7 @@ func (d GobusterDNS) Setup(g *libgobuster.Gobuster) error {
 // Process is the process implementation of gobusterdns
 func (d GobusterDNS) Process(g *libgobuster.Gobuster, word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, g.Opts.URL)
-	ips, err := net.LookupHost(subdomain)
+	ips, err := g.DNSLookup(subdomain)
 	var ret []libgobuster.Result
 	if err == nil {
 		if !g.IsWildcard || !g.WildcardIps.ContainsAny(ips) {
@@ -53,7 +52,7 @@ func (d GobusterDNS) Process(g *libgobuster.Gobuster, word string) ([]libgobuste
 			if g.Opts.ShowIPs {
 				result.Extra = strings.Join(ips, ", ")
 			} else if g.Opts.ShowCNAME {
-				cname, err := net.LookupCNAME(subdomain)
+				cname, err := g.DNSLookupCname(subdomain)
 				if err == nil {
 					result.Extra = cname
 				}

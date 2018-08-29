@@ -13,7 +13,7 @@ import (
 
 const (
 	// VERSION contains the current gobuster version
-	VERSION = "2.0.0"
+	VERSION = "2.0.1"
 )
 
 // SetupFunc is the "setup" function prototype for implementations

@@ -1,4 +1,4 @@
-Gobuster v2.0.0 (OJ Reeves @TheColonial)
+Gobuster v2.0.1 (OJ Reeves @TheColonial)
 ========================================
 
 Gobuster is a tool used to brute-force:
@@ -112,7 +112,7 @@ Default options looks like this:
 $ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -136,7 +136,7 @@ Default options with status codes disabled looks like this:
 $ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -n
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -161,7 +161,7 @@ Verbose output looks like this:
 $ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -v
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -188,7 +188,7 @@ Example showing content length:
 $ gobuster -u https://buffered.io -w ~/wordlists/shortlist.txt -l
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -228,7 +228,7 @@ Normal sample run goes like this:
 $ gobuster -m dns -w ~/wordlists/subdomains.txt -u google.com
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -264,7 +264,7 @@ Show IP sample run goes like this:
 $ gobuster -m dns -w ~/wordlists/subdomains.txt -u google.com -i
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -300,7 +300,7 @@ Base domain validation warning when the base domain fails to resolve. This is a 
 $ gobuster -m dns -w ~/wordlists/subdomains.txt -u yp.to -i
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
@@ -320,7 +320,7 @@ Wildcard DNS is also detected properly:
 $ gobuster -m dns -w ~/wordlists/subdomains.txt -u 0.0.1.xip.io        
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io
@@ -340,7 +340,7 @@ If the user wants to force processing of a domain that has wildcard entries, use
 $ gobuster -m dns -w ~/wordlists/subdomains.txt -u 0.0.1.xip.io -fw
 
 =====================================================
-Gobuster v2.0.0              OJ Reeves (@TheColonial)
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
 =====================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io

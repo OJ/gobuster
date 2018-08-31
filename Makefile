@@ -1,5 +1,4 @@
 TARGET=./build
-OSES=darwin linux windows
 ARCHS=amd64 386
 
 current: outputdir
@@ -29,7 +28,6 @@ darwin: outputdir
 		GOOS=darwin GARCH=$${GOARCH} go build -o ${TARGET}/gobuster-darwin-$${GOARCH} ; \
 	done; \
 	echo "Done."
-
 
 all: darwin linux windows
 

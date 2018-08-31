@@ -2,26 +2,29 @@ package libgobuster
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
-
-	"github.com/h2non/gock"
 )
 
-func TestMakeRequest(t *testing.T) {
-	defer gock.Off()
-	gock.New("http://server.com").
-		Get("/bar").
-		Reply(200).
-		BodyString("test")
+func httpServer(t *testing.T, content string) *httptest.Server {
+	t.Helper()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, content)
+	}))
+	return ts
+}
 
+func TestMakeRequest(t *testing.T) {
+	h := httpServer(t, "test")
+	defer h.Close()
 	o := NewOptions()
 	c, err := newHTTPClient(context.Background(), o)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	gock.InterceptClient(c.client)
-	defer gock.RestoreClient(c.client)
-	a, b, err := c.makeRequest("http://server.com/bar", "")
+	a, b, err := c.makeRequest(h.URL, "")
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}

@@ -2,6 +2,7 @@
 
 SET ARG=%1
 SET TARGET=.\build
+SET LDFLAGS="-s -w"
 
 IF "%ARG%"=="test" (
   go test -v -race ./...
@@ -48,10 +49,10 @@ GOTO Done
 set GOOS=darwin
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
 echo Done.
 EXIT /B 0
 
@@ -59,10 +60,10 @@ EXIT /B 0
 set GOOS=linux
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
 echo Done.
 EXIT /B 0
 
@@ -70,10 +71,10 @@ EXIT /B 0
 set GOOS=windows
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOARCH%.exe
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOARCH%.exe
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build -o %TARGET%\gobuster-%GOARCH%.exe
+go build -ldflags=%LDFLAGS% -o %TARGET%\gobuster-%GOARCH%.exe
 echo Done.
 EXIT /B 0
 

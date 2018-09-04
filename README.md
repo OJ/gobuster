@@ -85,7 +85,7 @@ If you have all the dependencies already, you can make use of the build scripts:
 * `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` subfolder.
 * `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` subfolder.
 * `make clean` - clears out the `build` subfolder.
-* `make test` - runs the tests (requires you to `go get githubcom/h2non/gock` first).
+* `make test` - runs the tests.
 
 #### Running as a script
 ```

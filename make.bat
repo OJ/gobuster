@@ -2,7 +2,7 @@
 
 SET ARG=%1
 SET TARGET=.\build
-SET BUILDARGS=-ldflags="-s -w" -gcflags="all=-trimpath=%GOPATH%/src" -asmflags="all=-trimpath=%GOPATH%/src"
+SET BUILDARGS=-ldflags="-s -w" -gcflags="-trimpath=%GOPATH%\src" -asmflags="-trimpath=%GOPATH%\src"
 
 IF "%ARG%"=="test" (
   go test -v -race ./...

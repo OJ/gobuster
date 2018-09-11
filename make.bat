@@ -49,10 +49,14 @@ GOTO Done
 set GOOS=darwin
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster
 echo Done.
 EXIT /B 0
 
@@ -60,10 +64,14 @@ EXIT /B 0
 set GOOS=linux
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOOS%-%GOARCH%
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster
 echo Done.
 EXIT /B 0
 
@@ -71,10 +79,14 @@ EXIT /B 0
 set GOOS=windows
 set GOARCH=amd64
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOARCH%.exe
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster.exe
 set GOARCH=386
 echo Building for %GOOS% %GOARCH% ...
-go build %BUILDARGS% -o %TARGET%\gobuster-%GOARCH%.exe
+set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
+mkdir %DIR% 2> NUL
+go build %BUILDARGS% -o %DIR%\gobuster.exe
 echo Done.
 EXIT /B 0
 

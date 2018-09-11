@@ -4,31 +4,31 @@ LDFLAGS="-s -w"
 GCFLAGS="all=-trimpath=${GOPATH}/src"
 ASMFLAGS="all=-trimpath=${GOPATH}/src"
 
-current: outputdir
+current:
 	@go build -o ./gobuster; \
 	echo "Done."
 
-outputdir:
-	@mkdir -p ${TARGET}
-
-windows: outputdir
+windows:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for windows $${GOARCH} ..." ; \
-		GOOS=windows GARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-$${GOARCH}.exe ; \
+		mkdir -p ${TARGET}/gobuster-windows-$${GOARCH} ; \
+		GOOS=windows GOARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-windows-$${GOARCH}/gobuster.exe ; \
 	done; \
 	echo "Done."
 
-linux: outputdir
+linux:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for linux $${GOARCH} ..." ; \
-		GOOS=linux GARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-linux-$${GOARCH} ; \
+		mkdir -p ${TARGET}/gobuster-linux-$${GOARCH} ; \
+		GOOS=linux GOARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-linux-$${GOARCH}/gobuster ; \
 	done; \
 	echo "Done."
 
-darwin: outputdir
+darwin:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for darwin $${GOARCH} ..." ; \
-		GOOS=darwin GARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-darwin-$${GOARCH} ; \
+		mkdir -p ${TARGET}/gobuster-darwin-$${GOARCH} ; \
+		GOOS=darwin GOARCH=$${GOARCH} go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-darwin-$${GOARCH}/gobuster ; \
 	done; \
 	echo "Done."
 

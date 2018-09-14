@@ -35,7 +35,7 @@ Yes, you're probably correct. Feel free to:
 
 If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
 
-<a href="https://opencollective.com/gobuster#backers" target="_blank"><img src="https://opencollective.com/gobuster/backers.svg?width=890"></a>
+[![Backers](https://opencollective.com/gobuster/backers.svg?width=890)](https://opencollective.com/gobuster#backers)
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 

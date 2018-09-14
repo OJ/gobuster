@@ -6,9 +6,9 @@ Gobuster is a tool used to brute-force:
 * URIs (directories and files) in web sites.
 * DNS subdomains (with wildcard support).
 
-### Travis CI Status
+### Tags, Statuses, etc
 
-Because all the cool kids are doing it: [![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster)
+[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](#sponsors)
 
 ### Oh dear God.. WHY!?
 
@@ -30,6 +30,12 @@ Yes, you're probably correct. Feel free to:
 
 * Not use it.
 * Show me how to do it better.
+
+### Love this tool? Back it!
+
+If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [[Become a backer](https://opencollective.com/gobuster#backer)]
+
+<a href="https://opencollective.com/gobuster#backers" target="_blank"><img src="https://opencollective.com/gobuster/backers.svg?width=890"></a>
 
 ### Common Command line options
 

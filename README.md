@@ -37,6 +37,8 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 <a href="https://opencollective.com/gobuster#backers" target="_blank"><img src="https://opencollective.com/gobuster/backers.svg?width=890"></a>
 
+All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
+
 ### Common Command line options
 
 * `-fw` - force processing of a domain with wildcard results.

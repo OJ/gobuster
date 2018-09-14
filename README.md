@@ -33,7 +33,7 @@ Yes, you're probably correct. Feel free to:
 
 ### Love this tool? Back it!
 
-If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [[Become a backer](https://opencollective.com/gobuster#backer)]
+If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
 
 <a href="https://opencollective.com/gobuster#backers" target="_blank"><img src="https://opencollective.com/gobuster/backers.svg?width=890"></a>
 

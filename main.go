@@ -150,7 +150,7 @@ func main() {
 	defer cancel()
 
 	var plugin libgobuster.GobusterPlugin
-	switch o.Mode {
+	switch strings.ToLower(o.Mode) {
 	case libgobuster.ModeDir:
 		plugin = gobusterdir.GobusterDir{}
 	case libgobuster.ModeDNS:

@@ -99,7 +99,7 @@ func (d GobusterDir) ResultToString(g *libgobuster.Gobuster, r *libgobuster.Resu
 
 	if g.Opts.StatusCodesParsed.Contains(r.Status) || g.Opts.Verbose {
 		if g.Opts.Expanded {
-			if _, err := fmt.Fprintf(buf, g.Opts.URL); err != nil {
+			if _, err := fmt.Fprintf(buf, "%s", g.Opts.URL); err != nil {
 				return nil, err
 			}
 		} else {
@@ -107,7 +107,7 @@ func (d GobusterDir) ResultToString(g *libgobuster.Gobuster, r *libgobuster.Resu
 				return nil, err
 			}
 		}
-		if _, err := fmt.Fprintf(buf, r.Entity); err != nil {
+		if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
 			return nil, err
 		}
 

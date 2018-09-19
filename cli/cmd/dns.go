@@ -16,7 +16,7 @@ import (
 var cmdDNS *cobra.Command
 
 func runDNS(cmd *cobra.Command, args []string) error {
-	globalopts, pluginopts, err := parseDNS()
+	globalopts, pluginopts, err := parseDNSOptions()
 	if err != nil {
 		return fmt.Errorf("error on parsing arguments: %v", err)
 	}
@@ -45,7 +45,7 @@ func runDNS(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseDNS() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
+func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err

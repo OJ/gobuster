@@ -22,7 +22,7 @@ import (
 var cmdDir *cobra.Command
 
 func runDir(cmd *cobra.Command, args []string) error {
-	globalopts, pluginopts, err := parseDir()
+	globalopts, pluginopts, err := parseDirOptions()
 	if err != nil {
 		return fmt.Errorf("error on parsing arguments: %v", err)
 	}
@@ -51,7 +51,7 @@ func runDir(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseDir() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
+func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err

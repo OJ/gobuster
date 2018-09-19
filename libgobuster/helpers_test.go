@@ -7,19 +7,19 @@ import (
 )
 
 func TestNewStringSet(t *testing.T) {
-	if newStringSet().Set == nil {
+	if NewStringSet().Set == nil {
 		t.Fatal("newStringSet returned nil Set")
 	}
 }
 
 func TestNewIntSet(t *testing.T) {
-	if newIntSet().Set == nil {
+	if NewIntSet().Set == nil {
 		t.Fatal("newIntSet returned nil Set")
 	}
 }
 
 func TestStringSetAdd(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	x.Add("test")
 	if len(x.Set) != 1 {
 		t.Fatalf("Unexptected size. Should have 1 Got %v", len(x.Set))
@@ -27,7 +27,7 @@ func TestStringSetAdd(t *testing.T) {
 }
 
 func TestStringSetAddDouble(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	x.Add("test")
 	x.Add("test")
 	if len(x.Set) != 1 {
@@ -36,7 +36,7 @@ func TestStringSetAddDouble(t *testing.T) {
 }
 
 func TestStringSetAddRange(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	x.AddRange([]string{"asdf", "ghjk"})
 	if len(x.Set) != 2 {
 		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
@@ -44,7 +44,7 @@ func TestStringSetAddRange(t *testing.T) {
 }
 
 func TestStringSetAddRangeDouble(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	x.AddRange([]string{"asdf", "ghjk", "asdf", "ghjk"})
 	if len(x.Set) != 2 {
 		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
@@ -52,7 +52,7 @@ func TestStringSetAddRangeDouble(t *testing.T) {
 }
 
 func TestStringSetContains(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	v := []string{"asdf", "ghjk", "1234", "5678"}
 	x.AddRange(v)
 	for _, y := range v {
@@ -63,7 +63,7 @@ func TestStringSetContains(t *testing.T) {
 }
 
 func TestStringSetContainsAny(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	v := []string{"asdf", "ghjk", "1234", "5678"}
 	x.AddRange(v)
 	if !x.ContainsAny(v) {
@@ -77,7 +77,7 @@ func TestStringSetContainsAny(t *testing.T) {
 }
 
 func TestStringSetStringify(t *testing.T) {
-	x := newStringSet()
+	x := NewStringSet()
 	v := []string{"asdf", "ghjk", "1234", "5678"}
 	x.AddRange(v)
 	z := x.Stringify()
@@ -90,7 +90,7 @@ func TestStringSetStringify(t *testing.T) {
 }
 
 func TestIntSetAdd(t *testing.T) {
-	x := newIntSet()
+	x := NewIntSet()
 	x.Add(1)
 	if len(x.Set) != 1 {
 		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
@@ -98,7 +98,7 @@ func TestIntSetAdd(t *testing.T) {
 }
 
 func TestIntSetAddDouble(t *testing.T) {
-	x := newIntSet()
+	x := NewIntSet()
 	x.Add(1)
 	x.Add(1)
 	if len(x.Set) != 1 {
@@ -107,7 +107,7 @@ func TestIntSetAddDouble(t *testing.T) {
 }
 
 func TestIntSetContains(t *testing.T) {
-	x := newIntSet()
+	x := NewIntSet()
 	v := []int{1, 2, 3, 4}
 	for _, y := range v {
 		x.Add(y)
@@ -120,7 +120,7 @@ func TestIntSetContains(t *testing.T) {
 }
 
 func TestIntSetStringify(t *testing.T) {
-	x := newIntSet()
+	x := NewIntSet()
 	v := []int{1, 3, 2, 4}
 	expected := "1,2,3,4"
 	for _, y := range v {

@@ -1,4 +1,4 @@
-package libgobuster
+package gobusterdir
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/OJ/gobuster/libgobuster"
 )
 
 type httpClient struct {
@@ -22,7 +24,7 @@ type httpClient struct {
 }
 
 // NewHTTPClient returns a new HTTPClient
-func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
+func newHTTPClient(c context.Context, opt *OptionsDir) (*httpClient, error) {
 	var proxyURLFunc func(*http.Request) (*url.URL, error)
 	var client httpClient
 	proxyURLFunc = http.ProxyFromEnvironment
@@ -80,7 +82,7 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		req.Header.Set("Cookie", cookie)
 	}
 
-	ua := fmt.Sprintf("gobuster %s", VERSION)
+	ua := libgobuster.DefaultUserAgent()
 	if client.userAgent != "" {
 		ua = client.userAgent
 	}

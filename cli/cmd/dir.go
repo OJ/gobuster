@@ -178,7 +178,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	// Prompt for PW if not provided
 	if plugin.Username != "" && plugin.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
-		passBytes, err := terminal.ReadPassword(syscall.Stdin)
+		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
 		fmt.Println("")

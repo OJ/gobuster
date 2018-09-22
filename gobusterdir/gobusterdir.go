@@ -137,7 +137,7 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 
 	if d.options.StatusCodesParsed.Contains(r.Status) || d.globalopts.Verbose {
 		if d.options.Expanded {
-			if _, err := fmt.Fprintf(buf, d.options.URL); err != nil {
+			if _, err := fmt.Fprintf(buf, "%s", d.options.URL); err != nil {
 				return nil, err
 			}
 		} else {
@@ -145,7 +145,7 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 				return nil, err
 			}
 		}
-		if _, err := fmt.Fprintf(buf, r.Entity); err != nil {
+		if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
 			return nil, err
 		}
 

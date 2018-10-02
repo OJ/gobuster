@@ -82,7 +82,7 @@ dns         uses dns mode
 -P, --password string      Password for Basic Auth
 -p, --proxy string         Proxy to use for requests [http(s)://host:port]
 -s, --statuscodes string   Positive status codes (default "200,204,301,302,307,403")
-    --timeout duration     HTTP Timeout in seconds (default 10s)
+    --timeout duration     HTTP Timeout (default 10s)
 -u, --url string           The target URL
 -a, --useragent string     Set the User-Agent string (default "gobuster 2.0.1")
 -U, --username string      Username for Basic Auth

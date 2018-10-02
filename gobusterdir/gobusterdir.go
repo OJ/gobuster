@@ -183,6 +183,7 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	if d.globalopts.Wordlist != "-" {
 		wordlist = d.globalopts.Wordlist
 	}
+
 	if _, err := fmt.Fprintf(buf, "[+] Wordlist     : %s\n", wordlist); err != nil {
 		return "", err
 	}

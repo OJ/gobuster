@@ -215,7 +215,7 @@ func init() {
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
 	cmdDir.Flags().StringP("proxy", "p", "", "Proxy to use for requests [http(s)://host:port]")
-	cmdDir.Flags().DurationP("timeout", "d", 10*time.Second, "HTTP Timeout in seconds")
+	cmdDir.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout in seconds")
 	cmdDir.Flags().BoolP("followredirect", "r", false, "Follow redirects")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("nostatus", "n", false, "Don't print status codes")

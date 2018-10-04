@@ -108,7 +108,7 @@ func main() {
 	flag.IntVar(&o.Threads, "t", 10, "Number of concurrent threads")
 	flag.StringVar(&o.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&o.Wordlist, "w", "", "Path to the wordlist")
-	flag.StringVar(&o.StatusCodes, "s", "200,204,301,302,307,403", "Positive status codes (dir mode only)")
+	flag.StringVar(&o.StatusCodes, "s", "200,204,301,302,307,401,403", "Positive status codes (dir mode only)")
 	flag.StringVar(&outputFilename, "o", "", "Output file to write results to (defaults to stdout)")
 	flag.StringVar(&o.URL, "u", "", "The target URL or Domain")
 	flag.StringVar(&o.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")

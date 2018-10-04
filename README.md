@@ -126,7 +126,7 @@ Gobuster v2.0.1              OJ Reeves (@TheColonial)
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,403
+[+] Status codes : 200,204,301,302,307,401,403
 [+] Timeout      : 10s
 =====================================================
 2018/08/27 11:49:43 Starting gobuster
@@ -150,7 +150,7 @@ Gobuster v2.0.1              OJ Reeves (@TheColonial)
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,403
+[+] Status codes : 200,204,301,302,307,401,403
 [+] No status    : true
 [+] Timeout      : 10s
 =====================================================
@@ -175,7 +175,7 @@ Gobuster v2.0.1              OJ Reeves (@TheColonial)
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,403
+[+] Status codes : 200,204,301,302,307,401,403
 [+] Verbose      : true
 [+] Timeout      : 10s
 =====================================================
@@ -202,7 +202,7 @@ Gobuster v2.0.1              OJ Reeves (@TheColonial)
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,403
+[+] Status codes : 200,204,301,302,307,401,403
 [+] Show length  : true
 [+] Timeout      : 10s
 =====================================================

@@ -208,7 +208,7 @@ func init() {
 		RunE:  runDir,
 	}
 	cmdDir.Flags().StringP("url", "u", "", "The target URL")
-	cmdDir.Flags().StringP("statuscodes", "s", "200,204,301,302,307,403", "Positive status codes")
+	cmdDir.Flags().StringP("statuscodes", "s", "200,204,301,302,307,401,403", "Positive status codes")
 	cmdDir.Flags().StringP("cookies", "c", "", "Cookies to use for the requests")
 	cmdDir.Flags().StringP("username", "U", "", "Username for Basic Auth")
 	cmdDir.Flags().StringP("password", "P", "", "Password for Basic Auth")

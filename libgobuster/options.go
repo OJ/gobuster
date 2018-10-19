@@ -19,6 +19,23 @@ const (
 )
 
 // Options helds all options that can be passed to libgobuster
+
+//This is stub, because golang flag lib can't parse array. This func returns concated headers with \r\n
+type headersArray []string
+
+func (i *headersArray) String() string {
+	all:= ""
+	for _,r:= range *i {
+		all+= r + "\r\n"
+	}
+	return all
+}
+
+func (i *headersArray) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 type Options struct {
 	Extensions        string
 	ExtensionsParsed  stringSet
@@ -46,6 +63,7 @@ type Options struct {
 	WildcardForced    bool
 	Verbose           bool
 	UseSlash          bool
+	HttpHeaders		  headersArray
 }
 
 // NewOptions returns a new initialized Options object

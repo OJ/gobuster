@@ -112,7 +112,7 @@ func (g *Gobuster) ClearProgress() {
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (g *Gobuster) GetRequest(url string) (*int, *int64, error) {
-	return g.http.makeRequest(url, g.Opts.Cookies)
+	return g.http.makeRequest(url, g.Opts.Cookies, g.Opts.HttpHeaders)
 }
 
 // DNSLookup looks up a domain via system default DNS servers

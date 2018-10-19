@@ -130,6 +130,7 @@ func main() {
 	flag.BoolVar(&o.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&o.InsecureSSL, "k", false, "Skip SSL certificate verification")
 	flag.BoolVar(&o.NoProgress, "np", false, "Don't display progress")
+	flag.Var(&o.HttpHeaders, "h", "Add custom headers to HTTP Request (example: -h \"Authorization: xxx\" -h \"SOAPAction: action\" ")
 
 	flag.Parse()
 

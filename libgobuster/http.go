@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 	"unicode/utf8"
+	"errors"
 )
 
 type httpClient struct {
@@ -66,7 +67,7 @@ func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
 }
 
 // MakeRequest makes a request to the specified url
-func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, error) {
+func (client *httpClient) makeRequest(fullURL, cookie string, headers headersArray) (*int, *int64, error) {
 	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 
 	if err != nil {
@@ -78,6 +79,20 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 
 	if cookie != "" {
 		req.Header.Set("Cookie", cookie)
+	}
+
+	if len(headers) > 0 {
+		for _,r := range headers {
+
+			//parse Header
+			keyAndValue := strings.SplitN(r,":",2)
+			if len(keyAndValue)!=2 {
+				err := errors.New("Error when parsing HttpHeaders")
+				return nil, nil, err
+			}
+
+			req.Header.Set(keyAndValue[0], keyAndValue[1])
+		}
 	}
 
 	ua := fmt.Sprintf("gobuster %s", VERSION)

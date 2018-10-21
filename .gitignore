@@ -27,3 +27,6 @@ _testmain.go
 
 gobuster
 build
+
+# Go Dep vendor directory
+vendor/

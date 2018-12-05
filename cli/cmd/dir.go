@@ -56,13 +56,14 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	plugin := gobusterdir.NewOptionsDir()
 
-	url, err := cmdDir.Flags().GetString("url")
+	plugin.URL, err = cmdDir.Flags().GetString("url")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for url: %v", err)
 	}
-	plugin.URL = url
+
 	if !strings.HasPrefix(plugin.URL, "http") {
 		// check to see if a port was specified
 		re := regexp.MustCompile(`^[^/]+:(\d+)`)
@@ -83,103 +84,90 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		}
 	}
 
-	statuscodes, err := cmdDir.Flags().GetString("statuscodes")
+	plugin.StatusCodes, err = cmdDir.Flags().GetString("statuscodes")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
 	}
-	plugin.StatusCodes = statuscodes
-	if err3 := plugin.ParseStatusCodes(); err3 != nil {
-		return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err3)
+
+	if err = plugin.ParseStatusCodes(); err != nil {
+		return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
 	}
 
-	cookies, err := cmdDir.Flags().GetString("cookies")
+	plugin.Cookies, err = cmdDir.Flags().GetString("cookies")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for cookies: %v", err)
 	}
-	plugin.Cookies = cookies
 
-	username, err := cmdDir.Flags().GetString("username")
+	plugin.Username, err = cmdDir.Flags().GetString("username")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for username: %v", err)
 	}
-	plugin.Username = username
 
-	password, err := cmdDir.Flags().GetString("password")
+	plugin.Password, err = cmdDir.Flags().GetString("password")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for password: %v", err)
 	}
-	plugin.Password = password
 
-	extensions, err := cmdDir.Flags().GetString("extensions")
+	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %v", err)
 	}
-	plugin.Extensions = extensions
-	if extensions != "" {
-		if err2 := plugin.ParseExtensions(); err2 != nil {
-			return nil, nil, fmt.Errorf("invalid value for extensions: %v", err2)
+
+	if plugin.Extensions != "" {
+		if err = plugin.ParseExtensions(); err != nil {
+			return nil, nil, fmt.Errorf("invalid value for extensions: %v", err)
 		}
 	}
 
-	useragent, err := cmdDir.Flags().GetString("useragent")
+	plugin.UserAgent, err = cmdDir.Flags().GetString("useragent")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for useragent: %v", err)
 	}
-	plugin.UserAgent = useragent
 
-	proxy, err := cmdDir.Flags().GetString("proxy")
+	plugin.Proxy, err = cmdDir.Flags().GetString("proxy")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for proxy: %v", err)
 	}
-	plugin.Proxy = proxy
 
-	timeout, err := cmdDir.Flags().GetDuration("timeout")
+	plugin.Timeout, err = cmdDir.Flags().GetDuration("timeout")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for timeout: %v", err)
 	}
-	plugin.Timeout = timeout
 
-	followredirect, err := cmdDir.Flags().GetBool("followredirect")
+	plugin.FollowRedirect, err = cmdDir.Flags().GetBool("followredirect")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for followredirect: %v", err)
 	}
-	plugin.FollowRedirect = followredirect
 
-	expanded, err := cmdDir.Flags().GetBool("expanded")
+	plugin.Expanded, err = cmdDir.Flags().GetBool("expanded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for expanded: %v", err)
 	}
-	plugin.Expanded = expanded
 
-	nostatus, err := cmdDir.Flags().GetBool("nostatus")
+	plugin.NoStatus, err = cmdDir.Flags().GetBool("nostatus")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for nostatus: %v", err)
 	}
-	plugin.NoStatus = nostatus
 
-	includelength, err := cmdDir.Flags().GetBool("includelength")
+	plugin.IncludeLength, err = cmdDir.Flags().GetBool("includelength")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for includelength: %v", err)
 	}
-	plugin.IncludeLength = includelength
 
-	insecuressl, err := cmdDir.Flags().GetBool("insecuressl")
+	plugin.InsecureSSL, err = cmdDir.Flags().GetBool("insecuressl")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for insecuressl: %v", err)
 	}
-	plugin.InsecureSSL = insecuressl
 
-	wildcard, err := cmdDir.Flags().GetBool("wildcard")
+	plugin.WildcardForced, err = cmdDir.Flags().GetBool("wildcard")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for wildcard: %v", err)
 	}
-	plugin.WildcardForced = wildcard
 
-	addslash, err := cmdDir.Flags().GetBool("addslash")
+	plugin.UseSlash, err = cmdDir.Flags().GetBool("addslash")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for addslash: %v", err)
 	}
-	plugin.UseSlash = addslash
 
 	// Prompt for PW if not provided
 	if plugin.Username != "" && plugin.Password == "" {
@@ -204,9 +192,10 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 func init() {
 	cmdDir = &cobra.Command{
 		Use:   "dir",
-		Short: "uses dir mode",
+		Short: "Uses directory/file brutceforcing mode",
 		RunE:  runDir,
 	}
+
 	cmdDir.Flags().StringP("url", "u", "", "The target URL")
 	cmdDir.Flags().StringP("statuscodes", "s", "200,204,301,302,307,401,403", "Positive status codes")
 	cmdDir.Flags().StringP("cookies", "c", "", "Cookies to use for the requests")
@@ -223,8 +212,14 @@ func init() {
 	cmdDir.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
 	cmdDir.Flags().BoolP("addslash", "f", false, "Apped / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+
 	if err := cmdDir.MarkFlagRequired("url"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)
 	}
+
+	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		configureGlobalOptions()
+	}
+
 	rootCmd.AddCommand(cmdDir)
 }

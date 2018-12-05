@@ -82,7 +82,7 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 func init() {
 	cmdDNS = &cobra.Command{
 		Use:   "dns",
-		Short: "uses dns mode",
+		Short: "Uses DNS subdomain bruteforcing mode",
 		RunE:  runDNS,
 	}
 
@@ -90,8 +90,14 @@ func init() {
 	cmdDNS.Flags().BoolP("showips", "i", false, "Show IP addresses")
 	cmdDNS.Flags().BoolP("showcname", "c", false, "Show CNAME records (cannot be used with '-i' option)")
 	cmdDNS.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+
 	if err := cmdDNS.MarkFlagRequired("domain"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)
 	}
+
+	cmdDNS.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		configureGlobalOptions()
+	}
+
 	rootCmd.AddCommand(cmdDNS)
 }

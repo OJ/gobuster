@@ -2,18 +2,11 @@ package libgobuster
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"strings"
 	"sync"
-)
-
-const (
-	// VERSION contains the current gobuster version
-	VERSION = "2.0.1"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -28,46 +21,22 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts             *Options
-	http             *httpClient
-	WildcardIps      stringSet
 	context          context.Context
 	requestsExpected int
 	requestsIssued   int
 	mu               *sync.RWMutex
 	plugin           GobusterPlugin
-	IsWildcard       bool
 	resultChan       chan Result
 	errorChan        chan error
 }
 
-// GobusterPlugin is an interface which plugins must implement
-type GobusterPlugin interface {
-	Setup(*Gobuster) error
-	Process(*Gobuster, string) ([]Result, error)
-	ResultToString(*Gobuster, *Result) (*string, error)
-}
-
 // NewGobuster returns a new Gobuster object
 func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
-	// validate given options
-	multiErr := opts.validate()
-	if multiErr != nil {
-		return nil, multiErr
-	}
-
 	var g Gobuster
-	g.WildcardIps = newStringSet()
-	g.context = c
 	g.Opts = opts
-	h, err := newHTTPClient(c, opts)
-	if err != nil {
-		return nil, err
-	}
-	g.http = h
-
 	g.plugin = plugin
 	g.mu = new(sync.RWMutex)
-
+	g.context = c
 	g.resultChan = make(chan Result)
 	g.errorChan = make(chan error)
 
@@ -109,22 +78,6 @@ func (g *Gobuster) ClearProgress() {
 	fmt.Fprint(os.Stderr, resetTerminal())
 }
 
-// GetRequest issues a GET request to the target and returns
-// the status code, length and an error
-func (g *Gobuster) GetRequest(url string) (*int, *int64, error) {
-	return g.http.makeRequest(url, g.Opts.Cookies)
-}
-
-// DNSLookup looks up a domain via system default DNS servers
-func (g *Gobuster) DNSLookup(domain string) ([]string, error) {
-	return net.LookupHost(domain)
-}
-
-// DNSLookupCname looks up a CNAME record via system default DNS servers
-func (g *Gobuster) DNSLookupCname(domain string) (string, error) {
-	return net.LookupCNAME(domain)
-}
-
 func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
@@ -138,7 +91,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			}
 			g.incrementRequests()
 			// Mode-specific processing
-			res, err := g.plugin.Process(g, word)
+			res, err := g.plugin.Run(word)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err
@@ -182,7 +135,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 // Start the busting of the website with the given
 // set of settings from the command line.
 func (g *Gobuster) Start() error {
-	if err := g.plugin.Setup(g); err != nil {
+	if err := g.plugin.PreRun(); err != nil {
 		return err
 	}
 
@@ -224,101 +177,5 @@ Scan:
 
 // GetConfigString returns the current config as a printable string
 func (g *Gobuster) GetConfigString() (string, error) {
-	buf := &bytes.Buffer{}
-	o := g.Opts
-	if _, err := fmt.Fprintf(buf, "[+] Mode         : %s\n", o.Mode); err != nil {
-		return "", err
-	}
-	if _, err := fmt.Fprintf(buf, "[+] Url/Domain   : %s\n", o.URL); err != nil {
-		return "", err
-	}
-	if _, err := fmt.Fprintf(buf, "[+] Threads      : %d\n", o.Threads); err != nil {
-		return "", err
-	}
-
-	wordlist := "stdin (pipe)"
-	if o.Wordlist != "-" {
-		wordlist = o.Wordlist
-	}
-	if _, err := fmt.Fprintf(buf, "[+] Wordlist     : %s\n", wordlist); err != nil {
-		return "", err
-	}
-
-	if o.Mode == ModeDir {
-		if _, err := fmt.Fprintf(buf, "[+] Status codes : %s\n", o.StatusCodesParsed.Stringify()); err != nil {
-			return "", err
-		}
-
-		if o.Proxy != "" {
-			if _, err := fmt.Fprintf(buf, "[+] Proxy        : %s\n", o.Proxy); err != nil {
-				return "", err
-			}
-		}
-
-		if o.Cookies != "" {
-			if _, err := fmt.Fprintf(buf, "[+] Cookies      : %s\n", o.Cookies); err != nil {
-				return "", err
-			}
-		}
-
-		if o.UserAgent != "" {
-			if _, err := fmt.Fprintf(buf, "[+] User Agent   : %s\n", o.UserAgent); err != nil {
-				return "", err
-			}
-		}
-
-		if o.IncludeLength {
-			if _, err := fmt.Fprintf(buf, "[+] Show length  : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if o.Username != "" {
-			if _, err := fmt.Fprintf(buf, "[+] Auth User    : %s\n", o.Username); err != nil {
-				return "", err
-			}
-		}
-
-		if len(o.Extensions) > 0 {
-			if _, err := fmt.Fprintf(buf, "[+] Extensions   : %s\n", o.ExtensionsParsed.Stringify()); err != nil {
-				return "", err
-			}
-		}
-
-		if o.UseSlash {
-			if _, err := fmt.Fprintf(buf, "[+] Add Slash    : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if o.FollowRedirect {
-			if _, err := fmt.Fprintf(buf, "[+] Follow Redir : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if o.Expanded {
-			if _, err := fmt.Fprintf(buf, "[+] Expanded     : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if o.NoStatus {
-			if _, err := fmt.Fprintf(buf, "[+] No status    : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if o.Verbose {
-			if _, err := fmt.Fprintf(buf, "[+] Verbose      : true\n"); err != nil {
-				return "", err
-			}
-		}
-
-		if _, err := fmt.Fprintf(buf, "[+] Timeout      : %s\n", o.Timeout.String()); err != nil {
-			return "", err
-		}
-	}
-
-	return strings.TrimSpace(buf.String()), nil
+	return g.plugin.GetConfigString()
 }

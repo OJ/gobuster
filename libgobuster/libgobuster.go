@@ -25,11 +25,18 @@ type ProcessFunc func(*Gobuster, string) ([]Result, error)
 // ResultToStringFunc is the "to string" function prototype for implementations
 type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 
+// ResponseSizeSet is a set of unique response sizes
+type ResponseSizeSet map[int64]bool
+
+// StatusCodeToResponseSizeSet maps each status code to a set of unique response sizes
+type StatusCodeToResponseSizeSet map[int]ResponseSizeSet
+
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts             *Options
 	http             *httpClient
 	WildcardIps      stringSet
+	statusCodeToResponseSizeSet StatusCodeToResponseSizeSet
 	context          context.Context
 	requestsExpected int
 	requestsIssued   int
@@ -57,6 +64,7 @@ func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobu
 
 	var g Gobuster
 	g.WildcardIps = newStringSet()
+	g.statusCodeToResponseSizeSet = make(StatusCodeToResponseSizeSet)
 	g.context = c
 	g.Opts = opts
 	h, err := newHTTPClient(c, opts)
@@ -145,11 +153,39 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				continue
 			} else {
 				for _, r := range res {
-					g.resultChan <- r
+					g.addResult(&r)
 				}
 			}
 		}
 	}
+}
+
+func (g *Gobuster) addResult(r *Result) {
+	if !g.Opts.UniqueResponseLength {
+		g.resultChan <- *r
+		return
+	}
+
+	responseSizeSet, ok := g.statusCodeToResponseSizeSet[r.Status]
+
+	// Create a bucket to collect all unique response sizes for
+	// the given status code
+	if !ok {
+		g.statusCodeToResponseSizeSet[r.Status] = make(ResponseSizeSet)
+		g.statusCodeToResponseSizeSet[r.Status][*r.Size] = true
+		g.resultChan <- *r
+		return
+	}
+
+	// Skip this result if we already have one with a known response size
+	if responseSizeSet[*r.Size] {
+		return
+	}
+
+	// Mark this result size as one we know and return the response since
+	// we count it as unique
+	responseSizeSet[*r.Size] = true
+	g.resultChan <- *r
 }
 
 func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {

@@ -117,7 +117,7 @@ func (d GobusterDir) ResultToString(g *libgobuster.Gobuster, r *libgobuster.Resu
 			}
 		}
 
-		if r.Size != nil {
+		if g.Opts.IncludeLength && r.Size != nil {
 			if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
 				return nil, err
 			}

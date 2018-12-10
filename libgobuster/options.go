@@ -36,6 +36,7 @@ type Options struct {
 	Timeout           time.Duration
 	FollowRedirect    bool
 	IncludeLength     bool
+	UniqueResponseLength     bool
 	NoStatus          bool
 	NoProgress        bool
 	Expanded          bool

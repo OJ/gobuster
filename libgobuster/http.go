@@ -60,7 +60,7 @@ func newHTTPClient(c context.Context, opt *Options) (*httpClient, error) {
 	client.context = c
 	client.username = opt.Username
 	client.password = opt.Password
-	client.includeLength = opt.IncludeLength
+	client.includeLength = opt.IncludeLength || opt.UniqueResponseLength
 	client.userAgent = opt.UserAgent
 	return &client, nil
 }

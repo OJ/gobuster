@@ -126,6 +126,7 @@ func main() {
 	flag.BoolVar(&o.Expanded, "e", false, "Expanded mode, print full URLs")
 	flag.BoolVar(&o.NoStatus, "n", false, "Don't print status codes")
 	flag.BoolVar(&o.IncludeLength, "l", false, "Include the length of the body in the output (dir mode only)")
+	flag.BoolVar(&o.UniqueResponseLength, "lu", false, "Only output results with a unique size for each status code")
 	flag.BoolVar(&o.UseSlash, "f", false, "Append a forward-slash to each directory request (dir mode only)")
 	flag.BoolVar(&o.WildcardForced, "fw", false, "Force continued operation when wildcard found")
 	flag.BoolVar(&o.InsecureSSL, "k", false, "Skip SSL certificate verification")

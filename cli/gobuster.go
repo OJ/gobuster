@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
 func ruler() {

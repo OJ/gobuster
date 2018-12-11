@@ -25,7 +25,6 @@ type OptionsDir struct {
 	NoStatus          bool
 	InsecureSSL       bool
 	UseSlash          bool
-	IsWildcard        bool
 	WildcardForced    bool
 }
 

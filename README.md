@@ -65,6 +65,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 * `-l` - show the length of the response.
 * `-n` - "no status" mode, disables the output of the result's status code.
 * `-o <file>` - specify a file name to write the output to.
+* `-oj <file>` - specify a file name to write the output as JSON.
 * `-p <proxy url>` - specify a proxy to use for all requests (scheme much match the URL scheme).
 * `-r` - follow redirects.
 * `-s <status codes>` - comma-separated set of the list of status codes to be deemed a "positive" (default: `200,204,301,302,307`).

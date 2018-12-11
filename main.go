@@ -94,6 +94,28 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster) {
 	}
 }
 
+func writeJsonFile(g *libgobuster.Gobuster, jsonOutputFile string) {
+	var err error
+	var f *os.File
+	f, err = os.Create(jsonOutputFile)
+
+	if err != nil {
+		fmt.Errorf("[!] Error on creating JSON output file: %v", err)
+	}
+
+	jsonResults, err := g.ResultsAsJson()
+	if err != nil {
+		fmt.Errorf("[!] Error on ecoding results as JSON: %v", err)
+	}
+
+	if f != nil {
+		err = writeToFile(f, jsonResults)
+		if err != nil {
+			fmt.Errorf("[!] Error on writing to JSON output file: %v", err)
+		}
+	}
+}
+
 func writeToFile(f *os.File, output string) error {
 	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
 	if err != nil {
@@ -104,12 +126,14 @@ func writeToFile(f *os.File, output string) error {
 
 func main() {
 	var outputFilename string
+	var outputJsonFilename string
 	o := libgobuster.NewOptions()
 	flag.IntVar(&o.Threads, "t", 10, "Number of concurrent threads")
 	flag.StringVar(&o.Mode, "m", "dir", "Directory/File mode (dir) or DNS mode (dns)")
 	flag.StringVar(&o.Wordlist, "w", "", "Path to the wordlist")
 	flag.StringVar(&o.StatusCodes, "s", "200,204,301,302,307,403", "Positive status codes (dir mode only)")
 	flag.StringVar(&outputFilename, "o", "", "Output file to write results to (defaults to stdout)")
+	flag.StringVar(&outputJsonFilename, "oj", "", "Output file to write json results to")
 	flag.StringVar(&o.URL, "u", "", "The target URL or Domain")
 	flag.StringVar(&o.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&o.Username, "U", "", "Username for Basic Auth (dir mode only)")
@@ -132,6 +156,10 @@ func main() {
 	flag.BoolVar(&o.NoProgress, "np", false, "Don't display progress")
 
 	flag.Parse()
+
+	if outputFilename == outputJsonFilename {
+		log.Fatal("[!] Output file name and JSON output file name must differ!")
+	}
 
 	// Prompt for PW if not provided
 	if o.Username != "" && o.Password == "" {
@@ -206,6 +234,11 @@ func main() {
 		// wait for all output funcs to finish
 		wg.Wait()
 	}
+
+	if len(outputJsonFilename) > 0 {
+		writeJsonFile(gobuster, outputJsonFilename)
+	}
+
 
 	if !o.Quiet {
 		gobuster.ClearProgress()

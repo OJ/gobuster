@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -33,6 +34,7 @@ type Gobuster struct {
 	context          context.Context
 	requestsExpected int
 	requestsIssued   int
+	cachedResults    []Result
 	mu               *sync.RWMutex
 	plugin           GobusterPlugin
 	IsWildcard       bool
@@ -77,6 +79,12 @@ func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobu
 // Results returns a channel of Results
 func (g *Gobuster) Results() <-chan Result {
 	return g.resultChan
+}
+
+// Returns our results as JSON
+func (g *Gobuster) ResultsAsJson() (string, error) {
+	jsonResults, err := json.Marshal(g.cachedResults)
+	return string(jsonResults), err
 }
 
 // Errors returns a channel of errors
@@ -145,11 +153,18 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				continue
 			} else {
 				for _, r := range res {
+					g.cacheResult(r)
 					g.resultChan <- r
 				}
 			}
 		}
 	}
+}
+
+func (g *Gobuster) cacheResult(r Result) {
+	g.mu.Lock()
+	g.cachedResults = append(g.cachedResults, r)
+	g.mu.Unlock()
 }
 
 func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {

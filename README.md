@@ -60,11 +60,13 @@ dns         uses dns mode
 ## Command line options for `dns` mode
 
 ```text
--d, --domain string   The target domain
--h, --help            help for dns
--c, --showcname       Show CNAME records (cannot be used with '-i' option)
--i, --showips         Show IP addresses
-    --wildcard        Force continued operation when wildcard found
+-d, --domain string      The target domain
+-h, --help               help for dns
+-r, --resolver string    use custom DNS server
+-c, --showcname          Show CNAME records (cannot be used with '-i' option)
+-i, --showips            Show IP addresses
+    --timeout duration   DNS resolver timeout (default 1s)
+    --wildcard           Force continued operation when wildcard found
 ```
 
 ## Command line options for `dir` mode

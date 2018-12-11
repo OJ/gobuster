@@ -1,4 +1,4 @@
-package gobusterdir
+package libgobuster
 
 import (
 	"context"
@@ -19,12 +19,12 @@ func httpServer(t *testing.T, content string) *httptest.Server {
 func TestMakeRequest(t *testing.T) {
 	h := httpServer(t, "test")
 	defer h.Close()
-	o := NewOptionsDir()
-	c, err := newHTTPClient(context.Background(), o)
+	var o HTTPOptions
+	c, err := NewHTTPClient(context.Background(), &o)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	a, b, err := c.makeRequest(h.URL, "")
+	a, b, err := c.Get(h.URL, "", "")
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}

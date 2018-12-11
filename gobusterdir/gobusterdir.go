@@ -17,13 +17,13 @@ import (
 type GobusterDir struct {
 	options    *OptionsDir
 	globalopts *libgobuster.Options
-	http       *httpClient
+	http       *libgobuster.HTTPClient
 }
 
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.makeRequest(url, d.options.Cookies)
+	return d.http.Get(url, "", d.options.Cookies)
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -40,7 +40,18 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		options:    opts,
 		globalopts: globalopts,
 	}
-	h, err := newHTTPClient(cont, opts)
+
+	httpOpts := libgobuster.HTTPOptions{
+		Proxy:          opts.Proxy,
+		FollowRedirect: opts.FollowRedirect,
+		InsecureSSL:    opts.InsecureSSL,
+		Timeout:        opts.Timeout,
+		Username:       opts.Username,
+		Password:       opts.Password,
+		UserAgent:      opts.UserAgent,
+	}
+
+	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +79,6 @@ func (d *GobusterDir) PreRun() error {
 	}
 
 	if d.options.StatusCodesParsed.Contains(*wildcardResp) {
-		d.options.IsWildcard = true
 		log.Printf("[-] Wildcard response found: %s => %d", url, *wildcardResp)
 		if !d.options.WildcardForced {
 			return fmt.Errorf("To force processing of Wildcard responses, specify the '--wildcard' switch.")

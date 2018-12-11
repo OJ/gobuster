@@ -1,11 +1,13 @@
 package gobusterdns
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"log"
 	"net"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/OJ/gobuster/libgobuster"
 	"github.com/google/uuid"
@@ -120,30 +122,32 @@ func (d *GobusterDNS) ResultToString(r *libgobuster.Result) (*string, error) {
 
 // GetConfigString returns the string representation of the current config
 func (d *GobusterDNS) GetConfigString() (string, error) {
-	buf := &bytes.Buffer{}
+	var buffer bytes.Buffer
+	bw := bufio.NewWriter(&buffer)
+	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := d.options
-	if _, err := fmt.Fprintf(buf, "[+] Domain         : %s\n", o.Domain); err != nil {
+	if _, err := fmt.Fprintf(tw, "[+] Domain:\t%s\n", o.Domain); err != nil {
 		return "", err
 	}
 
-	if _, err := fmt.Fprintf(buf, "[+] Threads        : %d\n", d.globalopts.Threads); err != nil {
+	if _, err := fmt.Fprintf(tw, "[+] Threads:\t%d\n", d.globalopts.Threads); err != nil {
 		return "", err
 	}
 
 	if o.ShowCNAME {
-		if _, err := fmt.Fprintf(buf, "[+] Show CNAME     : true\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Show CNAME:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
 
 	if o.ShowIPs {
-		if _, err := fmt.Fprintf(buf, "[+] Show IPs       : true\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Show IPs:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
 
 	if o.WildcardForced {
-		if _, err := fmt.Fprintf(buf, "[+] Wildcard forced : true\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Wildcard forced:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
@@ -152,17 +156,25 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	if d.globalopts.Wordlist != "-" {
 		wordlist = d.globalopts.Wordlist
 	}
-	if _, err := fmt.Fprintf(buf, "[+] Wordlist     : %s\n", wordlist); err != nil {
+	if _, err := fmt.Fprintf(tw, "[+] Wordlist:\t%s\n", wordlist); err != nil {
 		return "", err
 	}
 
 	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(buf, "[+] Verbose      : true\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
 
-	return strings.TrimSpace(buf.String()), nil
+	if err := tw.Flush(); err != nil {
+		return "", fmt.Errorf("error on tostring: %v", err)
+	}
+
+	if err := bw.Flush(); err != nil {
+		return "", fmt.Errorf("error on tostring: %v", err)
+	}
+
+	return strings.TrimSpace(buffer.String()), nil
 }
 
 func dnsLookup(domain string) ([]string, error) {

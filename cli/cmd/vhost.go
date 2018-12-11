@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/OJ/gobuster/cli"
-	"github.com/OJ/gobuster/gobustervhost"
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/OJ/gobuster/v3/cli"
+	"github.com/OJ/gobuster/v3/gobustervhost"
+	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )

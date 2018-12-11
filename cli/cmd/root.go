@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/OJ/gobuster/v3/libgobuster"
 
 	"github.com/spf13/cobra"
 )

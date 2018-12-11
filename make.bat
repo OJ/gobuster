@@ -31,7 +31,13 @@ IF "%ARG%"=="linux" (
   GOTO Done
 )
 
+IF "%ARG%"=="update" (
+  CALL :Update
+  GOTO Done
+)
+
 IF "%ARG%"=="all" (
+  CALL :Update
   CALL :Darwin
   CALL :Linux
   CALL :Windows
@@ -45,9 +51,18 @@ IF "%ARG%"=="" (
 
 GOTO Done
 
+:Update
+set GO111MODULE=on
+echo Updating ...
+go get -u
+go mod tidy
+echo Done.
+EXIT /B 0
+
 :Darwin
 set GOOS=darwin
 set GOARCH=amd64
+set GO111MODULE=on
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL
@@ -63,6 +78,7 @@ EXIT /B 0
 :Linux
 set GOOS=linux
 set GOARCH=amd64
+set GO111MODULE=on
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL
@@ -78,6 +94,7 @@ EXIT /B 0
 :Windows
 set GOOS=windows
 set GOARCH=amd64
+set GO111MODULE=on
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL

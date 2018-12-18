@@ -97,8 +97,8 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 	// remove leading / on words
 	if strings.HasPrefix(word, "/") {
-    word = word[1:]
-  }
+		word = word[1:]
+	}
 
 	// Try the DIR first
 	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)

@@ -123,5 +123,5 @@ func lineCounter(r io.Reader) (int, error) {
 
 // DefaultUserAgent returns the default user agent to use in HTTP requests
 func DefaultUserAgent() string {
-	return fmt.Sprintf("gobuster %s", VERSION)
+	return fmt.Sprintf("gobuster/%s", VERSION)
 }

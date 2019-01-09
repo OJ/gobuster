@@ -27,7 +27,10 @@ type GobusterDNS struct {
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		d := net.Dialer{}
-		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", server))
+		if !strings.Contains(server, ":") {
+			server = fmt.Sprintf("%s:53", server)
+		}
+		return d.DialContext(ctx, "udp", server)
 	}
 }
 
@@ -145,12 +148,19 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	bw := bufio.NewWriter(&buffer)
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := d.options
+
 	if _, err := fmt.Fprintf(tw, "[+] Domain:\t%s\n", o.Domain); err != nil {
 		return "", err
 	}
 
 	if _, err := fmt.Fprintf(tw, "[+] Threads:\t%d\n", d.globalopts.Threads); err != nil {
 		return "", err
+	}
+
+	if o.Resolver != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Resolver:\t%s\n", o.Resolver); err != nil {
+			return "", err
+		}
 	}
 
 	if o.ShowCNAME {

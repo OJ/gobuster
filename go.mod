@@ -5,6 +5,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-	golang.org/x/sys v0.0.0-20181211161752-7da8ea5c8182 // indirect
+	golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
+	golang.org/x/sys v0.0.0-20190109145017-48ac38b7c8cb // indirect
 )

@@ -10,7 +10,7 @@ current:
 
 update:
 	@go get -u; \
-	go mod tidy; \
+	go mod tidy -v; \
 	echo "Done."
 
 windows:

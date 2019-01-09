@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
 

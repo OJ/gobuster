@@ -3,7 +3,7 @@ package gobusterdir
 import (
 	"time"
 
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
 // OptionsDir is the struct to hold all options for this plugin

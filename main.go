@@ -1,5 +1,7 @@
 package main
 
+import "github.com/OJ/gobuster/cli/cmd"
+
 //----------------------------------------------------
 // Gobuster -- by OJ Reeves
 //
@@ -15,10 +17,6 @@ package main
 // Please see LICENSE file for license details.
 //
 //----------------------------------------------------
-
-import (
-	"github.com/OJ/gobuster/cli/cmd"
-)
 
 func main() {
 	cmd.Execute()

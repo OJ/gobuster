@@ -69,7 +69,12 @@ func newHTTPClient(c context.Context, opt *OptionsDir) (*httpClient, error) {
 
 // MakeRequest makes a request to the specified url
 func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, error) {
-	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
+	// attempt a HEAD request if specified by the user 
+	if opt.HeadRequests {
+		req, err := http.NewRequest(http.MethodHead, fullURL, nil)
+	} else {
+		req, err := http.NewRequest(http.MethodGet, fullURL, nil)
+	}
 
 	if err != nil {
 		return nil, nil, err
@@ -101,6 +106,11 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 			}
 		}
 		return nil, nil, err
+	}
+
+	// disable HEAD requests if the target does not support the method
+	if opt.HeadRequests && (resp.StatusCode == 405 || resp.StatusCode == 501) {
+		opt.HeadRequests = false
 	}
 
 	defer resp.Body.Close()

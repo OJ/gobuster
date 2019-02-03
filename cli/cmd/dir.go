@@ -169,6 +169,11 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for addslash: %v", err)
 	}
 
+	plugin.HeadRequests, err = cmdDir.Flags().GetBool("head")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for head: %v", err)
+	}
+
 	// Prompt for PW if not provided
 	if plugin.Username != "" && plugin.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
@@ -212,6 +217,7 @@ func init() {
 	cmdDir.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
 	cmdDir.Flags().BoolP("addslash", "f", false, "Apped / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+	cmdDir.Flags().BoolP("head", "H", false, "Use HEAD requests if possible")
 
 	if err := cmdDir.MarkFlagRequired("url"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)

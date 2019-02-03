@@ -70,11 +70,6 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("invalid value for noprogress: %v", err)
 	}
 
-	globalopts.HeadRequests, err = rootCmd.Flags().GetBool("headrequests")
-	if err != nil {
-		return nil, fmt.Errorf("invalid value for headrequests: %v", err)
-	}
-
 	return globalopts, nil
 }
 

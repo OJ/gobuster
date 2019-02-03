@@ -5,7 +5,6 @@ type Options struct {
 	Threads        int
 	Wordlist       string
 	OutputFilename string
-	HeadRequests   bool
 	NoStatus       bool
 	NoProgress     bool
 	Quiet          bool

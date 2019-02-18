@@ -27,7 +27,7 @@ func (set *stringSet) Add(s string) bool {
 	return !found
 }
 
-// Add a list of elements to a set
+// AddRange adds a list of elements to a set
 func (set *stringSet) AddRange(ss []string) {
 	for _, s := range ss {
 		set.Set[s] = true
@@ -40,7 +40,7 @@ func (set *stringSet) Contains(s string) bool {
 	return found
 }
 
-// Check if any of the elements exist
+// ContainsAny checks if any of the elements exist
 func (set *stringSet) ContainsAny(ss []string) bool {
 	for _, s := range ss {
 		if set.Set[s] {

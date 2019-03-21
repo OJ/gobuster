@@ -83,53 +83,45 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 		}
 	}
 
-	cookies, err := cmdVhost.Flags().GetString("cookies")
+	plugin.Cookies, err = cmdVhost.Flags().GetString("cookies")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for cookies: %v", err)
 	}
-	plugin.Cookies = cookies
 
-	username, err := cmdVhost.Flags().GetString("username")
+	plugin.Username, err = cmdVhost.Flags().GetString("username")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for username: %v", err)
 	}
-	plugin.Username = username
 
-	password, err := cmdVhost.Flags().GetString("password")
+	plugin.Password, err = cmdVhost.Flags().GetString("password")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for password: %v", err)
 	}
-	plugin.Password = password
 
-	useragent, err := cmdVhost.Flags().GetString("useragent")
+	plugin.UserAgent, err = cmdVhost.Flags().GetString("useragent")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for useragent: %v", err)
 	}
-	plugin.UserAgent = useragent
 
-	proxy, err := cmdVhost.Flags().GetString("proxy")
+	plugin.Proxy, err = cmdVhost.Flags().GetString("proxy")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for proxy: %v", err)
 	}
-	plugin.Proxy = proxy
 
-	timeout, err := cmdVhost.Flags().GetDuration("timeout")
+	plugin.Timeout, err = cmdVhost.Flags().GetDuration("timeout")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for timeout: %v", err)
 	}
-	plugin.Timeout = timeout
 
-	followredirect, err := cmdDir.Flags().GetBool("followredirect")
+	plugin.FollowRedirect, err = cmdDir.Flags().GetBool("followredirect")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for followredirect: %v", err)
 	}
-	plugin.FollowRedirect = followredirect
 
-	insecuressl, err := cmdVhost.Flags().GetBool("insecuressl")
+	plugin.InsecureSSL, err = cmdVhost.Flags().GetBool("insecuressl")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for insecuressl: %v", err)
 	}
-	plugin.InsecureSSL = insecuressl
 
 	// Prompt for PW if not provided
 	if plugin.Username != "" && plugin.Password == "" {

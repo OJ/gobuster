@@ -3,6 +3,7 @@
 Gobuster is a tool used to brute-force:
 
 * URIs (directories and files) in web sites.
+* Virtual Host names on target web servers.
 * DNS subdomains (with wildcard support).
 
 ## Tags, Statuses, etc

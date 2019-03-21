@@ -91,7 +91,23 @@ dns         uses dns mode
     --wildcard             Force continued operation when wildcard found
 ```
 
-## Building
+## Easy Installation
+
+### Binary Releases
+
+We are now shipping binaries for each of the releases so that you don't even have to build them yourself! How wonderful is that!
+
+If you're stupid enough to trust binaries that I've put together, you can download them from the [releases](https://github.com/OJ/gobuster/releases) page.
+
+### Using `go get`
+
+If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
+
+```bash
+go get github.com/OJ/gobuster
+```
+
+## Building From Source
 
 Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
 

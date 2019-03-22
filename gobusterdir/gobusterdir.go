@@ -100,6 +100,23 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 		})
 	}
 
+	// Perform a string replacement on all placeholders
+	if d.options.StringReplace != "" {
+		url = fmt.Sprintf("%s", strings.Replace(d.options.URL, d.options.StringReplace, word, -1))
+		url = fmt.Sprintf("%s%s", strings.TrimRight(url, "/"), suffix) // hack to remove perma / added in prerun
+		replResp, replSize, err := d.get(url)
+		if err != nil {
+			return nil, err
+		}
+		if replResp != nil {
+			ret = append(ret, libgobuster.Result{
+				Entity: fmt.Sprintf("%s (string replacement requested as: %s)", word, url),
+				Status: *replResp,
+				Size:   replSize,
+			})
+		}
+	}
+
 	// Follow up with files using each ext.
 	for ext := range d.options.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
@@ -227,6 +244,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.Extensions != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
+	if o.StringReplace != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Replacement token:\t%s\n", o.StringReplace); err != nil {
 			return "", err
 		}
 	}

@@ -17,6 +17,7 @@ type OptionsDir struct {
 	UserAgent         string
 	Username          string
 	Proxy             string
+	StringReplace     string
 	Cookies           string
 	Timeout           time.Duration
 	FollowRedirect    bool

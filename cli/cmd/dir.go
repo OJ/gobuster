@@ -129,6 +129,15 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for proxy: %v", err)
 	}
 
+	plugin.StringReplace, err = cmdDir.Flags().GetString("stringreplace")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for stringreplace: %v", err)
+	}
+
+	if plugin.StringReplace != "" && !strings.Contains(plugin.URL, plugin.StringReplace) {
+		return nil, nil, fmt.Errorf("stringreplace token '%s' not found in url", plugin.StringReplace)
+	}
+
 	plugin.Timeout, err = cmdDir.Flags().GetDuration("timeout")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for timeout: %v", err)
@@ -204,6 +213,7 @@ func init() {
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
 	cmdDir.Flags().StringP("proxy", "p", "", "Proxy to use for requests [http(s)://host:port]")
+	cmdDir.Flags().StringP("stringreplace", "S", "", "A placeholder value to perform string replacements on")
 	cmdDir.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 	cmdDir.Flags().BoolP("followredirect", "r", false, "Follow redirects")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")

@@ -23,7 +23,7 @@ type GobusterDir struct {
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.makeRequest(url, d.options.Cookies)
+	return d.http.makeRequest(url, d.options.Cookies, d.options.Headers)
 }
 
 // NewGobusterDir creates a new initialized GobusterDir

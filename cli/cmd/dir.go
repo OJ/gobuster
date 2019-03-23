@@ -21,6 +21,7 @@ import (
 
 var cmdDir *cobra.Command
 
+
 func runDir(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseDirOptions()
 	if err != nil {
@@ -169,6 +170,11 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for addslash: %v", err)
 	}
 
+	plugin.Headers, err = cmdDir.Flags().GetStringArray("headers")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for headers: %v", err)
+	}
+
 	// Prompt for PW if not provided
 	if plugin.Username != "" && plugin.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
@@ -212,6 +218,7 @@ func init() {
 	cmdDir.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
 	cmdDir.Flags().BoolP("addslash", "f", false, "Apped / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+	cmdDir.Flags().StringArrayP("headers","H",[]string{""},"Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 
 	if err := cmdDir.MarkFlagRequired("url"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)

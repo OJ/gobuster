@@ -68,7 +68,7 @@ func newHTTPClient(c context.Context, opt *OptionsDir) (*httpClient, error) {
 }
 
 // MakeRequest makes a request to the specified url
-func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, error) {
+func (client *httpClient) makeRequest(fullURL, cookie string, headers []string) (*int, *int64, error) {
 	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 
 	if err != nil {
@@ -87,6 +87,28 @@ func (client *httpClient) makeRequest(fullURL, cookie string) (*int, *int64, err
 		ua = client.userAgent
 	}
 	req.Header.Set("User-Agent", ua)
+
+	if len(headers) > 0 {
+		for _,r := range headers {
+
+			//parse Header
+			keyAndValue := strings.SplitN(r,":",2)
+			if len(keyAndValue)!=2 { //Check if we have both elements, header name and header value
+				return nil, nil, fmt.Errorf("Error when parsing HTTP Headers: %v", r)
+			}
+
+			if len(keyAndValue[0])==0{ //Check that the header name is not empty, btw header value empty is ok
+				return nil, nil, fmt.Errorf("Error when parsing HTTP Headers, header name is empty %v", r)
+			}
+
+			//req.Header.Set(keyAndValue[0], keyAndValue[1])
+			//This is because Header.Set is case insensitive, and it always converts case by default, hEAdEr -> Header
+			//So, I think this Idea is better:
+			req.Header[keyAndValue[0]] = []string{keyAndValue[1]}
+
+
+		}
+	}
 
 	if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)

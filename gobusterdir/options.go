@@ -27,6 +27,7 @@ type OptionsDir struct {
 	UseSlash          bool
 	IsWildcard        bool
 	WildcardForced    bool
+	Headers			  []string
 }
 
 // NewOptionsDir returns a new initialized OptionsDir

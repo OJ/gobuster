@@ -10,15 +10,17 @@ import (
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/google/uuid"
 )
 
 // GobusterVhost is the main type to implement the interface
 type GobusterVhost struct {
-	options      *OptionsVhost
-	globalopts   *libgobuster.Options
-	http         *libgobuster.HTTPClient
-	domain       string
-	baseResponse string
+	options    *OptionsVhost
+	globalopts *libgobuster.Options
+	http       *libgobuster.HTTPClient
+	domain     string
+	baseline1  string
+	baseline2  string
 }
 
 // NewGobusterVhost creates a new initialized GobusterDir
@@ -68,11 +70,20 @@ func (v *GobusterVhost) PreRun() error {
 	}
 	v.domain = url.Host
 
-	_, bodyBase, err := v.http.GetBody(v.options.URL, "", v.options.Cookies)
+	// request default vhost for baseline1
+	_, tmp, err := v.http.GetBody(v.options.URL, "", v.options.Cookies)
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
-	v.baseResponse = *bodyBase
+	v.baseline1 = *tmp
+
+	// request non existent vhost for baseline2
+	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
+	_, tmp, err = v.http.GetBody(v.options.URL, subdomain, v.options.Cookies)
+	if err != nil {
+		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
+	}
+	v.baseline2 = *tmp
 	return nil
 }
 
@@ -85,7 +96,8 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 		return ret, err
 	}
 
-	if *body != v.baseResponse {
+	// subdomain must not match default vhost and non existent vhost
+	if *body != v.baseline1 && *body != v.baseline2 {
 		result := libgobuster.Result{
 			Entity: subdomain,
 		}

@@ -97,15 +97,15 @@ vhost       uses vhost mode
 
 ```text
   -c, --cookies string     Cookies to use for the requests
+  -r, --followredirect     Follow redirects (default true)
   -h, --help               help for vhost
   -k, --insecuressl        Skip SSL certificate verification
   -P, --password string    Password for Basic Auth
   -p, --proxy string       Proxy to use for requests [http(s)://host:port]
       --timeout duration   HTTP Timeout (default 10s)
   -u, --url string         The target URL
-  -a, --useragent string   Set the User-Agent string (default "gobuster 2.0.1")
+  -a, --useragent string   Set the User-Agent string (default "gobuster/3.0.0")
   -U, --username string    Username for Basic Auth
-      --wildcard           Force continued operation when wildcard found
 ```
 
 ## Easy Installation
@@ -466,12 +466,12 @@ Normal sample run goes like this:
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 
 =====================================================
-Gobuster v2.0.1              OJ Reeves (@TheColonial)
+Gobuster v3.0.0              OJ Reeves (@TheColonial)
 =====================================================
 [+] Url:          https://mysite.com
 [+] Threads:      10
 [+] Wordlist:     common-vhosts.txt
-[+] User Agent:   gobuster 2.0.1
+[+] User Agent:   gobuster 3.0.0
 [+] Timeout:      10s
 =====================================================
 2018/10/09 08:36:00 Starting gobuster

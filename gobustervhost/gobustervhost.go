@@ -97,21 +97,19 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	}
 
 	// subdomain must not match default vhost and non existent vhost
-	if *body != v.baseline1 && *body != v.baseline2 {
+	// or verbose mode is enabled
+	found := *body != v.baseline1 && *body != v.baseline2
+	if found || v.globalopts.Verbose {
 		size := int64(len(*body))
-		result := libgobuster.Result{
-			Entity: subdomain,
-			Status: *status,
-			Size:   &size,
+		resultStatus := libgobuster.StatusMissed
+		if found {
+			resultStatus = libgobuster.StatusFound
 		}
-		ret = append(ret, result)
-	} else if v.globalopts.Verbose {
-		size := int64(len(*body))
 		result := libgobuster.Result{
-			Entity: subdomain,
-			Status: *status,
-			Size:   &size,
-			Extra:  "missed",
+			Entity:     subdomain,
+			StatusCode: *status,
+			Size:       &size,
+			Status:     resultStatus,
 		}
 		ret = append(ret, result)
 	}
@@ -123,11 +121,11 @@ func (v *GobusterVhost) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
 
 	statusText := "Found"
-	if v.globalopts.Verbose && r.Extra == "missed" {
+	if r.Status == libgobuster.StatusMissed {
 		statusText = "Missed"
 	}
 
-	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Entity, r.Status, *r.Size); err != nil {
+	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Entity, r.StatusCode, *r.Size); err != nil {
 		return nil, err
 	}
 

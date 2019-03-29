@@ -104,9 +104,9 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	var ret []libgobuster.Result
 	if dirResp != nil {
 		ret = append(ret, libgobuster.Result{
-			Entity: fmt.Sprintf("%s%s", word, suffix),
-			Status: *dirResp,
-			Size:   dirSize,
+			Entity:     fmt.Sprintf("%s%s", word, suffix),
+			StatusCode: *dirResp,
+			Size:       dirSize,
 		})
 	}
 
@@ -121,9 +121,9 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 		if fileResp != nil {
 			ret = append(ret, libgobuster.Result{
-				Entity: file,
-				Status: *fileResp,
-				Size:   fileSize,
+				Entity:     file,
+				StatusCode: *fileResp,
+				Size:       fileSize,
 			})
 		}
 	}
@@ -136,7 +136,7 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 
 	// Prefix if we're in verbose mode
 	if d.globalopts.Verbose {
-		if d.options.StatusCodesParsed.Contains(r.Status) {
+		if d.options.StatusCodesParsed.Contains(r.StatusCode) {
 			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
 				return nil, err
 			}
@@ -147,7 +147,7 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 		}
 	}
 
-	if d.options.StatusCodesParsed.Contains(r.Status) || d.globalopts.Verbose {
+	if d.options.StatusCodesParsed.Contains(r.StatusCode) || d.globalopts.Verbose {
 		if d.options.Expanded {
 			if _, err := fmt.Fprintf(buf, "%s", d.options.URL); err != nil {
 				return nil, err
@@ -162,7 +162,7 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 		}
 
 		if !d.options.NoStatus {
-			if _, err := fmt.Fprintf(buf, " (Status: %d)", r.Status); err != nil {
+			if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
 				return nil, err
 			}
 		}

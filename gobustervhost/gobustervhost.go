@@ -90,7 +90,7 @@ func (v *GobusterVhost) PreRun() error {
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	_, body, err := v.http.GetBody(v.options.URL, subdomain, v.options.Cookies)
+	status, body, err := v.http.GetBody(v.options.URL, subdomain, v.options.Cookies)
 	var ret []libgobuster.Result
 	if err != nil {
 		return ret, err
@@ -98,8 +98,20 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 
 	// subdomain must not match default vhost and non existent vhost
 	if *body != v.baseline1 && *body != v.baseline2 {
+		size := int64(len(*body))
 		result := libgobuster.Result{
 			Entity: subdomain,
+			Status: *status,
+			Size:   &size,
+		}
+		ret = append(ret, result)
+	} else if v.globalopts.Verbose {
+		size := int64(len(*body))
+		result := libgobuster.Result{
+			Entity: subdomain,
+			Status: *status,
+			Size:   &size,
+			Extra:  "missed",
 		}
 		ret = append(ret, result)
 	}
@@ -109,7 +121,13 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 // ResultToString is the to string implementation of gobusterdir
 func (v *GobusterVhost) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
-	if _, err := fmt.Fprintf(buf, "Found: %s\n", r.Entity); err != nil {
+
+	statusText := "Found"
+	if v.globalopts.Verbose && r.Extra == "missed" {
+		statusText = "Missed"
+	}
+
+	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Entity, r.Status, *r.Size); err != nil {
 		return nil, err
 	}
 

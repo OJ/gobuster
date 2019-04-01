@@ -1,8 +1,8 @@
 TARGET=./build
 ARCHS=amd64 386
 LDFLAGS="-s -w"
-GCFLAGS="all=-trimpath=${GOPATH}/src"
-ASMFLAGS="all=-trimpath=${GOPATH}/src"
+GCFLAGS="all=-trimpath=$(shell pwd)"
+ASMFLAGS="all=-trimpath=$(shell pwd)"
 
 current:
 	@go build -o ./gobuster; \

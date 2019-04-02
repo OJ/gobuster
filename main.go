@@ -42,16 +42,9 @@ func banner() {
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
-func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
+func resultWorker(g *libgobuster.Gobuster, f *os.File, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var f *os.File
-	var err error
-	if filename != "" {
-		f, err = os.Create(filename)
-		if err != nil {
-			log.Fatalf("error on creating output file: %v", err)
-		}
-	}
+
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
@@ -147,6 +140,19 @@ func main() {
 
 	times := 0
 
+	var f *os.File
+	var err error
+
+	if outputFilename != "" {
+		f, err = os.OpenFile(outputFilename, os.O_APPEND, 0666)
+		if err != nil {
+			f, err = os.Create(outputFilename)
+			if err != nil {
+				log.Fatalf("error on creating output file: %v", err)
+			}
+		}
+	}
+
 	for _, url := range urlPool {
 		times += 1
 
@@ -211,7 +217,7 @@ func main() {
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go errorWorker(gobuster, &wg)
-		go resultWorker(gobuster, outputFilename, &wg)
+		go resultWorker(gobuster, f, &wg)
 
 		if !o.Quiet && !o.NoProgress {
 			go progressWorker(ctx, gobuster)

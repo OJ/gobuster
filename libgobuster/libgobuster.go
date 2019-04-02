@@ -229,7 +229,23 @@ func (g *Gobuster) GetConfigString() (string, error) {
 	if _, err := fmt.Fprintf(buf, "[+] Mode         : %s\n", o.Mode); err != nil {
 		return "", err
 	}
-	if _, err := fmt.Fprintf(buf, "[+] Url/Domain   : %s\n", o.URL); err != nil {
+	if o.URL != "" {
+		if _, err := fmt.Fprintf(buf, "[+] Url/Domain   : %s\n", o.URL); err != nil {
+			return "", err
+		}
+	}
+	if o.URLFile != "" {
+		if _, err := fmt.Fprintf(buf, "[+] Url File     : %s\n", o.URLFile); err != nil {
+			return "", err
+		}
+	}
+	if _, err := fmt.Fprintf(buf, "[+] Recursive    : %s\n", func(on bool) string {
+		if on {
+			return "on"
+		}
+
+		return "off"
+	} (o.Recursive)); err != nil {
 		return "", err
 	}
 	if _, err := fmt.Fprintf(buf, "[+] Threads      : %d\n", o.Threads); err != nil {

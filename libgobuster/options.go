@@ -2,13 +2,13 @@ package libgobuster
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 )
 
 const (
@@ -28,12 +28,14 @@ type Options struct {
 	StatusCodesParsed intSet
 	Threads           int
 	URL               string
+	URLFile			  string
 	UserAgent         string
 	Username          string
 	Wordlist          string
 	Proxy             string
 	Cookies           string
 	Timeout           time.Duration
+	Recursive		  bool
 	FollowRedirect    bool
 	IncludeLength     bool
 	NoStatus          bool
@@ -76,8 +78,12 @@ func (opt *Options) validate() *multierror.Error {
 		errorList = multierror.Append(errorList, fmt.Errorf("Wordlist (-w): File does not exist: %s", opt.Wordlist))
 	}
 
-	if opt.URL == "" {
-		errorList = multierror.Append(errorList, fmt.Errorf("Url/Domain (-u): Must be specified"))
+	if opt.URLFile != "" {
+		if _, err := os.Stat(opt.URLFile); os.IsNotExist(err) {
+			errorList = multierror.Append(errorList, fmt.Errorf("URLFile (-file): File does not exist: %s", opt.URLFile))
+		}
+	} else if opt.URL == "" {
+		errorList = multierror.Append(errorList, fmt.Errorf("Url/Domain (-u) or URLFile (-file): Must be specified"))
 	}
 
 	if opt.StatusCodes != "" {
@@ -92,12 +98,8 @@ func (opt *Options) validate() *multierror.Error {
 		}
 	}
 
-	if opt.Mode == ModeDir {
-		if !strings.HasSuffix(opt.URL, "/") {
-			opt.URL = fmt.Sprintf("%s/", opt.URL)
-		}
-
-		if err := opt.validateDirMode(); err != nil {
+	if opt.Mode == ModeDir && opt.URL != "" {
+		if err := FixUrl(&opt.URL); err != nil {
 			errorList = multierror.Append(errorList, err)
 		}
 	}
@@ -137,34 +139,30 @@ func (opt *Options) parseStatusCodes() error {
 	return nil
 }
 
-func (opt *Options) validateDirMode() error {
-	// bail out if we are not in dir mode
-	if opt.Mode != ModeDir {
-		return nil
-	}
-	if !strings.HasPrefix(opt.URL, "http") {
-		// check to see if a port was specified
-		re := regexp.MustCompile(`^[^/]+:(\d+)`)
-		match := re.FindStringSubmatch(opt.URL)
+func (opt *Options) ReadUrls() []string {
+	urls := []string{}
 
-		if len(match) < 2 {
-			// no port, default to http on 80
-			opt.URL = fmt.Sprintf("http://%s", opt.URL)
-		} else {
-			port, err := strconv.Atoi(match[1])
-			if err != nil || (port != 80 && port != 443) {
-				return fmt.Errorf("url scheme not specified")
-			} else if port == 80 {
-				opt.URL = fmt.Sprintf("http://%s", opt.URL)
-			} else {
-				opt.URL = fmt.Sprintf("https://%s", opt.URL)
-			}
+	data, err := ioutil.ReadFile(opt.URLFile)
+
+	if err != nil {
+		return urls
+	}
+
+	text := string(data)
+
+	for _, line := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
+		line = strings.TrimSpace(line)
+
+		if line == "" {
+			continue
 		}
+
+		if err = FixUrl(&line); err != nil {
+			continue
+		}
+
+		urls = append(urls, line)
 	}
 
-	if opt.Username != "" && opt.Password == "" {
-		return fmt.Errorf("username was provided but password is missing")
-	}
-
-	return nil
+	return urls
 }

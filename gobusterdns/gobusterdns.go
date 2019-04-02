@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/Margular/gobuster/libgobuster"
 	"github.com/google/uuid"
 )
 

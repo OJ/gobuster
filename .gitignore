@@ -27,3 +27,4 @@ _testmain.go
 
 gobuster
 build
+.idea/

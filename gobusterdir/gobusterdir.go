@@ -3,10 +3,9 @@ package gobusterdir
 import (
 	"bytes"
 	"fmt"
-	"log"
-
-	"github.com/OJ/gobuster/libgobuster"
+	"github.com/Margular/gobuster/libgobuster"
 	"github.com/google/uuid"
+	"log"
 )
 
 // GobusterDir is the main type to implement the interface
@@ -51,6 +50,7 @@ func (d GobusterDir) Process(g *libgobuster.Gobuster, word string) ([]libgobuste
 	if err != nil {
 		return nil, err
 	}
+
 	var ret []libgobuster.Result
 	if dirResp != nil {
 		ret = append(ret, libgobuster.Result{

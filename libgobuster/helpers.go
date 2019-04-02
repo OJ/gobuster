@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -105,4 +107,32 @@ func lineCounter(r io.Reader) (int, error) {
 			return count, err
 		}
 	}
+}
+
+func FixUrl(url *string) error {
+	if !strings.HasSuffix(*url, "/") {
+		*url = fmt.Sprintf("%s/", *url)
+	}
+
+	if !strings.HasPrefix(*url, "http") {
+		// check to see if a port was specified
+		re := regexp.MustCompile(`^[^/]+:(\d+)`)
+		match := re.FindStringSubmatch(*url)
+
+		if len(match) < 2 {
+			// no port, default to http on 80
+			*url = fmt.Sprintf("http://%s", *url)
+		} else {
+			port, err := strconv.Atoi(match[1])
+			if err != nil || (port != 80 && port != 443) {
+				return fmt.Errorf("url scheme not specified")
+			} else if port == 80 {
+				*url = fmt.Sprintf("http://%s", *url)
+			} else {
+				*url = fmt.Sprintf("https://%s", *url)
+			}
+		}
+	}
+
+	return nil
 }

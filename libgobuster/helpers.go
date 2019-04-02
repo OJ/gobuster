@@ -8,11 +8,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type intSet struct {
 	Set map[int]bool
 }
+
+var mu sync.Mutex
 
 type stringSet struct {
 	Set map[string]bool
@@ -67,6 +70,8 @@ func newIntSet() intSet {
 
 // Add an element to a set
 func (set *intSet) Add(i int) bool {
+	mu.Lock()
+	defer mu.Unlock()
 	_, found := set.Set[i]
 	set.Set[i] = true
 	return !found

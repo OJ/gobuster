@@ -27,6 +27,7 @@ type Options struct {
 	StatusCodes       string
 	StatusCodesParsed intSet
 	Threads           int
+	URLGroup 		  uint
 	URL               string
 	URLFile			  string
 	UserAgent         string
@@ -51,8 +52,8 @@ type Options struct {
 }
 
 // NewOptions returns a new initialized Options object
-func NewOptions() *Options {
-	return &Options{
+func NewOptions() Options {
+	return Options{
 		StatusCodesParsed: newIntSet(),
 		ExtensionsParsed:  newStringSet(),
 	}

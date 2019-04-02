@@ -87,7 +87,10 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster) {
 	}
 }
 
+var muFile sync.Mutex
 func writeToFile(f *os.File, output string) error {
+	muFile.Lock()
+	defer muFile.Unlock()
 	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
 	if err != nil {
 		return fmt.Errorf("[!] Unable to write to file %v", err)
@@ -104,6 +107,7 @@ func main() {
 	flag.StringVar(&o.StatusCodes, "s", "200,204,301,302,307,403", "Positive status codes (dir mode only)")
 	flag.StringVar(&outputFilename, "o", "", "Output file to write results to (defaults to stdout)")
 	flag.StringVar(&o.URL, "u", "", "The target URL or Domain")
+	flag.UintVar(&o.URLGroup, "g", 5, "concurrent urls to scan")
 	flag.StringVar(&o.URLFile, "file", "", "The path to store urls")
 	flag.StringVar(&o.Cookies, "c", "", "Cookies to use for the requests (dir mode only)")
 	flag.StringVar(&o.Username, "U", "", "Username for Basic Auth (dir mode only)")
@@ -146,98 +150,106 @@ func main() {
 	if outputFilename != "" {
 		f, err = os.OpenFile(outputFilename, os.O_APPEND, 0666)
 		if err != nil {
-			f, err = os.Create(outputFilename)
-			if err != nil {
-				log.Fatalf("error on creating output file: %v", err)
-			}
+			log.Fatalf("error on appending output file: %v", err)
 		}
 	}
 
+	var wg sync.WaitGroup
 	for _, url := range urlPool {
 		times += 1
-
 		o.URL = url
-
-		// Prompt for PW if not provided
-		if o.Username != "" && o.Password == "" && times <= 1 {
-			fmt.Printf("[?] Auth Password: ")
-			passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-			// print a newline to simulate the newline that was entered
-			// this means that formatting/printing after doesn't look bad.
-			fmt.Println("")
-			if err != nil {
-				log.Fatal("[!] Auth username given but reading of password failed")
-			}
-			o.Password = string(passBytes)
-		}
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		var plugin libgobuster.GobusterPlugin
-		switch o.Mode {
-		case libgobuster.ModeDir:
-			plugin = gobusterdir.GobusterDir{}
-		case libgobuster.ModeDNS:
-			plugin = gobusterdns.GobusterDNS{}
-		}
-
-		gobuster, err := libgobuster.NewGobuster(ctx, o, plugin)
-		if err != nil {
-			log.Fatalf("[!] %v", err)
-		}
-
-		if !o.Quiet && times <= 1 {
-			fmt.Println("")
-			ruler()
-			banner()
-			ruler()
-			c, err := gobuster.GetConfigString()
-			if err != nil {
-				log.Fatalf("error on creating config string: %v", err)
-			}
-			fmt.Println(c)
-			ruler()
-			log.Println("Starting gobuster")
-			ruler()
-		}
-
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt)
-		go func() {
-			for range signalChan {
-				// caught CTRL+C
-				if !gobuster.Opts.Quiet {
-					fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
-				}
-				cancel()
-			}
-		}()
-
-		var wg sync.WaitGroup
-		wg.Add(2)
-		go errorWorker(gobuster, &wg)
-		go resultWorker(gobuster, f, &wg)
-
-		if !o.Quiet && !o.NoProgress {
-			go progressWorker(ctx, gobuster)
-		}
-
-		if err := gobuster.Start(); err != nil {
-			log.Printf("[!] %v", err)
-		} else {
-			// call cancel func to free ressources and stop progressFunc
-			cancel()
-			// wait for all output funcs to finish
+		wg.Add(1)
+		go startEngine(f, o, times == 1, &wg)
+		if times % int(o.URLGroup) == 0 {
 			wg.Wait()
 		}
-
-		if !o.Quiet {
-			gobuster.ClearProgress()
-		}
 	}
+
+	wg.Wait()
 
 	ruler()
 	log.Println("Finished")
 	ruler()
+}
+
+func startEngine(f *os.File, o libgobuster.Options, first bool, group *sync.WaitGroup) {
+	// Prompt for PW if not provided
+	if o.Username != "" && o.Password == "" && first {
+		fmt.Printf("[?] Auth Password: ")
+		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		// print a newline to simulate the newline that was entered
+		// this means that formatting/printing after doesn't look bad.
+		fmt.Println("")
+		if err != nil {
+			log.Fatal("[!] Auth username given but reading of password failed")
+		}
+		o.Password = string(passBytes)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var plugin libgobuster.GobusterPlugin
+	switch o.Mode {
+	case libgobuster.ModeDir:
+		plugin = gobusterdir.GobusterDir{}
+	case libgobuster.ModeDNS:
+		plugin = gobusterdns.GobusterDNS{}
+	}
+
+	gobuster, err := libgobuster.NewGobuster(ctx, &o, plugin)
+	if err != nil {
+		log.Fatalf("[!] %v", err)
+	}
+
+	if !o.Quiet && first {
+		fmt.Println("")
+		ruler()
+		banner()
+		ruler()
+		c, err := gobuster.GetConfigString()
+		if err != nil {
+			log.Fatalf("error on creating config string: %v", err)
+		}
+		fmt.Println(c)
+		ruler()
+		log.Println("Starting gobuster")
+		ruler()
+	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go func() {
+		for range signalChan {
+			// caught CTRL+C
+			if !gobuster.Opts.Quiet {
+				fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
+			}
+			cancel()
+		}
+	}()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go errorWorker(gobuster, &wg)
+	go resultWorker(gobuster, f, &wg)
+
+	if !o.Quiet && !o.NoProgress {
+		go progressWorker(ctx, gobuster)
+	}
+
+	if err := gobuster.Start(); err != nil {
+		log.Printf("[!] %v", err)
+	} else {
+		// call cancel func to free ressources and stop progressFunc
+		cancel()
+		// wait for all output funcs to finish
+		wg.Wait()
+	}
+
+	if !o.Quiet {
+		gobuster.ClearProgress()
+	}
+
+	group.Done()
 }

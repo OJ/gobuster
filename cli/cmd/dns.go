@@ -31,13 +31,19 @@ func runDNS(cmd *cobra.Command, args []string) error {
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
+	defer func() {
+		signal.Stop(signalChan)
+		cancel()
+	}()
 	go func() {
-		for range signalChan {
+		select {
+		case <-signalChan:
 			// caught CTRL+C
 			if !globalopts.Quiet {
 				fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
 			}
 			cancel()
+		case <-ctx.Done():
 		}
 	}()
 

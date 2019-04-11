@@ -83,6 +83,10 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error) {
 	resp, err := client.makeRequest(fullURL, host, cookie)
 	if err != nil {
+		// ignore context canceled errors
+		if client.context.Err() == context.Canceled {
+			return nil, nil, nil
+		}
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
@@ -115,6 +119,10 @@ func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error
 func (client *HTTPClient) GetBody(fullURL, host, cookie string) (*int, *string, error) {
 	resp, err := client.makeRequest(fullURL, host, cookie)
 	if err != nil {
+		// ignore context canceled errors
+		if client.context.Err() == context.Canceled {
+			return nil, nil, nil
+		}
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
@@ -158,7 +166,6 @@ func (client *HTTPClient) makeRequest(fullURL, host, cookie string) (*http.Respo
 	resp, err := client.client.Do(req)
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
-
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
 				return nil, fmt.Errorf("Invalid certificate: %v", ue.Err)
 			}

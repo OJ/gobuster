@@ -22,6 +22,7 @@ func banner() {
 
 func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	var f *os.File
 	var err error
 	if filename != "" {
@@ -29,7 +30,9 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		if err != nil {
 			log.Fatalf("error on creating output file: %v", err)
 		}
+		defer f.Close()
 	}
+
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
@@ -51,6 +54,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 
 func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	for e := range g.Errors() {
 		if !g.Opts.Quiet {
 			g.ClearProgress()
@@ -59,7 +63,9 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
-func progressWorker(c context.Context, g *libgobuster.Gobuster) {
+func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	tick := time.NewTicker(1 * time.Second)
 
 	for {
@@ -120,17 +126,18 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	go resultWorker(gobuster, opts.OutputFilename, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
-		go progressWorker(ctx, gobuster)
+		wg.Add(1)
+		go progressWorker(ctx, gobuster, &wg)
 	}
 
 	if err := gobuster.Start(); err != nil {
 		log.Printf("[!] %v", err)
-	} else {
-		// call cancel func to free ressources and stop progressFunc
-		cancel()
-		// wait for all output funcs to finish
-		wg.Wait()
 	}
+
+	// call cancel func to free ressources and stop progressFunc
+	cancel()
+	// wait for all output funcs to finish
+	wg.Wait()
 
 	if !opts.Quiet {
 		gobuster.ClearProgress()

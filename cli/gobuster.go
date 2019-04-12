@@ -20,6 +20,8 @@ func banner() {
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
+// resultWorker outputs the results as they come in. This needs to be a range and should not handle
+// the context so the channel always has a receiver and libgobuster will not block.
 func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -52,6 +54,8 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	}
 }
 
+// errorWorker outputs the errors as they come in. This needs to be a range and should not handle
+// the context so the channel always has a receiver and libgobuster will not block.
 func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -63,6 +67,8 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
+// progressWorker outputs the progress every tick. It will stop once cancel() is called
+// on the context
 func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -120,12 +126,17 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		ruler()
 	}
 
+	// our waitgroup for all goroutines
+	// this ensures all goroutines are finished
+	// when we call wg.Wait()
 	var wg sync.WaitGroup
+	// 2 is the number of goroutines we spin up
 	wg.Add(2)
 	go errorWorker(gobuster, &wg)
 	go resultWorker(gobuster, opts.OutputFilename, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
+		// if not quiet add a new workgroup entry and start the goroutine
 		wg.Add(1)
 		go progressWorker(ctx, gobuster, &wg)
 	}
@@ -134,9 +145,10 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		log.Printf("[!] %v", err)
 	}
 
-	// call cancel func to free ressources and stop progressFunc
+	// call cancel func so progressWorker will exit (the only goroutine in this
+	// file using the context) and to free ressources
 	cancel()
-	// wait for all output funcs to finish
+	// wait for all spun up goroutines to finsih (all have to call wg.Done())
 	wg.Wait()
 
 	if !opts.Quiet {

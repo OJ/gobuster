@@ -19,8 +19,8 @@ type GobusterVhost struct {
 	globalopts *libgobuster.Options
 	http       *libgobuster.HTTPClient
 	domain     string
-	baseline1  string
-	baseline2  string
+	baseline1  []byte
+	baseline2  []byte
 }
 
 // NewGobusterVhost creates a new initialized GobusterDir
@@ -71,7 +71,7 @@ func (v *GobusterVhost) PreRun() error {
 	v.domain = url.Host
 
 	// request default vhost for baseline1
-	_, tmp, err := v.http.GetBody(v.options.URL, "", v.options.Cookies)
+	_, tmp, err := v.http.GetWithBody(v.options.URL, "", v.options.Cookies)
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
@@ -79,7 +79,7 @@ func (v *GobusterVhost) PreRun() error {
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, tmp, err = v.http.GetBody(v.options.URL, subdomain, v.options.Cookies)
+	_, tmp, err = v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
@@ -90,7 +90,7 @@ func (v *GobusterVhost) PreRun() error {
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, body, err := v.http.GetBody(v.options.URL, subdomain, v.options.Cookies)
+	status, body, err := v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
 	var ret []libgobuster.Result
 	if err != nil {
 		return ret, err
@@ -98,7 +98,7 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := *body != v.baseline1 && *body != v.baseline2
+	found := !bytes.Equal(*body, v.baseline1) && !bytes.Equal(*body, v.baseline2)
 	if found || v.globalopts.Verbose {
 		size := int64(len(*body))
 		resultStatus := libgobuster.StatusMissed

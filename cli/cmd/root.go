@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 
@@ -14,8 +16,30 @@ var rootCmd = &cobra.Command{
 	Use: "gobuster",
 }
 
+var mainContext context.Context
+
 // Execute is the main cobra method
 func Execute() {
+	var cancel context.CancelFunc
+	mainContext, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	defer func() {
+		signal.Stop(signalChan)
+		cancel()
+	}()
+	go func() {
+		select {
+		case <-signalChan:
+			// caught CTRL+C
+			fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
+			cancel()
+		case <-mainContext.Done():
+		}
+	}()
+
 	if err := rootCmd.Execute(); err != nil {
 		// Leaving this in results in the same error appearing twice
 		// Once before and once after the help output. Not sure if

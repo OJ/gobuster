@@ -1,4 +1,4 @@
-package gobusterdir
+package helper
 
 import (
 	"reflect"
@@ -12,7 +12,7 @@ func TestParseExtensions(t *testing.T) {
 
 	var tt = []struct {
 		testName           string
-		Extensions         string
+		extensions         string
 		expectedExtensions libgobuster.StringSet
 		expectedError      string
 	}{
@@ -25,15 +25,13 @@ func TestParseExtensions(t *testing.T) {
 
 	for _, x := range tt {
 		t.Run(x.testName, func(t *testing.T) {
-			o := NewOptionsDir()
-			o.Extensions = x.Extensions
-			err := o.ParseExtensions()
+			ret, err := ParseExtensions(x.extensions)
 			if x.expectedError != "" {
 				if err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
-			} else if !reflect.DeepEqual(x.expectedExtensions, o.ExtensionsParsed) {
-				t.Fatalf("Expected %v but got %v", x.expectedExtensions, o.ExtensionsParsed)
+			} else if !reflect.DeepEqual(x.expectedExtensions, ret) {
+				t.Fatalf("Expected %v but got %v", x.expectedExtensions, ret)
 			}
 		})
 	}
@@ -58,15 +56,13 @@ func TestParseStatusCodes(t *testing.T) {
 
 	for _, x := range tt {
 		t.Run(x.testName, func(t *testing.T) {
-			o := NewOptionsDir()
-			o.StatusCodes = x.stringCodes
-			err := o.ParseStatusCodes()
+			ret, err := ParseStatusCodes(x.stringCodes)
 			if x.expectedError != "" {
 				if err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
-			} else if !reflect.DeepEqual(x.expectedCodes, o.StatusCodesParsed) {
-				t.Fatalf("Expected %v but got %v", x.expectedCodes, o.StatusCodesParsed)
+			} else if !reflect.DeepEqual(x.expectedCodes, ret) {
+				t.Fatalf("Expected %v but got %v", x.expectedCodes, ret)
 			}
 		})
 	}

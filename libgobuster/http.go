@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -79,9 +80,29 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	return &client, nil
 }
 
-// Get makes an http request and returns the status, the length and an error
+// Get gets an URL and returns the status, the length and an error
 func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error) {
-	resp, err := client.makeRequest(fullURL, host, cookie)
+	return client.requestWithoutBody(http.MethodGet, fullURL, host, cookie, "")
+}
+
+// Post posts to an URL and returns the status, the length and an error
+func (client *HTTPClient) Post(fullURL, host, cookie, data string) (*int, *int64, error) {
+	return client.requestWithoutBody(http.MethodPost, fullURL, host, cookie, data)
+}
+
+// GetWithBody gets an URL and returns the status and the body
+func (client *HTTPClient) GetWithBody(fullURL, host, cookie string) (*int, *string, error) {
+	return client.requestWithBody(http.MethodGet, fullURL, host, cookie, "")
+}
+
+// PostWithBody gets an URL and returns the status and the body
+func (client *HTTPClient) PostWithBody(fullURL, host, cookie, data string) (*int, *string, error) {
+	return client.requestWithBody(http.MethodPost, fullURL, host, cookie, data)
+}
+
+// requestWithoutBody makes an http request and returns the status, the length and an error
+func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie, data string) (*int, *int64, error) {
+	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
 	if err != nil {
 		// ignore context canceled errors
 		if client.context.Err() == context.Canceled {
@@ -115,9 +136,9 @@ func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error
 	return &resp.StatusCode, length, nil
 }
 
-// GetBody makes an http request and returns the status and the body
-func (client *HTTPClient) GetBody(fullURL, host, cookie string) (*int, *string, error) {
-	resp, err := client.makeRequest(fullURL, host, cookie)
+// requestWithBody makes an http request and returns the status and the body
+func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie, data string) (*int, *string, error) {
+	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
 	if err != nil {
 		// ignore context canceled errors
 		if client.context.Err() == context.Canceled {
@@ -136,10 +157,24 @@ func (client *HTTPClient) GetBody(fullURL, host, cookie string) (*int, *string, 
 	return &resp.StatusCode, &bodyString, nil
 }
 
-func (client *HTTPClient) makeRequest(fullURL, host, cookie string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
-	if err != nil {
-		return nil, err
+func (client *HTTPClient) makeRequest(method, fullURL, host, cookie, data string) (*http.Response, error) {
+	var req *http.Request
+	var err error
+
+	switch method {
+	case http.MethodGet:
+		req, err = http.NewRequest(http.MethodGet, fullURL, nil)
+		if err != nil {
+			return nil, err
+		}
+	case http.MethodPost:
+		buf := bytes.NewBufferString(data)
+		req, err = http.NewRequest(http.MethodPost, fullURL, buf)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("invalid method %s", method)
 	}
 
 	// add the context so we can easily cancel out
@@ -172,5 +207,6 @@ func (client *HTTPClient) makeRequest(fullURL, host, cookie string) (*http.Respo
 		}
 		return nil, err
 	}
+
 	return resp, nil
 }

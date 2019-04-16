@@ -14,6 +14,8 @@ import (
 	"unicode/utf8"
 )
 
+var defaultUserAgent = DefaultUserAgent()
+
 // HTTPClient represents a http object
 type HTTPClient struct {
 	client        *http.Client
@@ -82,26 +84,26 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 
 // Get gets an URL and returns the status, the length and an error
 func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error) {
-	return client.requestWithoutBody(http.MethodGet, fullURL, host, cookie, "")
+	return client.requestWithoutBody(http.MethodGet, fullURL, host, cookie, nil)
 }
 
 // Post posts to an URL and returns the status, the length and an error
-func (client *HTTPClient) Post(fullURL, host, cookie, data string) (*int, *int64, error) {
+func (client *HTTPClient) Post(fullURL, host, cookie string, data []byte) (*int, *int64, error) {
 	return client.requestWithoutBody(http.MethodPost, fullURL, host, cookie, data)
 }
 
 // GetWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) GetWithBody(fullURL, host, cookie string) (*int, *string, error) {
-	return client.requestWithBody(http.MethodGet, fullURL, host, cookie, "")
+func (client *HTTPClient) GetWithBody(fullURL, host, cookie string) (*int, *[]byte, error) {
+	return client.requestWithBody(http.MethodGet, fullURL, host, cookie, nil)
 }
 
 // PostWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) PostWithBody(fullURL, host, cookie, data string) (*int, *string, error) {
+func (client *HTTPClient) PostWithBody(fullURL, host, cookie string, data []byte) (*int, *[]byte, error) {
 	return client.requestWithBody(http.MethodPost, fullURL, host, cookie, data)
 }
 
 // requestWithoutBody makes an http request and returns the status, the length and an error
-func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie, data string) (*int, *int64, error) {
+func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie string, data []byte) (*int, *int64, error) {
 	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
 	if err != nil {
 		// ignore context canceled errors
@@ -137,7 +139,7 @@ func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie, data
 }
 
 // requestWithBody makes an http request and returns the status and the body
-func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie, data string) (*int, *string, error) {
+func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie string, data []byte) (*int, *[]byte, error) {
 	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
 	if err != nil {
 		// ignore context canceled errors
@@ -152,12 +154,11 @@ func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie, data st
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not read body: %v", err)
 	}
-	bodyString := string(body)
 
-	return &resp.StatusCode, &bodyString, nil
+	return &resp.StatusCode, &body, nil
 }
 
-func (client *HTTPClient) makeRequest(method, fullURL, host, cookie, data string) (*http.Response, error) {
+func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data []byte) (*http.Response, error) {
 	var req *http.Request
 	var err error
 
@@ -168,7 +169,7 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie, data string
 			return nil, err
 		}
 	case http.MethodPost:
-		buf := bytes.NewBufferString(data)
+		buf := bytes.NewBuffer(data)
 		req, err = http.NewRequest(http.MethodPost, fullURL, buf)
 		if err != nil {
 			return nil, err
@@ -188,11 +189,11 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie, data string
 		req.Host = host
 	}
 
-	ua := DefaultUserAgent()
 	if client.userAgent != "" {
-		ua = client.userAgent
+		req.Header.Set("User-Agent", client.userAgent)
+	} else {
+		req.Header.Set("User-Agent", defaultUserAgent)
 	}
-	req.Header.Set("User-Agent", ua)
 
 	if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)

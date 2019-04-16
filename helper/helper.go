@@ -9,9 +9,9 @@ import (
 )
 
 // ParseExtensions parses the extensions provided as a comma seperated list
-func ParseExtensions(extensions string) (*libgobuster.StringSet, error) {
+func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	if extensions == "" {
-		return nil, fmt.Errorf("invalid extension string provided")
+		return libgobuster.StringSet{}, fmt.Errorf("invalid extension string provided")
 	}
 
 	ret := libgobuster.NewStringSet()
@@ -21,13 +21,13 @@ func ParseExtensions(extensions string) (*libgobuster.StringSet, error) {
 		// remove leading . from extensions
 		ret.Add(strings.TrimPrefix(e, "."))
 	}
-	return &ret, nil
+	return ret, nil
 }
 
 // ParseStatusCodes parses the status codes provided as a comma seperated list
-func ParseStatusCodes(statuscodes string) (*libgobuster.IntSet, error) {
+func ParseStatusCodes(statuscodes string) (libgobuster.IntSet, error) {
 	if statuscodes == "" {
-		return nil, fmt.Errorf("invalid status code string provided")
+		return libgobuster.IntSet{}, fmt.Errorf("invalid status code string provided")
 	}
 
 	ret := libgobuster.NewIntSet()
@@ -35,9 +35,9 @@ func ParseStatusCodes(statuscodes string) (*libgobuster.IntSet, error) {
 		c = strings.TrimSpace(c)
 		i, err := strconv.Atoi(c)
 		if err != nil {
-			return nil, fmt.Errorf("invalid status code given: %s", c)
+			return libgobuster.IntSet{}, fmt.Errorf("invalid status code given: %s", c)
 		}
 		ret.Add(i)
 	}
-	return &ret, nil
+	return ret, nil
 }

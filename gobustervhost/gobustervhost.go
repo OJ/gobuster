@@ -19,8 +19,8 @@ type GobusterVhost struct {
 	globalopts *libgobuster.Options
 	http       *libgobuster.HTTPClient
 	domain     string
-	baseline1  string
-	baseline2  string
+	baseline1  []byte
+	baseline2  []byte
 }
 
 // NewGobusterVhost creates a new initialized GobusterDir
@@ -98,7 +98,7 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := *body != v.baseline1 && *body != v.baseline2
+	found := !bytes.Equal(*body, v.baseline1) && !bytes.Equal(*body, v.baseline2)
 	if found || v.globalopts.Verbose {
 		size := int64(len(*body))
 		resultStatus := libgobuster.StatusMissed

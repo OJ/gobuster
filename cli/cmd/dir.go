@@ -62,7 +62,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for extensions: %v", err)
 		}
-		plugin.ExtensionsParsed = *ret
+		plugin.ExtensionsParsed = ret
 	}
 
 	plugin.StatusCodes, err = cmdDir.Flags().GetString("statuscodes")
@@ -74,7 +74,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
 	}
-	plugin.StatusCodesParsed = *ret
+	plugin.StatusCodesParsed = ret
 
 	plugin.UseSlash, err = cmdDir.Flags().GetBool("addslash")
 	if err != nil {

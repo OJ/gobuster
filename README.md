@@ -75,7 +75,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ### Building
 
-Since this tool is written in [Go](https://golang.org/) you need install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
 
 #### Compiling
 `gobuster` now has external dependencies, and so they need to be pulled in first:

@@ -68,7 +68,9 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 		Timeout:       opt.Timeout,
 		CheckRedirect: redirectFunc,
 		Transport: &http.Transport{
-			Proxy: proxyURLFunc,
+			Proxy:               proxyURLFunc,
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 100,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: opt.InsecureSSL,
 			},

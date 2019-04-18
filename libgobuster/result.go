@@ -4,8 +4,8 @@ package libgobuster
 type Result struct {
 	Entity string
 	Status int
-	Extra  string
-	Size   *int64
+	Extra  string `json:",omitempty"`
+	Size   *int64 `json:",omitempty"`
 }
 
 // ToString converts the Result to it's textual representation

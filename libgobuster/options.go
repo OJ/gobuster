@@ -5,6 +5,7 @@ type Options struct {
 	Threads        int
 	Wordlist       string
 	OutputFilename string
+	JSONOutput     bool
 	NoStatus       bool
 	NoProgress     bool
 	Quiet          bool

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -20,7 +21,7 @@ func banner() {
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
-func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
+func resultWorker(g *libgobuster.Gobuster, filename string, jsonOutput bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var f *os.File
 	var err error
@@ -30,6 +31,14 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 			log.Fatalf("error on creating output file: %v", err)
 		}
 	}
+	if f != nil && jsonOutput {
+		err = writeToFile(f, "[")
+		if err != nil {
+			log.Fatalf("error writing output file: %v", err)
+		}
+		defer writeToFile(f, "\n]\n")
+	}
+	firstResult := true
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
@@ -40,6 +49,20 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 			s = strings.TrimSpace(s)
 			fmt.Println(s)
 			if f != nil {
+				if jsonOutput {
+					j, err := json.Marshal(r)
+					if err != nil {
+						log.Fatalf("error marshalling result: %v", err)
+					}
+					if firstResult {
+						s = fmt.Sprintf("\n%s", j)
+						firstResult = false
+					} else {
+						s = fmt.Sprintf(",\n%s", j)
+					}
+				} else {
+					s = fmt.Sprintf("%s\n", s)
+				}
 				err = writeToFile(f, s)
 				if err != nil {
 					log.Fatalf("error on writing output file: %v", err)
@@ -73,7 +96,7 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster) {
 }
 
 func writeToFile(f *os.File, output string) error {
-	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
+	_, err := f.WriteString(output)
 	if err != nil {
 		return fmt.Errorf("[!] Unable to write to file %v", err)
 	}
@@ -117,7 +140,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go errorWorker(gobuster, &wg)
-	go resultWorker(gobuster, opts.OutputFilename, &wg)
+	go resultWorker(gobuster, opts.OutputFilename, opts.JSONOutput, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
 		go progressWorker(ctx, gobuster)

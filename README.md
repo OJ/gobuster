@@ -51,6 +51,7 @@ dns         uses dns mode
 -h, --help              Help for gobuster
     --noprogress        Don't display progress
 -o, --output string     Output file to write results to (defaults to stdout)
+-j, --json              Format output file as json
 -q, --quiet             Don't print the banner and other noise
 -t, --threads int       Number of concurrent threads (default 10)
 -v, --verbose           Verbose output (errors)

@@ -142,6 +142,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 // Start the busting of the website with the given
 // set of settings from the command line.
 func (g *Gobuster) Start() error {
+	defer close(g.resultChan)
+	defer close(g.errorChan)
+
 	if err := g.plugin.PreRun(); err != nil {
 		return err
 	}
@@ -172,8 +175,6 @@ Scan:
 	}
 	close(wordChan)
 	workerGroup.Wait()
-	close(g.resultChan)
-	close(g.errorChan)
 	return nil
 }
 

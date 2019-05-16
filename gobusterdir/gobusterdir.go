@@ -3,7 +3,6 @@ package gobusterdir
 import (
 	"bytes"
 	"fmt"
-	"log"
 
 	"github.com/OJ/gobuster/libgobuster"
 	"github.com/google/uuid"
@@ -29,7 +28,7 @@ func (d GobusterDir) Setup(g *libgobuster.Gobuster) error {
 
 	if g.Opts.StatusCodesParsed.Contains(*wildcardResp) {
 		g.IsWildcard = true
-		log.Printf("[-] Wildcard response found: %s => %d", url, *wildcardResp)
+		fmt.Printf("[-] Wildcard response found: %s => %d\n", url, *wildcardResp)
 		if !g.Opts.WildcardForced {
 			return fmt.Errorf("To force processing of Wildcard responses, specify the '-fw' switch.")
 		}

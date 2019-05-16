@@ -102,6 +102,7 @@ func writeToFile(f *os.File, output string) error {
 	return nil
 }
 
+// Timestamp STDOUT Message
 func msgTimeStamp(msg string) {
 	fmt.Printf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
 }

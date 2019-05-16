@@ -109,8 +109,8 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 		}
 	} else if d.globalopts.Verbose {
 		ret = append(ret, libgobuster.Result{
-			Entity: subdomain,
-			Status: 404,
+			Entity:     subdomain,
+			StatusCode: 404,
 		})
 	}
 	return ret, nil
@@ -120,7 +120,7 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 func (d *GobusterDNS) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
 
-	if r.Status == 404 {
+	if r.StatusCode == 404 {
 		if _, err := fmt.Fprintf(buf, "Missing: %s\n", r.Entity); err != nil {
 			return nil, err
 		}

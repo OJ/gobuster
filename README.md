@@ -3,6 +3,7 @@
 Gobuster is a tool used to brute-force:
 
 * URIs (directories and files) in web sites.
+* Virtual Host names on target web servers.
 * DNS subdomains (with wildcard support).
 
 ## Tags, Statuses, etc
@@ -43,6 +44,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 ```text
 dir         uses dir mode
 dns         uses dns mode
+vhost       uses vhost mode
 ```
 
 ## Common Command line options
@@ -89,6 +91,21 @@ dns         uses dns mode
 -a, --useragent string     Set the User-Agent string (default "gobuster/3.0.0")
 -U, --username string      Username for Basic Auth
     --wildcard             Force continued operation when wildcard found
+```
+
+## Command line options for `vhost` mode
+
+```text
+  -c, --cookies string     Cookies to use for the requests
+  -r, --followredirect     Follow redirects (default true)
+  -h, --help               help for vhost
+  -k, --insecuressl        Skip SSL certificate verification
+  -P, --password string    Password for Basic Auth
+  -p, --proxy string       Proxy to use for requests [http(s)://host:port]
+      --timeout duration   HTTP Timeout (default 10s)
+  -u, --url string         The target URL
+  -a, --useragent string   Set the User-Agent string (default "gobuster/3.0.0")
+  -U, --username string    Username for Basic Auth
 ```
 
 ## Easy Installation
@@ -432,6 +449,38 @@ Found: 127.0.0.1.xip.io
 Found: test.127.0.0.1.xip.io
 =====================================================
 2018/08/27 12:13:53 Finished
+=====================================================
+```
+
+### `vhost` mode
+
+Command line might look like this:
+
+```bash
+gobuster vhost -u https://mysite.com -w common-vhosts.txt
+```
+
+Normal sample run goes like this:
+
+```bash
+gobuster vhost -u https://mysite.com -w common-vhosts.txt
+
+=====================================================
+Gobuster v3.0.0              OJ Reeves (@TheColonial)
+=====================================================
+[+] Url:          https://mysite.com
+[+] Threads:      10
+[+] Wordlist:     common-vhosts.txt
+[+] User Agent:   gobuster 3.0.0
+[+] Timeout:      10s
+=====================================================
+2018/10/09 08:36:00 Starting gobuster
+=====================================================
+Found: www.mysite.com
+Found: piwik.mysite.com
+Found: mail.mysite.com
+=====================================================
+2018/10/09 08:36:05 Finished
 =====================================================
 ```
 

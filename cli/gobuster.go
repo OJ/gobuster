@@ -20,8 +20,11 @@ func banner() {
 	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
 }
 
+// resultWorker outputs the results as they come in. This needs to be a range and should not handle
+// the context so the channel always has a receiver and libgobuster will not block.
 func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	var f *os.File
 	var err error
 	if filename != "" {
@@ -29,7 +32,9 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		if err != nil {
 			log.Fatalf("error on creating output file: %v", err)
 		}
+		defer f.Close()
 	}
+
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
@@ -49,8 +54,11 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	}
 }
 
+// errorWorker outputs the errors as they come in. This needs to be a range and should not handle
+// the context so the channel always has a receiver and libgobuster will not block.
 func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	for e := range g.Errors() {
 		if !g.Opts.Quiet {
 			g.ClearProgress()
@@ -59,7 +67,11 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
-func progressWorker(c context.Context, g *libgobuster.Gobuster) {
+// progressWorker outputs the progress every tick. It will stop once cancel() is called
+// on the context
+func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	tick := time.NewTicker(1 * time.Second)
 
 	for {
@@ -114,23 +126,30 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		ruler()
 	}
 
+	// our waitgroup for all goroutines
+	// this ensures all goroutines are finished
+	// when we call wg.Wait()
 	var wg sync.WaitGroup
+	// 2 is the number of goroutines we spin up
 	wg.Add(2)
 	go errorWorker(gobuster, &wg)
 	go resultWorker(gobuster, opts.OutputFilename, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
-		go progressWorker(ctx, gobuster)
+		// if not quiet add a new workgroup entry and start the goroutine
+		wg.Add(1)
+		go progressWorker(ctx, gobuster, &wg)
 	}
 
 	if err := gobuster.Start(); err != nil {
 		log.Printf("[!] %v", err)
-	} else {
-		// call cancel func to free ressources and stop progressFunc
-		cancel()
-		// wait for all output funcs to finish
-		wg.Wait()
 	}
+
+	// call cancel func so progressWorker will exit (the only goroutine in this
+	// file using the context) and to free ressources
+	cancel()
+	// wait for all spun up goroutines to finsih (all have to call wg.Done())
+	wg.Wait()
 
 	if !opts.Quiet {
 		gobuster.ClearProgress()

@@ -90,8 +90,15 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				return
 			}
 			g.incrementRequests()
+
+			wordCleaned := strings.TrimSpace(word)
+			// Skip "comment" (starts with #), as well as empty lines
+			if strings.HasPrefix(wordCleaned, "#") || len(wordCleaned) == 0 {
+				break
+			}
+
 			// Mode-specific processing
-			res, err := g.plugin.Run(word)
+			res, err := g.plugin.Run(wordCleaned)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err
@@ -135,6 +142,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 // Start the busting of the website with the given
 // set of settings from the command line.
 func (g *Gobuster) Start() error {
+	defer close(g.resultChan)
+	defer close(g.errorChan)
+
 	if err := g.plugin.PreRun(); err != nil {
 		return err
 	}
@@ -160,18 +170,11 @@ Scan:
 		select {
 		case <-g.context.Done():
 			break Scan
-		default:
-			word := strings.TrimSpace(scanner.Text())
-			// Skip "comment" (starts with #), as well as empty lines
-			if !strings.HasPrefix(word, "#") && len(word) > 0 {
-				wordChan <- word
-			}
+		case wordChan <- scanner.Text():
 		}
 	}
 	close(wordChan)
 	workerGroup.Wait()
-	close(g.resultChan)
-	close(g.errorChan)
 	return nil
 }
 

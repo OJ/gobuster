@@ -1,31 +1,21 @@
 package gobusterdir
 
 import (
-	"time"
-
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
 // OptionsDir is the struct to hold all options for this plugin
 type OptionsDir struct {
+	libgobuster.OptionsHTTP
 	Extensions        string
 	ExtensionsParsed  libgobuster.StringSet
-	Password          string
 	StatusCodes       string
 	StatusCodesParsed libgobuster.IntSet
-	URL               string
-	UserAgent         string
-	Username          string
-	Proxy             string
-	Cookies           string
-	Timeout           time.Duration
-	FollowRedirect    bool
+	UseSlash          bool
+	WildcardForced    bool
 	IncludeLength     bool
 	Expanded          bool
 	NoStatus          bool
-	InsecureSSL       bool
-	UseSlash          bool
-	WildcardForced    bool
 }
 
 // NewOptionsDir returns a new initialized OptionsDir

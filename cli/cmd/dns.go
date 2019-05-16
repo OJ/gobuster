@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 	"runtime"
 	"time"
 
@@ -22,32 +19,13 @@ func runDNS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("error on parsing arguments: %v", err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+
 	plugin, err := gobusterdns.NewGobusterDNS(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("Error on creating gobusterdns: %v", err)
 	}
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	defer func() {
-		signal.Stop(signalChan)
-		cancel()
-	}()
-	go func() {
-		select {
-		case <-signalChan:
-			// caught CTRL+C
-			if !globalopts.Quiet {
-				fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
-			}
-			cancel()
-		case <-ctx.Done():
-		}
-	}()
-
-	if err := cli.Gobuster(ctx, globalopts, plugin); err != nil {
+	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		return fmt.Errorf("error on running goubster: %v", err)
 	}
 	return nil

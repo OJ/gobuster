@@ -5,8 +5,7 @@ SET TARGET=.\build
 SET BUILDARGS=-ldflags="-s -w" -gcflags="all=-trimpath=%GOPATH%\src" -asmflags="all=-trimpath=%GOPATH%\src"
 
 IF "%ARG%"=="test" (
-  go test -v -race ./...
-  echo Done.
+  CALL :Test
   GOTO Done
 )
 
@@ -36,8 +35,15 @@ IF "%ARG%"=="update" (
   GOTO Done
 )
 
+IF "%ARG%"=="fmt" (
+  CALL :Fmt
+  GOTO Done
+)
+
 IF "%ARG%"=="all" (
+  CALL :Fmt
   CALL :Update
+  CALL :Test
   CALL :Darwin
   CALL :Linux
   CALL :Windows
@@ -50,6 +56,20 @@ IF "%ARG%"=="" (
 )
 
 GOTO Done
+
+:Test
+set GO111MODULE=on
+echo Testing ...
+go test -v ./...
+echo Done
+EXIT /B 0
+
+:Fmt
+set GO111MODULE=on
+echo Formatting ...
+go fmt ./...
+echo Done.
+EXIT /B 0
 
 :Update
 set GO111MODULE=on

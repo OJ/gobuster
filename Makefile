@@ -8,6 +8,10 @@ current:
 	@go build -o ./gobuster; \
 	echo "Done."
 
+fmt:
+	@go fmt ./...; \
+	echo "Done."
+
 update:
 	@go get -u; \
 	go mod tidy -v; \
@@ -37,7 +41,7 @@ darwin:
 	done; \
 	echo "Done."
 
-all: update darwin linux windows
+all: clean fmt update test darwin linux windows
 
 test:
 	@go test -v -race ./... ; \

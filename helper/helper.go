@@ -8,7 +8,7 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
-// ParseExtensions parses the extensions provided as a comma seperated list
+// ParseExtensions parses the extensions provided as a comma separated list
 func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	if extensions == "" {
 		return libgobuster.StringSet{}, fmt.Errorf("invalid extension string provided")
@@ -24,7 +24,7 @@ func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	return ret, nil
 }
 
-// ParseStatusCodes parses the status codes provided as a comma seperated list
+// ParseStatusCodes parses the status codes provided as a comma separated list
 func ParseStatusCodes(statuscodes string) (libgobuster.IntSet, error) {
 	if statuscodes == "" {
 		return libgobuster.IntSet{}, fmt.Errorf("invalid status code string provided")

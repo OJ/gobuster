@@ -11,6 +11,7 @@ IF "%ARG%"=="test" (
 
 IF "%ARG%"=="clean" (
   del /F /Q %TARGET%\*.*
+  go clean ./...
   echo Done.
   GOTO Done
 )
@@ -43,6 +44,7 @@ IF "%ARG%"=="fmt" (
 IF "%ARG%"=="all" (
   CALL :Fmt
   CALL :Update
+  CALL :Lint
   CALL :Test
   CALL :Darwin
   CALL :Linux
@@ -63,6 +65,15 @@ echo Testing ...
 go test -v ./...
 echo Done
 EXIT /B 0
+
+:Lint
+set GO111MODULE=on
+echo Linting ...
+go get -u github.com/golangci/golangci-lint@master
+golangci-lint run ./...
+rem remove test deps
+go mod tidy
+echo Done
 
 :Fmt
 set GO111MODULE=on

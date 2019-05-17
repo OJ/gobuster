@@ -8,4 +8,4 @@ go:
   - "1.12.x"
   - master
 
-script: make test
+script: make lint test

@@ -41,12 +41,19 @@ darwin:
 	done; \
 	echo "Done."
 
-all: clean fmt update test darwin linux windows
+all: clean fmt update lint test darwin linux windows
 
 test:
 	@go test -v -race ./... ; \
 	echo "Done."
 
+lint:
+	@go get -u github.com/golangci/golangci-lint@master ; \
+	golangci-lint run ./... ; \
+	go mod tidy ; \
+	echo Done
+
 clean:
 	@rm -rf ${TARGET}/* ; \
+	go clean ./... ; \
 	echo "Done."

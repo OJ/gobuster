@@ -28,7 +28,7 @@ func BenchmarkVhostMode(b *testing.B) {
 	}
 	defer os.Remove(wordlist.Name())
 	for w := 0; w < 1000; w++ {
-		wordlist.WriteString(fmt.Sprintf("%d\n", w))
+		_, _ = wordlist.WriteString(fmt.Sprintf("%d\n", w))
 	}
 	wordlist.Close()
 

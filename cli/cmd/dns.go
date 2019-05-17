@@ -22,7 +22,7 @@ func runDNS(cmd *cobra.Command, args []string) error {
 
 	plugin, err := gobusterdns.NewGobusterDNS(globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("Error on creating gobusterdns: %v", err)
+		return fmt.Errorf("error on creating gobusterdns: %v", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {

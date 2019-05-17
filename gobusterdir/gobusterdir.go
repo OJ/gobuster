@@ -153,15 +153,16 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 
 	// Prefix if we're in verbose mode
 	if d.globalopts.Verbose {
-		if r.Status == libgobuster.StatusFound {
+		switch r.Status {
+		case libgobuster.StatusFound:
 			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
 				return nil, err
 			}
-		} else if r.Status == libgobuster.StatusMissed {
+		case libgobuster.StatusMissed:
 			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
 				return nil, err
 			}
-		} else {
+		default:
 			return nil, fmt.Errorf("unknown status %d", r.Status)
 		}
 	}

@@ -13,16 +13,15 @@ import (
 	"unicode/utf8"
 )
 
-var defaultUserAgent = DefaultUserAgent()
-
 // HTTPClient represents a http object
 type HTTPClient struct {
-	client        *http.Client
-	context       context.Context
-	userAgent     string
-	username      string
-	password      string
-	includeLength bool
+	client           *http.Client
+	context          context.Context
+	userAgent        string
+	defaultUserAgent string
+	username         string
+	password         string
+	includeLength    bool
 }
 
 // HTTPOptions provides options to the http client
@@ -80,6 +79,7 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	client.password = opt.Password
 	client.includeLength = opt.IncludeLength
 	client.userAgent = opt.UserAgent
+	client.defaultUserAgent = DefaultUserAgent()
 	return &client, nil
 }
 
@@ -192,7 +192,7 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data
 	if client.userAgent != "" {
 		req.Header.Set("User-Agent", client.userAgent)
 	} else {
-		req.Header.Set("User-Agent", defaultUserAgent)
+		req.Header.Set("User-Agent", client.defaultUserAgent)
 	}
 
 	if client.username != "" {
@@ -203,7 +203,7 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
-				return nil, fmt.Errorf("Invalid certificate: %v", ue.Err)
+				return nil, fmt.Errorf("invalid certificate: %v", ue.Err)
 			}
 		}
 		return nil, err

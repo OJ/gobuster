@@ -39,6 +39,12 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
+## Changes since 2.0
+
+* New CLI options so modes are strictly seperated
+* Performance Optimizations and better connection handling
+* Ability to bruteforce vhost names
+
 ## Available modes
 
 ```text

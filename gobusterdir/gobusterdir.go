@@ -103,11 +103,19 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	}
 	var ret []libgobuster.Result
 	if dirResp != nil {
-		ret = append(ret, libgobuster.Result{
-			Entity:     fmt.Sprintf("%s%s", word, suffix),
-			StatusCode: *dirResp,
-			Size:       dirSize,
-		})
+		resultStatus := libgobuster.StatusMissed
+		if d.options.StatusCodesParsed.Contains(*dirResp) {
+			resultStatus = libgobuster.StatusFound
+		}
+
+		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+			ret = append(ret, libgobuster.Result{
+				Entity:     fmt.Sprintf("%s%s", word, suffix),
+				StatusCode: *dirResp,
+				Size:       dirSize,
+				Status:     resultStatus,
+			})
+		}
 	}
 
 	// Follow up with files using each ext.
@@ -120,11 +128,20 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 		}
 
 		if fileResp != nil {
-			ret = append(ret, libgobuster.Result{
-				Entity:     file,
-				StatusCode: *fileResp,
-				Size:       fileSize,
-			})
+			resultStatus := libgobuster.StatusMissed
+			if d.options.StatusCodesParsed.Contains(*fileResp) {
+				resultStatus = libgobuster.StatusFound
+			}
+
+			if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+				ret = append(ret, libgobuster.Result{
+					Entity:     file,
+					StatusCode: *fileResp,
+					Size:       fileSize,
+					Status:     resultStatus,
+				})
+			}
+
 		}
 	}
 	return ret, nil
@@ -136,46 +153,47 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 
 	// Prefix if we're in verbose mode
 	if d.globalopts.Verbose {
-		if d.options.StatusCodesParsed.Contains(r.StatusCode) {
+		if r.Status == libgobuster.StatusFound {
 			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
 				return nil, err
 			}
-		} else {
+		} else if r.Status == libgobuster.StatusMissed {
 			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
 				return nil, err
 			}
-		}
-	}
-
-	if d.options.StatusCodesParsed.Contains(r.StatusCode) || d.globalopts.Verbose {
-		if d.options.Expanded {
-			if _, err := fmt.Fprintf(buf, "%s", d.options.URL); err != nil {
-				return nil, err
-			}
 		} else {
-			if _, err := fmt.Fprintf(buf, "/"); err != nil {
-				return nil, err
-			}
+			return nil, fmt.Errorf("unknown status %d", r.Status)
 		}
-		if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
+	}
+
+	if d.options.Expanded {
+		if _, err := fmt.Fprintf(buf, "%s", d.options.URL); err != nil {
 			return nil, err
 		}
-
-		if !d.options.NoStatus {
-			if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
-				return nil, err
-			}
-		}
-
-		if r.Size != nil {
-			if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
-				return nil, err
-			}
-		}
-		if _, err := fmt.Fprintf(buf, "\n"); err != nil {
+	} else {
+		if _, err := fmt.Fprintf(buf, "/"); err != nil {
 			return nil, err
 		}
 	}
+	if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
+		return nil, err
+	}
+
+	if !d.options.NoStatus {
+		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
+			return nil, err
+		}
+	}
+
+	if r.Size != nil {
+		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
+			return nil, err
+		}
+	}
+	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
+		return nil, err
+	}
+
 	s := buf.String()
 	return &s, nil
 }

@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
+
+// ErrWildcard is returned if a wildcard response is found
+var ErrWildcard = errors.New("wildcard found")
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
@@ -78,11 +81,8 @@ func (d *GobusterDir) PreRun() error {
 		return err
 	}
 
-	if d.options.StatusCodesParsed.Contains(*wildcardResp) {
-		log.Printf("[-] Wildcard response found: %s => %d", url, *wildcardResp)
-		if !d.options.WildcardForced {
-			return fmt.Errorf("To force processing of Wildcard responses, specify the '--wildcard' switch.")
-		}
+	if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
+		return ErrWildcard
 	}
 
 	return nil

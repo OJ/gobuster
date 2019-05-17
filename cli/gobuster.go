@@ -108,7 +108,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 
 	gobuster, err := libgobuster.NewGobuster(ctx, opts, plugin)
 	if err != nil {
-		log.Fatalf("[!] %v", err)
+		return err
 	}
 
 	if !opts.Quiet {
@@ -118,7 +118,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		ruler()
 		c, err := gobuster.GetConfigString()
 		if err != nil {
-			log.Fatalf("error on creating config string: %v", err)
+			return fmt.Errorf("error on creating config string: %v", err)
 		}
 		fmt.Println(c)
 		ruler()
@@ -141,15 +141,18 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		go progressWorker(ctx, gobuster, &wg)
 	}
 
-	if err := gobuster.Start(); err != nil {
-		log.Printf("[!] %v", err)
-	}
+	err = gobuster.Start()
 
 	// call cancel func so progressWorker will exit (the only goroutine in this
 	// file using the context) and to free ressources
 	cancel()
-	// wait for all spun up goroutines to finsih (all have to call wg.Done())
+	// wait for all spun up goroutines to finish (all have to call wg.Done())
 	wg.Wait()
+
+	// Late error checking to finish all threads
+	if err != nil {
+		return err
+	}
 
 	if !opts.Quiet {
 		gobuster.ClearProgress()

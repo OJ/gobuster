@@ -13,7 +13,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "gobuster",
+	Use:          "gobuster",
+	SilenceUsage: true,
 }
 
 var mainContext context.Context

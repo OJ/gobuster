@@ -25,6 +25,9 @@ func runDir(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
+		if err == gobusterdir.ErrWildcard {
+			return fmt.Errorf("the server returns the same status code for every request. To force processing of Wildcard responses, specify the '--wildcard' switch")
+		}
 		return fmt.Errorf("error on running goubster: %v", err)
 	}
 	return nil

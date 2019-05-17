@@ -96,6 +96,7 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 		if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
 			result := libgobuster.Result{
 				Entity: subdomain,
+				Status: libgobuster.StatusFound,
 			}
 			if d.options.ShowIPs {
 				result.Extra = strings.Join(ips, ", ")
@@ -109,8 +110,8 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 		}
 	} else if d.globalopts.Verbose {
 		ret = append(ret, libgobuster.Result{
-			Entity:     subdomain,
-			StatusCode: 404,
+			Entity: subdomain,
+			Status: libgobuster.StatusMissed,
 		})
 	}
 	return ret, nil
@@ -120,20 +121,26 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 func (d *GobusterDNS) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}
 
-	if r.StatusCode == 404 {
-		if _, err := fmt.Fprintf(buf, "Missing: %s\n", r.Entity); err != nil {
+	if r.Status == libgobuster.StatusFound {
+		if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
 			return nil, err
 		}
-	} else if d.options.ShowIPs {
-		if _, err := fmt.Fprintf(buf, "Found: %s [%s]\n", r.Entity, r.Extra); err != nil {
+	} else if r.Status == libgobuster.StatusMissed {
+		if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
+			return nil, err
+		}
+	}
+
+	if d.options.ShowIPs {
+		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Entity, r.Extra); err != nil {
 			return nil, err
 		}
 	} else if d.options.ShowCNAME {
-		if _, err := fmt.Fprintf(buf, "Found: %s [%s]\n", r.Entity, r.Extra); err != nil {
+		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Entity, r.Extra); err != nil {
 			return nil, err
 		}
 	} else {
-		if _, err := fmt.Fprintf(buf, "Found: %s\n", r.Entity); err != nil {
+		if _, err := fmt.Fprintf(buf, "%s\n", r.Entity); err != nil {
 			return nil, err
 		}
 	}

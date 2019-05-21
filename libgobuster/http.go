@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 )
 
+// HTTPHeader holds a single key value pair of a HTTP header
 type HTTPHeader struct {
 	Name  string
 	Value string

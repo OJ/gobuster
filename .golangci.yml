@@ -14,7 +14,7 @@ issues:
       linters:
         - gocritic
 
-    - path: cli\cmd\.+\.go
+    - path: cli\\cmd\\.+\.go
       linters:
         - gochecknoinits
         - gochecknoglobals

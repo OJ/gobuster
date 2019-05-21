@@ -46,6 +46,7 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 		Username:       opts.Username,
 		Password:       opts.Password,
 		UserAgent:      opts.UserAgent,
+		Headers:        opts.Headers,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)

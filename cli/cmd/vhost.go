@@ -49,6 +49,7 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Timeout = httpOpts.Timeout
 	plugin.FollowRedirect = httpOpts.FollowRedirect
 	plugin.InsecureSSL = httpOpts.InsecureSSL
+	plugin.Headers = httpOpts.Headers
 
 	return globalopts, &plugin, nil
 }

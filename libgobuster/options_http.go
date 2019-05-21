@@ -12,6 +12,7 @@ type OptionsHTTP struct {
 	Username       string
 	Proxy          string
 	Cookies        string
+	Headers        []HTTPHeader
 	Timeout        time.Duration
 	FollowRedirect bool
 	InsecureSSL    bool

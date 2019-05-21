@@ -23,6 +23,7 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 	cmd.Flags().BoolP("followredirect", "r", false, "Follow redirects")
 	cmd.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
+	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 
 	if err := cmdDir.MarkFlagRequired("url"); err != nil {
 		return fmt.Errorf("error on marking flag as required: %v", err)
@@ -98,6 +99,25 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error)
 	options.InsecureSSL, err = cmd.Flags().GetBool("insecuressl")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for insecuressl: %v", err)
+	}
+
+	headers, err := cmd.Flags().GetStringArray("headers")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for headers: %v", err)
+	}
+
+	for _, h := range headers {
+		keyAndValue := strings.SplitN(h, ":", 2)
+		if len(keyAndValue) != 2 {
+			return options, fmt.Errorf("invalid header format for header %q", h)
+		}
+		key := strings.TrimSpace(keyAndValue[0])
+		value := strings.TrimSpace(keyAndValue[1])
+		if len(key) == 0 {
+			return options, fmt.Errorf("invalid header format for header %q - name is empty", h)
+		}
+		header := libgobuster.HTTPHeader{Name: key, Value: value}
+		options.Headers = append(options.Headers, header)
 	}
 
 	// Prompt for PW if not provided

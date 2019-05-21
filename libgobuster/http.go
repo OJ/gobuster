@@ -13,6 +13,11 @@ import (
 	"unicode/utf8"
 )
 
+type HTTPHeader struct {
+	Name  string
+	Value string
+}
+
 // HTTPClient represents a http object
 type HTTPClient struct {
 	client           *http.Client
@@ -21,6 +26,7 @@ type HTTPClient struct {
 	defaultUserAgent string
 	username         string
 	password         string
+	headers          []HTTPHeader
 	includeLength    bool
 }
 
@@ -30,6 +36,7 @@ type HTTPOptions struct {
 	Username       string
 	Password       string
 	UserAgent      string
+	Headers        []HTTPHeader
 	Timeout        time.Duration
 	FollowRedirect bool
 	InsecureSSL    bool
@@ -80,6 +87,7 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	client.includeLength = opt.IncludeLength
 	client.userAgent = opt.UserAgent
 	client.defaultUserAgent = DefaultUserAgent()
+	client.headers = opt.Headers
 	return &client, nil
 }
 
@@ -193,6 +201,11 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data
 		req.Header.Set("User-Agent", client.userAgent)
 	} else {
 		req.Header.Set("User-Agent", client.defaultUserAgent)
+	}
+
+	// add custom headers
+	for _, h := range client.headers {
+		req.Header.Set(h.Name, h.Value)
 	}
 
 	if client.username != "" {

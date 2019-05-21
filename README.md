@@ -44,6 +44,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 * New CLI options so modes are strictly seperated
 * Performance Optimizations and better connection handling
 * Ability to bruteforce vhost names
+* Option to supply custom HTTP headers
 
 ## Available modes
 

@@ -13,3 +13,4 @@
 @knapsy - saving output to file, and CNAME resolution for DNS mode
 @rverton - CLI flag to skip SSL verification
 @viaMorgoth - base domain validation for DNS mode
+@barrracud4 - Custom HTTP headers

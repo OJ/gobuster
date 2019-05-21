@@ -13,11 +13,12 @@ import (
 )
 
 func ruler() {
-	fmt.Println("=====================================================")
+	fmt.Println("===============================================================")
 }
 
 func banner() {
-	fmt.Printf("Gobuster v%s              OJ Reeves (@TheColonial)\n", libgobuster.VERSION)
+	fmt.Printf("Gobuster v%s\n", libgobuster.VERSION)
+	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)")
 }
 
 // resultWorker outputs the results as they come in. This needs to be a range and should not handle
@@ -112,7 +113,6 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	}
 
 	if !opts.Quiet {
-		fmt.Println("")
 		ruler()
 		banner()
 		ruler()

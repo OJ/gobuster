@@ -123,6 +123,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error)
 	// Prompt for PW if not provided
 	if options.Username != "" && options.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
+		// please don't remove the int cast here as it is sadly needed on windows :/
 		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.

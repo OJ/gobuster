@@ -102,6 +102,11 @@ func writeToFile(f *os.File, output string) error {
 	return nil
 }
 
+// Timestamp for message logging to STDOUT
+func msgTimeStamp(msg string) {
+	fmt.Printf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
+}
+
 func main() {
 	var outputFilename string
 	o := libgobuster.NewOptions()
@@ -173,7 +178,7 @@ func main() {
 		}
 		fmt.Println(c)
 		ruler()
-		log.Println("Starting gobuster")
+		msgTimeStamp("Starting gobuster")
 		ruler()
 	}
 
@@ -210,7 +215,7 @@ func main() {
 	if !o.Quiet {
 		gobuster.ClearProgress()
 		ruler()
-		log.Println("Finished")
+		msgTimeStamp("Finished - " + o.URL)
 		ruler()
 	}
 }

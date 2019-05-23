@@ -199,3 +199,9 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	return strings.TrimSpace(buffer.String()), nil
 }
+
+// GetRequestString returns the string representation of the current request
+func (v *GobusterVhost) GetRequestString() string {
+	o := v.options
+	return o.URL
+}

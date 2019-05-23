@@ -305,3 +305,9 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	return strings.TrimSpace(buffer.String()), nil
 }
+
+// GetRequestString returns the string representation of the current request
+func (d *GobusterDir) GetRequestString() string {
+	o := d.options
+	return o.URL
+}

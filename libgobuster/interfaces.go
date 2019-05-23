@@ -6,4 +6,5 @@ type GobusterPlugin interface {
 	Run(string) ([]Result, error)
 	ResultToString(*Result) (*string, error)
 	GetConfigString() (string, error)
+	GetRequestString() string
 }

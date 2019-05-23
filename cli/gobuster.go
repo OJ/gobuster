@@ -158,7 +158,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	if !opts.Quiet {
 		gobuster.ClearProgress()
 		ruler()
-		helper.MsgTimeStamp("Finished")
+		helper.MsgTimeStamp("Finished - " + plugin.GetRequestString())
 		ruler()
 	}
 	return nil

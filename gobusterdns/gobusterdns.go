@@ -232,3 +232,9 @@ func (d *GobusterDNS) dnsLookupCname(domain string) (string, error) {
 	time.Sleep(time.Second)
 	return d.resolver.LookupCNAME(ctx, domain)
 }
+
+// GetRequestString returns the string representation of the current request
+func (d *GobusterDNS) GetRequestString() string {
+	o := d.options
+	return o.Domain
+}

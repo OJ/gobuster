@@ -182,3 +182,8 @@ Scan:
 func (g *Gobuster) GetConfigString() (string, error) {
 	return g.plugin.GetConfigString()
 }
+
+// GetRequestString returns the current request as a printable string
+func (g *Gobuster) GetRequestString() string {
+	return g.plugin.GetRequestString()
+}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
@@ -41,9 +40,4 @@ func ParseStatusCodes(statuscodes string) (libgobuster.IntSet, error) {
 		ret.Add(i)
 	}
 	return ret, nil
-}
-
-// TimeStamped STDOUT Messages
-func MsgTimeStamp(msg string) {
-	fmt.Printf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
 }

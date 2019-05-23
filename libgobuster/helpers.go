@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 )
 
 // IntSet is a set of Ints
@@ -124,4 +125,9 @@ func lineCounter(r io.Reader) (int, error) {
 // DefaultUserAgent returns the default user agent to use in HTTP requests
 func DefaultUserAgent() string {
 	return fmt.Sprintf("gobuster/%s", VERSION)
+}
+
+// TimeStamped STDOUT Messages
+func MsgTimeStamp(msg string) {
+	fmt.Printf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
 }

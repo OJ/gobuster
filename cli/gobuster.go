@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
@@ -123,7 +122,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		}
 		fmt.Println(c)
 		ruler()
-		helper.MsgTimeStamp("Starting gobuster")
+		libgobuster.MsgTimeStamp("Starting gobuster")
 		ruler()
 	}
 
@@ -158,7 +157,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	if !opts.Quiet {
 		gobuster.ClearProgress()
 		ruler()
-		helper.MsgTimeStamp("Finished - " + plugin.GetRequestString())
+		libgobuster.MsgTimeStamp("Finished - " + plugin.GetRequestString())
 		ruler()
 	}
 	return nil

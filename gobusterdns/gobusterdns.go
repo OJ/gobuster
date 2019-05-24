@@ -22,7 +22,7 @@ type ErrWildcard struct {
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the DNS Server returned to same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
+	return fmt.Sprintf("the DNS Server returned the same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
 }
 
 // GobusterDNS is the main type to implement the interface

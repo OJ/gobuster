@@ -2,12 +2,21 @@ package libgobuster
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
 	"strings"
 	"time"
 )
+
+// WildCard is a interface for error reporting
+type WildCard struct {
+	error   error
+	request string
+	code    int
+	ip      string
+}
 
 // IntSet is a set of Ints
 type IntSet struct {
@@ -66,6 +75,33 @@ func (set *StringSet) Stringify() string {
 		values = append(values, s)
 	}
 	return strings.Join(values, ",")
+}
+
+// WildCardInit creates a new WildCard reference
+func WildCardInit() *WildCard {
+	return &WildCard{error: errors.New("wildcard found")}
+}
+
+// ErrorCheck validates if error matches wildcard
+func (w *WildCard) ErrorCheck(e error) bool {
+	return e.Error() == w.error.Error()
+}
+
+// Set sets the requested URL and code in the set
+func (w *WildCard) Set(r string, c int, ip string) {
+	w.request = r
+	w.code = c
+	w.ip = ip
+}
+
+// GetDir returns the URL and code in the set
+func (w *WildCard) GetDir() (string, int) {
+	return w.request, w.code
+}
+
+// GetDNS returns the Domain and IP in the set
+func (w *WildCard) GetDNS() (string, string) {
+	return w.request, w.ip
 }
 
 // NewIntSet creates a new initialized IntSet

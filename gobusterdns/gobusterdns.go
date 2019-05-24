@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -16,9 +15,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// ErrWildcard is returned if a wildcard response is found
-var ErrWildcard = errors.New("wildcard found")
-
 // GobusterDNS is the main type to implement the interface
 type GobusterDNS struct {
 	resolver    *net.Resolver
@@ -26,6 +22,7 @@ type GobusterDNS struct {
 	options     *OptionsDNS
 	isWildcard  bool
 	wildcardIps libgobuster.StringSet
+	WildCard    *libgobuster.WildCard
 }
 
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -61,6 +58,7 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 		globalopts:  globalopts,
 		wildcardIps: libgobuster.NewStringSet(),
 		resolver:    resolver,
+		WildCard:    libgobuster.WildCardInit(),
 	}
 	return &g, nil
 }
@@ -74,7 +72,8 @@ func (d *GobusterDNS) PreRun() error {
 		d.isWildcard = true
 		d.wildcardIps.AddRange(wildcardIps)
 		if !d.options.WildcardForced {
-			return ErrWildcard
+			d.WildCard.Set(d.options.Domain, 0, fmt.Sprintf("%#v", wildcardIps))
+			return fmt.Errorf("wildcard found")
 		}
 	}
 

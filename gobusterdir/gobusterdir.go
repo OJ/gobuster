@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"text/tabwriter"
@@ -13,14 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// ErrWildcard is returned if a wildcard response is found
-var ErrWildcard = errors.New("wildcard found")
-
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
 	options    *OptionsDir
 	globalopts *libgobuster.Options
 	http       *libgobuster.HTTPClient
+	WildCard   *libgobuster.WildCard
 }
 
 // GetRequest issues a GET request to the target and returns
@@ -42,6 +39,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	g := GobusterDir{
 		options:    opts,
 		globalopts: globalopts,
+		WildCard:   libgobuster.WildCardInit(),
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -83,7 +81,8 @@ func (d *GobusterDir) PreRun() error {
 	}
 
 	if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-		return ErrWildcard
+		d.WildCard.Set(d.options.URL, *wildcardResp, "")
+		return fmt.Errorf("wildcard found")
 	}
 
 	return nil

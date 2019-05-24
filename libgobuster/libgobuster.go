@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -28,6 +29,8 @@ type Gobuster struct {
 	plugin           GobusterPlugin
 	resultChan       chan Result
 	errorChan        chan error
+	LogInfo          *log.Logger
+	LogError         *log.Logger
 }
 
 // NewGobuster returns a new Gobuster object
@@ -39,6 +42,8 @@ func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobu
 	g.context = c
 	g.resultChan = make(chan Result)
 	g.errorChan = make(chan error)
+	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
+	g.LogError = log.New(os.Stderr, "", log.LstdFlags)
 
 	return &g, nil
 }

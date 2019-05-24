@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -31,7 +30,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	if filename != "" {
 		f, err = os.Create(filename)
 		if err != nil {
-			log.Fatalf("error on creating output file: %v", err)
+			g.LogError.Fatalf("error on creating output file: %v", err)
 		}
 		defer f.Close()
 	}
@@ -39,7 +38,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
-			log.Fatal(err)
+			g.LogError.Fatal(err)
 		}
 		if s != "" {
 			g.ClearProgress()
@@ -48,7 +47,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 			if f != nil {
 				err = writeToFile(f, s)
 				if err != nil {
-					log.Fatalf("error on writing output file: %v", err)
+					g.LogError.Fatalf("error on writing output file: %v", err)
 				}
 			}
 		}
@@ -63,7 +62,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	for e := range g.Errors() {
 		if !g.Opts.Quiet {
 			g.ClearProgress()
-			log.Printf("[!] %v", e)
+			g.LogError.Printf("[!] %v", e)
 		}
 	}
 }
@@ -122,7 +121,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		}
 		fmt.Println(c)
 		ruler()
-		log.Println("Starting gobuster")
+		gobuster.LogInfo.Println("Starting gobuster")
 		ruler()
 	}
 
@@ -157,7 +156,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	if !opts.Quiet {
 		gobuster.ClearProgress()
 		ruler()
-		log.Println("Finished")
+		gobuster.LogInfo.Println("Finished")
 		ruler()
 	}
 	return nil

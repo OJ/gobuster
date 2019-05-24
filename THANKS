@@ -13,3 +13,4 @@
 @rverton - CLI flag to skip SSL verification
 @viaMorgoth - base domain validation for DNS mode
 @barrracud4 - Custom HTTP headers
+@mattburch - several output improvements

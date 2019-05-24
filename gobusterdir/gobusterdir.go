@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"text/tabwriter"
@@ -14,7 +13,15 @@ import (
 )
 
 // ErrWildcard is returned if a wildcard response is found
-var ErrWildcard = errors.New("wildcard found")
+type ErrWildcard struct {
+	url        string
+	statusCode int
+}
+
+// Error is the implementation of the error interface
+func (e *ErrWildcard) Error() string {
+	return fmt.Sprintf("the server returns the same status code for every request. %s => %d", e.url, e.statusCode)
+}
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
@@ -83,7 +90,7 @@ func (d *GobusterDir) PreRun() error {
 	}
 
 	if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-		return ErrWildcard
+		return &ErrWildcard{url: url, statusCode: *wildcardResp}
 	}
 
 	return nil

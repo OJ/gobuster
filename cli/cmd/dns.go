@@ -26,8 +26,8 @@ func runDNS(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		if err == gobusterdns.ErrWildcard {
-			return fmt.Errorf("the DNS Server returned to same IP for every domain. To force processing of Wildcard DNS, specify the '--wildcard' switch")
+		if goberr, ok := err.(*gobusterdns.ErrWildcard); ok {
+			return fmt.Errorf("%s. To force processing of Wildcard DNS, specify the '--wildcard' switch", goberr.Error())
 		}
 		return fmt.Errorf("error on running goubster: %v", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -17,7 +16,14 @@ import (
 )
 
 // ErrWildcard is returned if a wildcard response is found
-var ErrWildcard = errors.New("wildcard found")
+type ErrWildcard struct {
+	wildcardIps libgobuster.StringSet
+}
+
+// Error is the implementation of the error interface
+func (e *ErrWildcard) Error() string {
+	return fmt.Sprintf("the DNS Server returned to same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
+}
 
 // GobusterDNS is the main type to implement the interface
 type GobusterDNS struct {
@@ -74,7 +80,7 @@ func (d *GobusterDNS) PreRun() error {
 		d.isWildcard = true
 		d.wildcardIps.AddRange(wildcardIps)
 		if !d.options.WildcardForced {
-			return ErrWildcard
+			return &ErrWildcard{wildcardIps: d.wildcardIps}
 		}
 	}
 

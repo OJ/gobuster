@@ -95,6 +95,11 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("invalid value for noprogress: %v", err)
 	}
 
+	globalopts.Delay, err = rootCmd.Flags().GetDuration("delay")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for delay: %v", err)
+	}
+
 	return globalopts, nil
 }
 
@@ -115,4 +120,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("noprogress", "z", false, "Don't display progress")
+	rootCmd.PersistentFlags().DurationP("delay", "", 0, "Delay between requests")
 }

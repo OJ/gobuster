@@ -45,7 +45,6 @@ All funds that are donated to this project will be donated to charity. A full lo
 * Performance Optimizations and better connection handling
 * Ability to bruteforce vhost names
 * Option to supply custom HTTP headers
-* Added new `--delay` option to sleep between requests
 
 ## Available modes
 

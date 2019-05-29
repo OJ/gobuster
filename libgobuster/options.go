@@ -1,10 +1,7 @@
 package libgobuster
 
-import "time"
-
 // Options helds all options that can be passed to libgobuster
 type Options struct {
-	Delay          time.Duration
 	Threads        int
 	Wordlist       string
 	OutputFilename string

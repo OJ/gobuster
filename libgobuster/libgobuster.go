@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -177,14 +176,6 @@ Scan:
 		case <-g.context.Done():
 			break Scan
 		case wordChan <- scanner.Text():
-		}
-		// delay between requests
-		// use select here to be able to cancel the sleep
-		select {
-		case <-g.context.Done():
-			break Scan
-		case <-time.After(g.Opts.Delay):
-			break
 		}
 	}
 	close(wordChan)

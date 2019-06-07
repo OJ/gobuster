@@ -20,7 +20,7 @@ type ErrWildcard struct {
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns the same status code for every request. %s => %d", e.url, e.statusCode)
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d", e.url, e.statusCode)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -89,8 +89,16 @@ func (d *GobusterDir) PreRun() error {
 		return err
 	}
 
-	if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-		return &ErrWildcard{url: url, statusCode: *wildcardResp}
+	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
+			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+		}
+	} else if d.options.StatusCodesParsed.Length() > 0 {
+		if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
+			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+		}
+	} else {
+		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 	}
 
 	return nil
@@ -112,8 +120,17 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	var ret []libgobuster.Result
 	if dirResp != nil {
 		resultStatus := libgobuster.StatusMissed
-		if d.options.StatusCodesParsed.Contains(*dirResp) {
-			resultStatus = libgobuster.StatusFound
+
+		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+			if !d.options.StatusCodesBlacklistParsed.Contains(*dirResp) {
+				resultStatus = libgobuster.StatusFound
+			}
+		} else if d.options.StatusCodesParsed.Length() > 0 {
+			if d.options.StatusCodesParsed.Contains(*dirResp) {
+				resultStatus = libgobuster.StatusFound
+			}
+		} else {
+			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
@@ -137,8 +154,17 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 		if fileResp != nil {
 			resultStatus := libgobuster.StatusMissed
-			if d.options.StatusCodesParsed.Contains(*fileResp) {
-				resultStatus = libgobuster.StatusFound
+
+			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+				if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
+					resultStatus = libgobuster.StatusFound
+				}
+			} else if d.options.StatusCodesParsed.Length() > 0 {
+				if d.options.StatusCodesParsed.Contains(*fileResp) {
+					resultStatus = libgobuster.StatusFound
+				}
+			} else {
+				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
 			if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
@@ -149,7 +175,6 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 					Status:     resultStatus,
 				})
 			}
-
 		}
 	}
 	return ret, nil
@@ -228,8 +253,14 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
-		return "", err
+	if o.StatusCodesBlacklistParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
+			return "", err
+		}
+	} else if o.StatusCodesParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
+			return "", err
+		}
 	}
 
 	if o.Proxy != "" {

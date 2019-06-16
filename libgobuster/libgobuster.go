@@ -162,6 +162,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open wordlist: %v", err)
 	}
+	
 
 	lines, err := lineCounter(wordlist)
 	if err != nil {
@@ -202,6 +203,8 @@ func (g *Gobuster) Start() error {
 		return err
 	}
 
+	var repString = strings.Split(g.Opts.URL, "/")[2]
+
 Scan:
 	for scanner.Scan() {
 		select {
@@ -211,7 +214,13 @@ Scan:
 			word := strings.TrimSpace(scanner.Text())
 			// Skip "comment" (starts with #), as well as empty lines
 			if !strings.HasPrefix(word, "#") && len(word) > 0 {
-				wordChan <- word
+				// add word if DomainReplace mode is not used
+				if (g.Opts.DomainReplace == ""){
+					wordChan <- word
+				} else{
+					// Domain Replace mode in use, replace {{DOMAIN}} for example with google.com
+					wordChan <- strings.Replace(word, g.Opts.DomainReplace, repString, -1)
+				}
 			}
 		}
 	}
@@ -314,6 +323,12 @@ func (g *Gobuster) GetConfigString() (string, error) {
 				return "", err
 			}
 		}
+		
+		//if o.DomainReplace != "" {
+		//	if _, err := fmt.Fprintf(buf, "[+] Wordlist Domain Replace Mode Placeholder     : %s\n", o.DomainReplace); err != nil {
+		//		return "", err
+		//	}
+		//}
 
 		if _, err := fmt.Fprintf(buf, "[+] Timeout      : %s\n", o.Timeout.String()); err != nil {
 			return "", err

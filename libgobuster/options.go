@@ -33,6 +33,7 @@ type Options struct {
 	Wordlist          string
 	Proxy             string
 	Cookies           string
+	DomainReplace     string
 	Timeout           time.Duration
 	FollowRedirect    bool
 	IncludeLength     bool

@@ -117,6 +117,7 @@ func main() {
 	flag.StringVar(&o.Extensions, "x", "", "File extension(s) to search for (dir mode only)")
 	flag.StringVar(&o.UserAgent, "a", "", "Set the User-Agent string (dir mode only)")
 	flag.StringVar(&o.Proxy, "p", "", "Proxy to use for requests [http(s)://host:port] (dir mode only)")
+	flag.StringVar(&o.DomainReplace, "dr", "", "Replace wordlist placeholder specified with domain name, eg: {{DOMAIN}}")
 	flag.DurationVar(&o.Timeout, "to", 10*time.Second, "HTTP Timeout in seconds (dir mode only)")
 	flag.BoolVar(&o.Verbose, "v", false, "Verbose output (errors)")
 	flag.BoolVar(&o.ShowIPs, "i", false, "Show IP addresses (dns mode only)")

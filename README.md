@@ -3,8 +3,8 @@
 Gobuster is a tool used to brute-force:
 
 * URIs (directories and files) in web sites.
-* Virtual Host names on target web servers.
 * DNS subdomains (with wildcard support).
+* Virtual Host names on target web servers.
 
 ## Tags, Statuses, etc
 
@@ -39,22 +39,27 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
-## Changes since 2.0
+## Changes in 3.0
 
-* New CLI options so modes are strictly seperated
+* New CLI options so modes are strictly seperated (`-m` is now gone!)
 * Performance Optimizations and better connection handling
 * Ability to bruteforce vhost names
 * Option to supply custom HTTP headers
 
-## Available modes
+## Available Modes
 
-```text
-dir         uses dir mode
-dns         uses dns mode
-vhost       uses vhost mode
-```
+* dir - the classic directory brute-forcing mode
+* dns - DNS subdomain brute-forcing mode
+* vhost - virtual host brute-forcing mode (not the same as DNS!)
 
-## Common Command line options
+## Built-in Help
+
+Help is built-in!
+
+* `gobuster help` - outputs the top-level help.
+* `gobuster help <mode>` - outputs the help specific to that mode.
+
+## Common Command Line Options (all modes)
 
 ```text
 -h, --help              Help for gobuster
@@ -66,7 +71,7 @@ vhost       uses vhost mode
 -w, --wordlist string   Path to the wordlist
 ```
 
-## Command line options for `dns` mode
+## `dns` Mode Options
 
 ```text
 -d, --domain string      The target domain
@@ -78,7 +83,7 @@ vhost       uses vhost mode
     --wildcard           Force continued operation when wildcard found
 ```
 
-## Command line options for `dir` mode
+## `dir` Mode Options
 
 ```text
 -f, --addslash             Apped / to each request
@@ -100,7 +105,7 @@ vhost       uses vhost mode
     --wildcard             Force continued operation when wildcard found
 ```
 
-## Command line options for `vhost` mode
+## `vhost` Mode Options
 
 ```text
   -c, --cookies string     Cookies to use for the requests
@@ -159,7 +164,7 @@ If you have all the dependencies already, you can make use of the build scripts:
 * `make clean` - clears out the `build` subfolder.
 * `make test` - runs the tests.
 
-### Running as a script
+### Running as a Script
 
 ```bash
 go run main.go <parameters>
@@ -177,7 +182,7 @@ Note: If the `-w` option is specified at the same time as piping from STDIN, an 
 
 ## Examples
 
-### `dir` mode
+### `dir` Mode
 
 Command line might look like this:
 
@@ -308,7 +313,7 @@ https://buffered.io/posts
 https://buffered.io/categories
 ```
 
-### `dns` mode
+### `dns` Mode
 
 Command line might look like this:
 
@@ -459,7 +464,7 @@ Found: test.127.0.0.1.xip.io
 =====================================================
 ```
 
-### `vhost` mode
+### `vhost` Mode
 
 Command line might look like this:
 

@@ -8,40 +8,43 @@ import (
 	"strings"
 )
 
-type intSet struct {
+// IntSet is a set of Ints
+type IntSet struct {
 	Set map[int]bool
 }
 
-type stringSet struct {
+// StringSet is a set of Strings
+type StringSet struct {
 	Set map[string]bool
 }
 
-func newStringSet() stringSet {
-	return stringSet{Set: map[string]bool{}}
+// NewStringSet creates a new initialized StringSet
+func NewStringSet() StringSet {
+	return StringSet{Set: map[string]bool{}}
 }
 
 // Add an element to a set
-func (set *stringSet) Add(s string) bool {
+func (set *StringSet) Add(s string) bool {
 	_, found := set.Set[s]
 	set.Set[s] = true
 	return !found
 }
 
-// Add a list of elements to a set
-func (set *stringSet) AddRange(ss []string) {
+// AddRange adds a list of elements to a set
+func (set *StringSet) AddRange(ss []string) {
 	for _, s := range ss {
 		set.Set[s] = true
 	}
 }
 
-// Test if an element is in a set
-func (set *stringSet) Contains(s string) bool {
+// Contains tests if an element is in a set
+func (set *StringSet) Contains(s string) bool {
 	_, found := set.Set[s]
 	return found
 }
 
-// Check if any of the elements exist
-func (set *stringSet) ContainsAny(ss []string) bool {
+// ContainsAny checks if any of the elements exist
+func (set *StringSet) ContainsAny(ss []string) bool {
 	for _, s := range ss {
 		if set.Set[s] {
 			return true
@@ -50,8 +53,13 @@ func (set *stringSet) ContainsAny(ss []string) bool {
 	return false
 }
 
+// Length returns the length of the Set
+func (set *StringSet) Length() int {
+	return len(set.Set)
+}
+
 // Stringify the set
-func (set *stringSet) Stringify() string {
+func (set *StringSet) Stringify() string {
 	values := []string{}
 	for s := range set.Set {
 		values = append(values, s)
@@ -59,25 +67,26 @@ func (set *stringSet) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-func newIntSet() intSet {
-	return intSet{Set: map[int]bool{}}
+// NewIntSet creates a new initialized IntSet
+func NewIntSet() IntSet {
+	return IntSet{Set: map[int]bool{}}
 }
 
-// Add an element to a set
-func (set *intSet) Add(i int) bool {
+// Add adds an element to a set
+func (set *IntSet) Add(i int) bool {
 	_, found := set.Set[i]
 	set.Set[i] = true
 	return !found
 }
 
-// Test if an element is in a set
-func (set *intSet) Contains(i int) bool {
+// Contains tests if an element is in a set
+func (set *IntSet) Contains(i int) bool {
 	_, found := set.Set[i]
 	return found
 }
 
 // Stringify the set
-func (set *intSet) Stringify() string {
+func (set *IntSet) Stringify() string {
 	values := []int{}
 	for s := range set.Set {
 		values = append(values, s)
@@ -86,6 +95,11 @@ func (set *intSet) Stringify() string {
 
 	delim := ","
 	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(values)), delim), "[]")
+}
+
+// Length returns the length of the Set
+func (set *IntSet) Length() int {
+	return len(set.Set)
 }
 
 func lineCounter(r io.Reader) (int, error) {
@@ -105,4 +119,9 @@ func lineCounter(r io.Reader) (int, error) {
 			return count, err
 		}
 	}
+}
+
+// DefaultUserAgent returns the default user agent to use in HTTP requests
+func DefaultUserAgent() string {
+	return fmt.Sprintf("gobuster/%s", VERSION)
 }

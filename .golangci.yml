@@ -1,0 +1,29 @@
+linters:
+  enable-all: true
+  disable:
+    - lll
+    - gocyclo
+
+issues:
+  exclude-rules:
+    - text: "TLS InsecureSkipVerify may be true"
+      linters:
+        - gosec
+
+    - text: ifElseChain
+      linters:
+        - gocritic
+
+    - path: cli\\cmd\\.+\.go
+      linters:
+        - gochecknoinits
+        - gochecknoglobals
+
+    - path: cli/cmd/.+\.go
+      linters:
+        - gochecknoinits
+        - gochecknoglobals
+
+    - path: _test\.go
+      linters:
+        - scopelint

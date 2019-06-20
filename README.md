@@ -94,6 +94,7 @@ Flags:
   -c, --cookies string                Cookies to use for the requests
   -e, --expanded                      Expanded mode, print full URLs
   -x, --extensions string             File extension(s) to search for
+  -X, --filesonly                     Search only for files in a known directory, skips directory search
   -r, --followredirect                Follow redirects
   -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
   -h, --help                          help for dir

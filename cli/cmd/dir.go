@@ -119,6 +119,11 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for wildcard: %v", err)
 	}
 
+	plugin.FilesOnly, err = cmdDir.Flags().GetBool("filesonly")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for filesonly: %v", err)
+	}
+
 	return globalopts, plugin, nil
 }
 
@@ -140,6 +145,7 @@ func init() {
 	cmdDir.Flags().BoolP("includelength", "l", false, "Include the length of the body in the output")
 	cmdDir.Flags().BoolP("addslash", "f", false, "Apped / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+	cmdDir.Flags().BoolP("filesonly", "X", false, "Search only for files in a known directory, skips directory search")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

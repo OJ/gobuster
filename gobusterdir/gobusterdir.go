@@ -110,43 +110,45 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	if d.options.UseSlash {
 		suffix = "/"
 	}
-
-	// Try the DIR first
-	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
-	dirResp, dirSize, err := d.get(url)
-	if err != nil {
-		return nil, err
-	}
 	var ret []libgobuster.Result
-	if dirResp != nil {
-		resultStatus := libgobuster.StatusMissed
 
-		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-			if !d.options.StatusCodesBlacklistParsed.Contains(*dirResp) {
-				resultStatus = libgobuster.StatusFound
-			}
-		} else if d.options.StatusCodesParsed.Length() > 0 {
-			if d.options.StatusCodesParsed.Contains(*dirResp) {
-				resultStatus = libgobuster.StatusFound
-			}
-		} else {
-			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+	if !d.options.FilesOnly {
+		// Try the DIR first
+		url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
+		dirResp, dirSize, err := d.get(url)
+		if err != nil {
+			return nil, err
 		}
+		if dirResp != nil {
+			resultStatus := libgobuster.StatusMissed
 
-		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
-			ret = append(ret, libgobuster.Result{
-				Entity:     fmt.Sprintf("%s%s", word, suffix),
-				StatusCode: *dirResp,
-				Size:       dirSize,
-				Status:     resultStatus,
-			})
+			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+				if !d.options.StatusCodesBlacklistParsed.Contains(*dirResp) {
+					resultStatus = libgobuster.StatusFound
+				}
+			} else if d.options.StatusCodesParsed.Length() > 0 {
+				if d.options.StatusCodesParsed.Contains(*dirResp) {
+					resultStatus = libgobuster.StatusFound
+				}
+			} else {
+				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+			}
+
+			if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+				ret = append(ret, libgobuster.Result{
+					Entity:     fmt.Sprintf("%s%s", word, suffix),
+					StatusCode: *dirResp,
+					Size:       dirSize,
+					Status:     resultStatus,
+				})
+			}
 		}
 	}
 
 	// Follow up with files using each ext.
 	for ext := range d.options.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
-		url = fmt.Sprintf("%s%s", d.options.URL, file)
+		url := fmt.Sprintf("%s%s", d.options.URL, file)
 		fileResp, fileSize, err := d.get(url)
 		if err != nil {
 			return nil, err
@@ -295,6 +297,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.Extensions != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
+	if o.FilesOnly {
+		if _, err := fmt.Fprintf(tw, "[+] Files Only:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

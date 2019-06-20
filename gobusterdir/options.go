@@ -18,6 +18,7 @@ type OptionsDir struct {
 	IncludeLength              bool
 	Expanded                   bool
 	NoStatus                   bool
+	FilesOnly                  bool
 }
 
 // NewOptionsDir returns a new initialized OptionsDir

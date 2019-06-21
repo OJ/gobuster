@@ -55,6 +55,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		Proxy:          opts.Proxy,
 		FollowRedirect: opts.FollowRedirect,
 		InsecureSSL:    opts.InsecureSSL,
+		IncludeLength:  opts.IncludeLength,
 		Timeout:        opts.Timeout,
 		Username:       opts.Username,
 		Password:       opts.Password,

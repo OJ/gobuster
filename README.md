@@ -1,4 +1,4 @@
-# Gobuster v3.0.0 (OJ Reeves @TheColonial)
+# Gobuster v3.0.1 (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
 
@@ -106,7 +106,7 @@ Flags:
   -b, --statuscodesblacklist string   Negative status codes (will override statuscodes if set)
       --timeout duration              HTTP Timeout (default 10s)
   -u, --url string                    The target URL
-  -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.0 (beta)")
+  -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string               Username for Basic Auth
       --wildcard                      Force continued operation when wildcard found
 
@@ -135,7 +135,7 @@ Flags:
   -p, --proxy string          Proxy to use for requests [http(s)://host:port]
       --timeout duration      HTTP Timeout (default 10s)
   -u, --url string            The target URL
-  -a, --useragent string      Set the User-Agent string (default "gobuster/3.0.0 (beta)")
+  -a, --useragent string      Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string       Username for Basic Auth
 
 Global Flags:
@@ -191,12 +191,6 @@ If you have all the dependencies already, you can make use of the build scripts:
 * `make clean` - clears out the `build` subfolder.
 * `make test` - runs the tests.
 
-### Running as a Script
-
-```bash
-go run main.go <parameters>
-```
-
 ## Wordlists via STDIN
 
 Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
@@ -222,9 +216,10 @@ Default options looks like this:
 ```bash
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
@@ -232,16 +227,16 @@ Gobuster v3.0.0              OJ Reeves (@TheColonial)
 [+] Status codes : 200,204,301,302,307,401,403
 [+] User Agent   : gobuster/3.0.1
 [+] Timeout      : 10s
-=====================================================
-2018/08/27 11:49:43 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:49:43 Starting gobuster
+===============================================================
 /categories (Status: 301)
 /contact (Status: 301)
 /posts (Status: 301)
 /index (Status: 200)
-=====================================================
-2018/08/27 11:49:44 Finished
-=====================================================
+===============================================================
+2019/06/21 11:49:44 Finished
+===============================================================
 ```
 
 Default options with status codes disabled looks like this:
@@ -249,9 +244,10 @@ Default options with status codes disabled looks like this:
 ```bash
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
@@ -260,16 +256,16 @@ Gobuster v3.0.0              OJ Reeves (@TheColonial)
 [+] User Agent   : gobuster/3.0.1
 [+] No status    : true
 [+] Timeout      : 10s
-=====================================================
-2018/08/27 11:50:18 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:50:18 Starting gobuster
+===============================================================
 /categories
 /contact
 /index
 /posts
-=====================================================
-2018/08/27 11:50:18 Finished
-=====================================================
+===============================================================
+2019/06/21 11:50:18 Finished
+===============================================================
 ```
 
 Verbose output looks like this:
@@ -277,9 +273,10 @@ Verbose output looks like this:
 ```bash
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
@@ -288,18 +285,18 @@ Gobuster v3.0.0              OJ Reeves (@TheColonial)
 [+] User Agent   : gobuster/3.0.1
 [+] Verbose      : true
 [+] Timeout      : 10s
-=====================================================
-2018/08/27 11:50:51 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:50:51 Starting gobuster
+===============================================================
 Missed: /alsodoesnotexist (Status: 404)
 Found: /index (Status: 200)
 Missed: /doesnotexist (Status: 404)
 Found: /categories (Status: 301)
 Found: /posts (Status: 301)
 Found: /contact (Status: 301)
-=====================================================
-2018/08/27 11:50:51 Finished
-=====================================================
+===============================================================
+2019/06/21 11:50:51 Finished
+===============================================================
 ```
 
 Example showing content length:
@@ -307,9 +304,10 @@ Example showing content length:
 ```bash
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
 [+] Threads      : 10
@@ -318,16 +316,16 @@ Gobuster v3.0.0              OJ Reeves (@TheColonial)
 [+] User Agent   : gobuster/3.0.1
 [+] Show length  : true
 [+] Timeout      : 10s
-=====================================================
-2018/08/27 11:51:16 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:51:16 Starting gobuster
+===============================================================
 /categories (Status: 301) [Size: 178]
 /posts (Status: 301) [Size: 178]
 /contact (Status: 301) [Size: 178]
 /index (Status: 200) [Size: 51759]
-=====================================================
-2018/08/27 11:51:17 Finished
-=====================================================
+===============================================================
+2019/06/21 11:51:17 Finished
+===============================================================
 ```
 
 Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
@@ -353,16 +351,17 @@ Normal sample run goes like this:
 ```bash
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/subdomains.txt
-=====================================================
-2018/08/27 11:54:20 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:54:20 Starting gobuster
+===============================================================
 Found: chrome.google.com
 Found: ns1.google.com
 Found: admin.google.com
@@ -381,9 +380,9 @@ Found: wap.google.com
 Found: directory.google.com
 Found: local.google.com
 Found: blog.google.com
-=====================================================
-2018/08/27 11:54:20 Finished
-=====================================================
+===============================================================
+2019/06/21 11:54:20 Finished
+===============================================================
 ```
 
 Show IP sample run goes like this:
@@ -391,16 +390,17 @@ Show IP sample run goes like this:
 ```bash
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/subdomains.txt
-=====================================================
-2018/08/27 11:54:54 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 11:54:54 Starting gobuster
+===============================================================
 Found: www.google.com [172.217.25.36, 2404:6800:4006:802::2004]
 Found: admin.google.com [172.217.25.46, 2404:6800:4006:806::200e]
 Found: store.google.com [172.217.167.78, 2404:6800:4006:802::200e]
@@ -419,9 +419,9 @@ Found: directory.google.com [172.217.25.46, 2404:6800:4006:802::200e]
 Found: translate.google.com [172.217.25.46, 2404:6800:4006:802::200e]
 Found: music.google.com [172.217.25.46, 2404:6800:4006:802::200e]
 Found: mail.google.com [172.217.25.37, 2404:6800:4006:802::2005]
-=====================================================
-2018/08/27 11:54:55 Finished
-=====================================================
+===============================================================
+2019/06/21 11:54:55 Finished
+===============================================================
 ```
 
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
@@ -429,21 +429,22 @@ Base domain validation warning when the base domain fails to resolve. This is a 
 ```bash
 gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/subdomains.txt
-=====================================================
-2018/08/27 11:56:43 Starting gobuster
-=====================================================
-2018/08/27 11:56:53 [-] Unable to validate base domain: yp.to
+===============================================================
+2019/06/21 11:56:43 Starting gobuster
+===============================================================
+2019/06/21 11:56:53 [-] Unable to validate base domain: yp.to
 Found: cr.yp.to [131.193.32.108, 131.193.32.109]
-=====================================================
-2018/08/27 11:56:53 Finished
-=====================================================
+===============================================================
+2019/06/21 11:56:53 Finished
+===============================================================
 ```
 
 Wildcard DNS is also detected properly:
@@ -451,21 +452,22 @@ Wildcard DNS is also detected properly:
 ```bash
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/subdomains.txt
-=====================================================
-2018/08/27 12:13:48 Starting gobuster
-=====================================================
-2018/08/27 12:13:48 [-] Wildcard DNS found. IP address(es): 1.0.0.0
-2018/08/27 12:13:48 [!] To force processing of Wildcard DNS, specify the '--wildcard' switch.
-=====================================================
-2018/08/27 12:13:48 Finished
-=====================================================
+===============================================================
+2019/06/21 12:13:48 Starting gobuster
+===============================================================
+2019/06/21 12:13:48 [-] Wildcard DNS found. IP address(es): 1.0.0.0
+2019/06/21 12:13:48 [!] To force processing of Wildcard DNS, specify the '--wildcard' switch.
+===============================================================
+2019/06/21 12:13:48 Finished
+===============================================================
 ```
 
 If the user wants to force processing of a domain that has wildcard entries, use `--wildcard`:
@@ -473,22 +475,23 @@ If the user wants to force processing of a domain that has wildcard entries, use
 ```bash
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/subdomains.txt
-=====================================================
-2018/08/27 12:13:51 Starting gobuster
-=====================================================
-2018/08/27 12:13:51 [-] Wildcard DNS found. IP address(es): 1.0.0.0
+===============================================================
+2019/06/21 12:13:51 Starting gobuster
+===============================================================
+2019/06/21 12:13:51 [-] Wildcard DNS found. IP address(es): 1.0.0.0
 Found: 127.0.0.1.xip.io
 Found: test.127.0.0.1.xip.io
-=====================================================
-2018/08/27 12:13:53 Finished
-=====================================================
+===============================================================
+2019/06/21 12:13:53 Finished
+===============================================================
 ```
 
 ### `vhost` Mode
@@ -504,23 +507,24 @@ Normal sample run goes like this:
 ```bash
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 
-=====================================================
-Gobuster v3.0.0              OJ Reeves (@TheColonial)
-=====================================================
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
 [+] Url:          https://mysite.com
 [+] Threads:      10
 [+] Wordlist:     common-vhosts.txt
-[+] User Agent:   gobuster 3.0.0
+[+] User Agent:   gobuster/3.0.1
 [+] Timeout:      10s
-=====================================================
-2018/10/09 08:36:00 Starting gobuster
-=====================================================
+===============================================================
+2019/06/21 08:36:00 Starting gobuster
+===============================================================
 Found: www.mysite.com
 Found: piwik.mysite.com
 Found: mail.mysite.com
-=====================================================
-2018/10/09 08:36:05 Finished
-=====================================================
+===============================================================
+2019/06/21 08:36:05 Finished
+===============================================================
 ```
 
 ## License

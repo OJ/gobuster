@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -113,6 +114,8 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 					g.resultChan <- r
 				}
 			}
+
+			time.Sleep(time.Duration(g.Opts.Delay) * time.Millisecond)
 		}
 	}
 }

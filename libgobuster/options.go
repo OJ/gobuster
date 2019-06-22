@@ -10,6 +10,7 @@ type Options struct {
 	Quiet          bool
 	WildcardForced bool
 	Verbose        bool
+	Delay          int
 }
 
 // NewOptions returns a new initialized Options object

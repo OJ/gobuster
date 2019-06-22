@@ -143,7 +143,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	if _, err := fmt.Fprintf(tw, "[+] Url:\t%s\n", o.URL); err != nil {
 		return "", err
 	}
+
 	if _, err := fmt.Fprintf(tw, "[+] Threads:\t%d\n", v.globalopts.Threads); err != nil {
+		return "", err
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Delay:\t%d\n", v.globalopts.Delay); err != nil {
 		return "", err
 	}
 

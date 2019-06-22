@@ -1,7 +1,7 @@
 package gobustervhost
 
 import (
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/libgobuster"
 )
 
 // OptionsVhost is the struct to hold all options for this plugin

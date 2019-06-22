@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterdns"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/cli"
+	"github.com/OJ/gobuster/gobusterdns"
+	"github.com/OJ/gobuster/libgobuster"
 	"github.com/spf13/cobra"
 )
 

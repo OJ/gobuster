@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/libgobuster"
 
 	"github.com/spf13/cobra"
 )

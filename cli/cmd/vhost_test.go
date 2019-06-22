@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobustervhost"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/cli"
+	"github.com/OJ/gobuster/gobustervhost"
+	"github.com/OJ/gobuster/libgobuster"
 )
 
 func BenchmarkVhostMode(b *testing.B) {

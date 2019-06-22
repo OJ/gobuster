@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterdir"
-	"github.com/OJ/gobuster/v3/helper"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/cli"
+	"github.com/OJ/gobuster/gobusterdir"
+	"github.com/OJ/gobuster/helper"
+	"github.com/OJ/gobuster/libgobuster"
 	"github.com/spf13/cobra"
 )
 

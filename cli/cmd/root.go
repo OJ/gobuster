@@ -119,7 +119,7 @@ func configureGlobalOptions() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().DurationP("delay", "d", 0, "Time each thread waits between requests (e.g. 1500ms)")
+	rootCmd.PersistentFlags().DurationP("delay", "", 0, "Time each thread waits between requests (e.g. 1500ms)")
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")
 	rootCmd.PersistentFlags().StringP("wordlist", "w", "", "Path to the wordlist")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to stdout)")

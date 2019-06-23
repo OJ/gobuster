@@ -79,6 +79,7 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -115,6 +116,7 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -143,6 +145,7 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```

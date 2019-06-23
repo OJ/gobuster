@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // SetupFunc is the "setup" function prototype for implementations
@@ -112,6 +113,11 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				for _, r := range res {
 					g.resultChan <- r
 				}
+			}
+
+			select {
+			case <-g.context.Done():
+			case <-time.After(g.Opts.Delay):
 			}
 		}
 	}

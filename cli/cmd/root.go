@@ -64,6 +64,16 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 	}
 	globalopts.Threads = threads
 
+	delay, err := rootCmd.Flags().GetDuration("delay")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for delay: %v", err)
+	}
+
+	if delay < 0 {
+		return nil, fmt.Errorf("delay must be positive")
+	}
+	globalopts.Delay = delay
+
 	globalopts.Wordlist, err = rootCmd.Flags().GetString("wordlist")
 	if err != nil {
 		return nil, fmt.Errorf("invalid value for wordlist: %v", err)
@@ -109,6 +119,7 @@ func configureGlobalOptions() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().DurationP("delay", "", 0, "Time each thread waits between requests (e.g. 1500ms)")
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")
 	rootCmd.PersistentFlags().StringP("wordlist", "w", "", "Path to the wordlist")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to stdout)")

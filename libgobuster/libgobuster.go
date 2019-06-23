@@ -115,7 +115,10 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 				}
 			}
 
-			time.Sleep(time.Duration(g.Opts.Delay) * time.Millisecond)
+			select {
+			case <-g.context.Done():
+			case <-time.After(g.Opts.Delay):
+			}
 		}
 	}
 }

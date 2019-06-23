@@ -148,8 +148,10 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Delay:\t%d\n", v.globalopts.Delay); err != nil {
-		return "", err
+	if v.globalopts.Delay > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", v.globalopts.Delay); err != nil {
+			return "", err
+		}
 	}
 
 	wordlist := "stdin (pipe)"

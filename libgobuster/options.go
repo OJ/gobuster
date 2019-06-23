@@ -1,5 +1,7 @@
 package libgobuster
 
+import "time"
+
 // Options helds all options that can be passed to libgobuster
 type Options struct {
 	Threads        int
@@ -10,7 +12,7 @@ type Options struct {
 	Quiet          bool
 	WildcardForced bool
 	Verbose        bool
-	Delay          int
+	Delay          time.Duration
 }
 
 // NewOptions returns a new initialized Options object

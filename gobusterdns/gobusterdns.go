@@ -173,8 +173,10 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Delay:\t%d\n", d.globalopts.Delay); err != nil {
-		return "", err
+	if d.globalopts.Delay > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
+			return "", err
+		}
 	}
 
 	if o.Resolver != "" {

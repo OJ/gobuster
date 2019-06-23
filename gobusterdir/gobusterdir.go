@@ -247,8 +247,10 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Delay:\t%dms\n", d.globalopts.Delay); err != nil {
-		return "", err
+	if d.globalopts.Delay > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
+			return "", err
+		}
 	}
 
 	wordlist := "stdin (pipe)"

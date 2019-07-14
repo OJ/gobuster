@@ -29,7 +29,7 @@ func runDNS(cmd *cobra.Command, args []string) error {
 		if goberr, ok := err.(*gobusterdns.ErrWildcard); ok {
 			return fmt.Errorf("%s. To force processing of Wildcard DNS, specify the '--wildcard' switch", goberr.Error())
 		}
-		return fmt.Errorf("error on running goubster: %v", err)
+		return fmt.Errorf("error on running gobuster: %v", err)
 	}
 	return nil
 }

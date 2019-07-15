@@ -28,7 +28,7 @@ func runDir(cmd *cobra.Command, args []string) error {
 		if goberr, ok := err.(*gobusterdir.ErrWildcard); ok {
 			return fmt.Errorf("%s. To force processing of Wildcard responses, specify the '--wildcard' switch", goberr.Error())
 		}
-		return fmt.Errorf("error on running goubster: %v", err)
+		return fmt.Errorf("error on running gobuster: %v", err)
 	}
 	return nil
 }

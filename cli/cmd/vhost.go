@@ -24,7 +24,7 @@ func runVhost(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		return fmt.Errorf("error on running goubster: %v", err)
+		return fmt.Errorf("error on running gobuster: %v", err)
 	}
 	return nil
 }

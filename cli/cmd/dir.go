@@ -138,7 +138,7 @@ func init() {
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("nostatus", "n", false, "Don't print status codes")
 	cmdDir.Flags().BoolP("includelength", "l", false, "Include the length of the body in the output")
-	cmdDir.Flags().BoolP("addslash", "f", false, "Apped / to each request")
+	cmdDir.Flags().BoolP("addslash", "f", false, "Append / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {

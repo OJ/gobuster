@@ -85,7 +85,7 @@ func BenchmarkDirMode(b *testing.B) {
 		}
 
 		if err := cli.Gobuster(ctx, &globalopts, plugin); err != nil {
-			b.Fatalf("error on running goubster: %v", err)
+			b.Fatalf("error on running gobuster: %v", err)
 		}
 		os.Stdout = oldStdout
 		os.Stderr = oldStderr

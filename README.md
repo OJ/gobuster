@@ -91,7 +91,7 @@ Usage:
   gobuster dir [flags]
 
 Flags:
-  -f, --addslash                      Apped / to each request
+  -f, --addslash                      Append / to each request
   -c, --cookies string                Cookies to use for the requests
   -e, --expanded                      Expanded mode, print full URLs
   -x, --extensions string             File extension(s) to search for

@@ -61,6 +61,7 @@ GOTO Done
 
 :Test
 set GO111MODULE=on
+set CGO_ENABLED=0
 echo Testing ...
 go test -v ./...
 echo Done
@@ -94,6 +95,7 @@ EXIT /B 0
 set GOOS=darwin
 set GOARCH=amd64
 set GO111MODULE=on
+set CGO_ENABLED=0
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL
@@ -110,6 +112,7 @@ EXIT /B 0
 set GOOS=linux
 set GOARCH=amd64
 set GO111MODULE=on
+set CGO_ENABLED=0
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL
@@ -126,6 +129,7 @@ EXIT /B 0
 set GOOS=windows
 set GOARCH=amd64
 set GO111MODULE=on
+set CGO_ENABLED=0
 echo Building for %GOOS% %GOARCH% ...
 set DIR=%TARGET%\gobuster-%GOOS%-%GOARCH%
 mkdir %DIR% 2> NUL

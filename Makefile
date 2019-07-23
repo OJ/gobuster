@@ -21,7 +21,7 @@ windows:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for windows $${GOARCH} ..." ; \
 		mkdir -p ${TARGET}/gobuster-windows-$${GOARCH} ; \
-		GOOS=windows GOARCH=$${GOARCH} GO111MODULE=on go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-windows-$${GOARCH}/gobuster.exe ; \
+		GOOS=windows GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-windows-$${GOARCH}/gobuster.exe ; \
 	done; \
 	echo "Done."
 
@@ -29,7 +29,7 @@ linux:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for linux $${GOARCH} ..." ; \
 		mkdir -p ${TARGET}/gobuster-linux-$${GOARCH} ; \
-		GOOS=linux GOARCH=$${GOARCH} GO111MODULE=on go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-linux-$${GOARCH}/gobuster ; \
+		GOOS=linux GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-linux-$${GOARCH}/gobuster ; \
 	done; \
 	echo "Done."
 
@@ -37,7 +37,7 @@ darwin:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for darwin $${GOARCH} ..." ; \
 		mkdir -p ${TARGET}/gobuster-darwin-$${GOARCH} ; \
-		GOOS=darwin GOARCH=$${GOARCH} GO111MODULE=on go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-darwin-$${GOARCH}/gobuster ; \
+		GOOS=darwin GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-darwin-$${GOARCH}/gobuster ; \
 	done; \
 	echo "Done."
 

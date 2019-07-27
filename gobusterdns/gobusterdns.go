@@ -85,11 +85,17 @@ func (d *GobusterDNS) PreRun() error {
 	}
 
 	if !d.globalopts.Quiet {
-		// Provide a warning if the base domain doesn't resolve (in case of typo)
-		_, err = d.dnsLookup(d.options.Domain)
-		if err != nil {
-			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.yp.to` does!
-			log.Printf("[-] Unable to validate base domain: %s (%v)", d.options.Domain, err)
+		// Check if injection point was provided
+		if !strings.Contains(d.options.Domain, "*") {
+			// Provide a warning if the base domain doesn't resolve (in case of typo)
+			_, err = d.dnsLookup(d.options.Domain)
+			if err != nil {
+				// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.yp.to` does!
+				log.Printf("[-] Unable to validate base domain: %s (%v)", d.options.Domain, err)
+			} 
+		} else {
+			// Warning: Injection char (*) was provided, no base domain validation will be performed!
+			log.Printf("[-] Warning: Injection char (*) was provided, no base domain validation will be performed!")
 		}
 	}
 
@@ -98,7 +104,12 @@ func (d *GobusterDNS) PreRun() error {
 
 // Run is the process implementation of gobusterdns
 func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
-	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
+	subdomain := ""
+	if strings.Contains(d.options.Domain, "*") == true {
+		subdomain = strings.Replace(d.options.Domain, "*", word, -1) // Path?
+	} else {
+		subdomain = fmt.Sprintf("%s.%s", word, d.options.Domain)	
+	}
 	ips, err := d.dnsLookup(subdomain)
 	var ret []libgobuster.Result
 	if err == nil {

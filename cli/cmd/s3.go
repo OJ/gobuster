@@ -40,16 +40,10 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	plugin.Password = httpOpts.Password
-	plugin.URL = httpOpts.URL
+
 	plugin.UserAgent = httpOpts.UserAgent
-	plugin.Username = httpOpts.Username
 	plugin.Proxy = httpOpts.Proxy
-	plugin.Cookies = httpOpts.Cookies
 	plugin.Timeout = httpOpts.Timeout
-	plugin.FollowRedirect = httpOpts.FollowRedirect
-	plugin.InsecureSSL = httpOpts.InsecureSSL
-	plugin.Headers = httpOpts.Headers
 
 	plugin.MaxFilesToList, err = cmdS3.Flags().GetInt("maxfiles")
 	if err != nil {

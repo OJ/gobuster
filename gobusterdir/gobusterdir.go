@@ -30,7 +30,7 @@ type GobusterDir struct {
 	http       *libgobuster.HTTPClient
 }
 
-// GetRequest issues a GET request to the target and returns
+// get issues a GET request to the target and returns
 // the status code, length and an error
 func (d *GobusterDir) get(url string) (*int, *int64, error) {
 	return d.http.Get(url, "", d.options.Cookies)

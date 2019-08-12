@@ -21,8 +21,8 @@ type GobusterS3 struct {
 	bucketRegex *regexp.Regexp
 }
 
-// GetRequest issues a GET request to the target and returns
-// the status code, length and an error
+// get issues a GET request to the target and returns
+// the status code, body and an error
 func (s *GobusterS3) get(url string) (*int, *[]byte, error) {
 	return s.http.GetWithBody(url, "", s.options.Cookies)
 }

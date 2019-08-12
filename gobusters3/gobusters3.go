@@ -204,38 +204,20 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.Cookies != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Cookies:\t%s\n", o.Cookies); err != nil {
-			return "", err
-		}
-	}
-
 	if o.UserAgent != "" {
 		if _, err := fmt.Fprintf(tw, "[+] User Agent:\t%s\n", o.UserAgent); err != nil {
 			return "", err
 		}
 	}
 
-	if o.Username != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
-			return "", err
-		}
-	}
-
-	if o.FollowRedirect {
-		if _, err := fmt.Fprintf(tw, "[+] Follow Redir:\ttrue\n"); err != nil {
-			return "", err
-		}
+	if _, err := fmt.Fprintf(tw, "[+] Timeout:\t%s\n", o.Timeout.String()); err != nil {
+		return "", err
 	}
 
 	if s.globalopts.Verbose {
 		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
-	}
-
-	if _, err := fmt.Fprintf(tw, "[+] Timeout:\t%s\n", o.Timeout.String()); err != nil {
-		return "", err
 	}
 
 	if o.Expanded {

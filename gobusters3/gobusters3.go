@@ -79,7 +79,6 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 		return ret, nil
 	}
 
-	// this url will return a 307 with the URL including the region if found
 	bucketURL := fmt.Sprintf("http://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
 	status, body, err := s.get(bucketURL)
 	if err != nil {

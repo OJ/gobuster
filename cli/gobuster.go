@@ -121,7 +121,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		}
 		fmt.Println(c)
 		ruler()
-		gobuster.LogInfo.Println("Starting gobuster")
+		gobuster.LogInfo.Printf("Starting gobuster in %s mode", plugin.Name())
 		ruler()
 	}
 

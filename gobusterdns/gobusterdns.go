@@ -71,6 +71,11 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (d *GobusterDNS) Name() string {
+	return "DNS enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun() error {
 	// Resolve a subdomain sthat probably shouldn't exist

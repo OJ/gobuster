@@ -71,6 +71,11 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (d *GobusterDir) Name() string {
+	return "directory enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun() error {
 	// add trailing slash

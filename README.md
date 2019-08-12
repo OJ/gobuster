@@ -1,10 +1,11 @@
-# Gobuster v3.0.1 (OJ Reeves @TheColonial)
+# Gobuster v3.1.0
 
 Gobuster is a tool used to brute-force:
 
 * URIs (directories and files) in web sites.
 * DNS subdomains (with wildcard support).
 * Virtual Host names on target web servers.
+* Open Amazon S3 buckets
 
 ## Tags, Statuses, etc
 
@@ -39,11 +40,15 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
+## Changes in 3.1
+
+* enumerate public AWS S3 buckets
+
 ## Changes in 3.0
 
 * New CLI options so modes are strictly seperated (`-m` is now gone!)
 * Performance Optimizations and better connection handling
-* Ability to bruteforce vhost names
+* Ability to enumerate vhost names
 * Option to supply custom HTTP headers
 
 ## Available Modes
@@ -527,6 +532,103 @@ Found: piwik.mysite.com
 Found: mail.mysite.com
 ===============================================================
 2019/06/21 08:36:05 Finished
+===============================================================
+```
+
+### `s3` Mode
+
+Command line might look like this:
+
+```bash
+gobuster s3 -w bucket-names.txt
+```
+
+Normal sample run goes like this:
+
+```text
+PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Threads:                 10
+[+] Wordlist:                .\wordlist.txt
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+[+] Maximum files to list:   5
+===============================================================
+2019/08/12 21:48:16 Starting gobuster in S3 bucket enumeration mode
+===============================================================
+webmail
+hacking
+css
+img
+www
+dav
+web
+localhost
+===============================================================
+2019/08/12 21:48:17 Finished
+===============================================================
+```
+
+Verbose and sample run
+
+```text
+PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -v
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Threads:                 10
+[+] Wordlist:                .\wordlist.txt
+[+] User Agent:              gobuster/3.1.0
+[+] Verbose:                 true
+[+] Timeout:                 10s
+[+] Maximum files to list:   5
+===============================================================
+2019/08/12 21:49:00 Starting gobuster in S3 bucket enumeration mode
+===============================================================
+www [Error: All access to this object has been disabled (AllAccessDisabled)]
+hacking [Error: Access Denied (AccessDenied)]
+css [Error: All access to this object has been disabled (AllAccessDisabled)]
+webmail [Error: All access to this object has been disabled (AllAccessDisabled)]
+img [Bucket Listing enabled: GodBlessPotomac1.jpg (1236807b), HOMEWORKOUTAUDIO.zip (203908818b), ProductionInfo.xml (11946b), Start of Perpetual Motion Logo-1.mp3 (621821b), addressbook.gif (3115b)]
+web [Error: Access Denied (AccessDenied)]
+dav [Error: All access to this object has been disabled (AllAccessDisabled)]
+localhost [Error: Access Denied (AccessDenied)]
+===============================================================
+2019/08/12 21:49:01 Finished
+===============================================================
+```
+
+Extended sample run
+
+```text
+PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -e
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Threads:                 10
+[+] Wordlist:                .\wordlist.txt
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+[+] Expanded:                true
+[+] Maximum files to list:   5
+===============================================================
+2019/08/12 21:48:38 Starting gobuster in S3 bucket enumeration mode
+===============================================================
+http://css.s3.amazonaws.com/
+http://www.s3.amazonaws.com/
+http://webmail.s3.amazonaws.com/
+http://hacking.s3.amazonaws.com/
+http://img.s3.amazonaws.com/
+http://web.s3.amazonaws.com/
+http://dav.s3.amazonaws.com/
+http://localhost.s3.amazonaws.com/
+===============================================================
+2019/08/12 21:48:38 Finished
 ===============================================================
 ```
 

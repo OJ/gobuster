@@ -57,6 +57,11 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (v *GobusterVhost) Name() string {
+	return "VHOST enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun() error {
 

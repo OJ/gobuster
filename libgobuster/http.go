@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 	"unicode/utf8"
 )
 
@@ -28,20 +27,7 @@ type HTTPClient struct {
 	username         string
 	password         string
 	headers          []HTTPHeader
-	includeLength    bool
-}
-
-// HTTPOptions provides options to the http client
-type HTTPOptions struct {
-	Proxy          string
-	Username       string
-	Password       string
-	UserAgent      string
-	Headers        []HTTPHeader
-	Timeout        time.Duration
-	FollowRedirect bool
-	InsecureSSL    bool
-	IncludeLength  bool
+	cookies          string
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -85,36 +71,36 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	client.context = c
 	client.username = opt.Username
 	client.password = opt.Password
-	client.includeLength = opt.IncludeLength
 	client.userAgent = opt.UserAgent
 	client.defaultUserAgent = DefaultUserAgent()
 	client.headers = opt.Headers
+	client.cookies = opt.Cookies
 	return &client, nil
 }
 
 // Get gets an URL and returns the status, the length and an error
-func (client *HTTPClient) Get(fullURL, host, cookie string) (*int, *int64, error) {
-	return client.requestWithoutBody(http.MethodGet, fullURL, host, cookie, nil)
+func (client *HTTPClient) Get(fullURL, host string, includeLength bool) (*int, *int64, error) {
+	return client.requestWithoutBody(http.MethodGet, fullURL, host, nil, includeLength)
 }
 
 // Post posts to an URL and returns the status, the length and an error
-func (client *HTTPClient) Post(fullURL, host, cookie string, data io.Reader) (*int, *int64, error) {
-	return client.requestWithoutBody(http.MethodPost, fullURL, host, cookie, data)
+func (client *HTTPClient) Post(fullURL, host string, data io.Reader, includeLength bool) (*int, *int64, error) {
+	return client.requestWithoutBody(http.MethodPost, fullURL, host, data, includeLength)
 }
 
 // GetWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) GetWithBody(fullURL, host, cookie string) (*int, *[]byte, error) {
-	return client.requestWithBody(http.MethodGet, fullURL, host, cookie, nil)
+func (client *HTTPClient) GetWithBody(fullURL, host string) (*int, *[]byte, error) {
+	return client.requestWithBody(http.MethodGet, fullURL, host, nil)
 }
 
 // PostWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) PostWithBody(fullURL, host, cookie string, data io.Reader) (*int, *[]byte, error) {
-	return client.requestWithBody(http.MethodPost, fullURL, host, cookie, data)
+func (client *HTTPClient) PostWithBody(fullURL, host string, data io.Reader) (*int, *[]byte, error) {
+	return client.requestWithBody(http.MethodPost, fullURL, host, data)
 }
 
 // requestWithoutBody makes an http request and returns the status, the length and an error
-func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie string, data io.Reader) (*int, *int64, error) {
-	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
+func (client *HTTPClient) requestWithoutBody(method, fullURL, host string, data io.Reader, includeLength bool) (*int, *int64, error) {
+	resp, err := client.makeRequest(method, fullURL, host, data)
 	if err != nil {
 		// ignore context canceled errors
 		if client.context.Err() == context.Canceled {
@@ -126,7 +112,7 @@ func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie strin
 
 	var length *int64
 
-	if client.includeLength {
+	if includeLength {
 		length = new(int64)
 		if resp.ContentLength <= 0 {
 			body, err2 := ioutil.ReadAll(resp.Body)
@@ -149,8 +135,8 @@ func (client *HTTPClient) requestWithoutBody(method, fullURL, host, cookie strin
 }
 
 // requestWithBody makes an http request and returns the status and the body
-func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie string, data io.Reader) (*int, *[]byte, error) {
-	resp, err := client.makeRequest(method, fullURL, host, cookie, data)
+func (client *HTTPClient) requestWithBody(method, fullURL, host string, data io.Reader) (*int, *[]byte, error) {
+	resp, err := client.makeRequest(method, fullURL, host, data)
 	if err != nil {
 		// ignore context canceled errors
 		if client.context.Err() == context.Canceled {
@@ -168,7 +154,7 @@ func (client *HTTPClient) requestWithBody(method, fullURL, host, cookie string, 
 	return &resp.StatusCode, &body, nil
 }
 
-func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data io.Reader) (*http.Response, error) {
+func (client *HTTPClient) makeRequest(method, fullURL, host string, data io.Reader) (*http.Response, error) {
 	var req *http.Request
 	var err error
 
@@ -190,8 +176,8 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data
 	// add the context so we can easily cancel out
 	req = req.WithContext(client.context)
 
-	if cookie != "" {
-		req.Header.Set("Cookie", cookie)
+	if client.cookies != "" {
+		req.Header.Set("Cookie", client.cookies)
 	}
 
 	if host != "" {

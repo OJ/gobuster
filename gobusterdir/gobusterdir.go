@@ -33,7 +33,7 @@ type GobusterDir struct {
 // get issues a GET request to the target and returns
 // the status code, length and an error
 func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.Get(url, "", d.options.Cookies)
+	return d.http.Get(url, "", d.options.IncludeLength)
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -51,16 +51,20 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		globalopts: globalopts,
 	}
 
+	basicOptions := libgobuster.BasicHTTPOptions{
+		Proxy:     opts.Proxy,
+		Timeout:   opts.Timeout,
+		UserAgent: opts.UserAgent,
+	}
+
 	httpOpts := libgobuster.HTTPOptions{
-		Proxy:          opts.Proxy,
-		FollowRedirect: opts.FollowRedirect,
-		InsecureSSL:    opts.InsecureSSL,
-		IncludeLength:  opts.IncludeLength,
-		Timeout:        opts.Timeout,
-		Username:       opts.Username,
-		Password:       opts.Password,
-		UserAgent:      opts.UserAgent,
-		Headers:        opts.Headers,
+		BasicHTTPOptions: basicOptions,
+		FollowRedirect:   opts.FollowRedirect,
+		InsecureSSL:      opts.InsecureSSL,
+		Username:         opts.Username,
+		Password:         opts.Password,
+		Headers:          opts.Headers,
+		Cookies:          opts.Cookies,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)

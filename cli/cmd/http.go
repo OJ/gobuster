@@ -36,8 +36,8 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	return nil
 }
 
-func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error) {
-	options := libgobuster.OptionsHTTP{}
+func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, error) {
+	options := libgobuster.BasicHTTPOptions{}
 	var err error
 
 	options.UserAgent, err = cmd.Flags().GetString("useragent")
@@ -57,8 +57,8 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error) 
 	return options, nil
 }
 
-func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error) {
-	options := libgobuster.OptionsHTTP{}
+func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error) {
+	options := libgobuster.HTTPOptions{}
 	var err error
 
 	basic, err := parseBasicHTTPOptions(cmd)

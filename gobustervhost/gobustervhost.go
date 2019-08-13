@@ -38,15 +38,20 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 		globalopts: globalopts,
 	}
 
+	basicOptions := libgobuster.BasicHTTPOptions{
+		Proxy:     opts.Proxy,
+		Timeout:   opts.Timeout,
+		UserAgent: opts.UserAgent,
+	}
+
 	httpOpts := libgobuster.HTTPOptions{
-		Proxy:          opts.Proxy,
-		FollowRedirect: opts.FollowRedirect,
-		InsecureSSL:    opts.InsecureSSL,
-		Timeout:        opts.Timeout,
-		Username:       opts.Username,
-		Password:       opts.Password,
-		UserAgent:      opts.UserAgent,
-		Headers:        opts.Headers,
+		BasicHTTPOptions: basicOptions,
+		FollowRedirect:   opts.FollowRedirect,
+		InsecureSSL:      opts.InsecureSSL,
+		Username:         opts.Username,
+		Password:         opts.Password,
+		Headers:          opts.Headers,
+		Cookies:          opts.Cookies,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
@@ -77,7 +82,7 @@ func (v *GobusterVhost) PreRun() error {
 	v.domain = url.Host
 
 	// request default vhost for baseline1
-	_, tmp, err := v.http.GetWithBody(v.options.URL, "", v.options.Cookies)
+	_, tmp, err := v.http.GetWithBody(v.options.URL, "")
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
@@ -85,7 +90,7 @@ func (v *GobusterVhost) PreRun() error {
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, tmp, err = v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
+	_, tmp, err = v.http.GetWithBody(v.options.URL, subdomain)
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
@@ -96,7 +101,7 @@ func (v *GobusterVhost) PreRun() error {
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, body, err := v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
+	status, body, err := v.http.GetWithBody(v.options.URL, subdomain)
 	var ret []libgobuster.Result
 	if err != nil {
 		return ret, err

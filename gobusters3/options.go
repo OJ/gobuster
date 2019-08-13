@@ -6,7 +6,7 @@ import (
 
 // OptionsS3 is the struct to hold all options for this plugin
 type OptionsS3 struct {
-	libgobuster.OptionsHTTP
+	libgobuster.BasicHTTPOptions
 	MaxFilesToList int
 	Expanded       bool
 }

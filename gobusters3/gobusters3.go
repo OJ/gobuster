@@ -24,7 +24,7 @@ type GobusterS3 struct {
 // get issues a GET request to the target and returns
 // the status code, body and an error
 func (s *GobusterS3) get(url string) (*int, *[]byte, error) {
-	return s.http.GetWithBody(url, "", s.options.Cookies)
+	return s.http.GetWithBody(url, "")
 }
 
 // NewGobusterS3 creates a new initialized GobusterS3
@@ -42,12 +42,16 @@ func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *
 		globalopts: globalopts,
 	}
 
+	basicOptions := libgobuster.BasicHTTPOptions{
+		Proxy:     opts.Proxy,
+		Timeout:   opts.Timeout,
+		UserAgent: opts.UserAgent,
+	}
+
 	httpOpts := libgobuster.HTTPOptions{
-		Proxy: opts.Proxy,
+		BasicHTTPOptions: basicOptions,
 		// needed so we can list bucket contents
 		FollowRedirect: true,
-		Timeout:        opts.Timeout,
-		UserAgent:      opts.UserAgent,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)

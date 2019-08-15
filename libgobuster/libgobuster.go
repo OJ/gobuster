@@ -139,8 +139,14 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
 
-	g.requestsExpected = lines
 	g.requestsIssued = 0
+
+	// calcutate expected requests
+	if g.Opts.PermutationFile == "" {
+		g.requestsExpected = lines * len(g.Opts.Permutations)
+	} else {
+		g.requestsExpected = lines
+	}
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)

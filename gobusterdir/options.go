@@ -6,7 +6,7 @@ import (
 
 // OptionsDir is the struct to hold all options for this plugin
 type OptionsDir struct {
-	libgobuster.OptionsHTTP
+	libgobuster.HTTPOptions
 	Extensions                 string
 	ExtensionsParsed           libgobuster.StringSet
 	StatusCodes                string

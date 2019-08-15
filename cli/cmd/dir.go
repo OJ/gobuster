@@ -55,6 +55,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.FollowRedirect = httpOpts.FollowRedirect
 	plugin.InsecureSSL = httpOpts.InsecureSSL
 	plugin.Headers = httpOpts.Headers
+	plugin.Method = httpOpts.Method
 
 	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {
@@ -76,7 +77,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 
 	// blacklist will override the normal status codes
 	if plugin.StatusCodesBlacklist != "" {
-		ret, err := helper.ParseStatusCodes(plugin.StatusCodesBlacklist)
+		ret, err := helper.ParseCommaSeperatedInt(plugin.StatusCodesBlacklist)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodesblacklist: %v", err)
 		}
@@ -87,7 +88,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
 		}
-		ret, err := helper.ParseStatusCodes(plugin.StatusCodes)
+		ret, err := helper.ParseCommaSeperatedInt(plugin.StatusCodes)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
 		}
@@ -125,7 +126,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 func init() {
 	cmdDir = &cobra.Command{
 		Use:   "dir",
-		Short: "Uses directory/file brutceforcing mode",
+		Short: "Uses directory/file enumeration mode",
 		RunE:  runDir,
 	}
 

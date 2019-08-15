@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -85,6 +86,30 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("wordlist file %q does not exist: %v", globalopts.Wordlist, err2)
 	}
 
+	globalopts.PermutationFile, err = rootCmd.Flags().GetString("permutations")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for permutations: %v", err)
+	}
+
+	if globalopts.PermutationFile != "" {
+		if _, err = os.Stat(globalopts.PermutationFile); os.IsNotExist(err) {
+			return nil, fmt.Errorf("permutation file %q does not exist: %v", globalopts.PermutationFile, err)
+		}
+		permFile, err := os.Open(globalopts.PermutationFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not open permutation file %q: %v", globalopts.PermutationFile, err)
+		}
+		defer permFile.Close()
+
+		scanner := bufio.NewScanner(permFile)
+		for scanner.Scan() {
+			globalopts.Permutations = append(globalopts.Permutations, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("could not read permutation file %q: %v", globalopts.PermutationFile, err)
+		}
+	}
+
 	globalopts.OutputFilename, err = rootCmd.Flags().GetString("output")
 	if err != nil {
 		return nil, fmt.Errorf("invalid value for output filename: %v", err)
@@ -126,4 +151,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("noprogress", "z", false, "Don't display progress")
+	rootCmd.PersistentFlags().StringP("permutations", "p", "", "File containing permutations")
 }

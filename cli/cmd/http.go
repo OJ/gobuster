@@ -30,7 +30,7 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
-	if err := cmdDir.MarkFlagRequired("url"); err != nil {
+	if err := cmd.MarkFlagRequired("url"); err != nil {
 		return fmt.Errorf("error on marking flag as required: %v", err)
 	}
 

@@ -142,10 +142,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	g.requestsIssued = 0
 
 	// calcutate expected requests
+	g.requestsExpected = lines
 	if g.Opts.PermutationFile != "" {
-		g.requestsExpected = lines * len(g.Opts.Permutations)
-	} else {
-		g.requestsExpected = lines
+		g.requestsExpected += (lines * len(g.Opts.Permutations))
 	}
 
 	// rewind wordlist

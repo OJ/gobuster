@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"unicode/utf8"
 )
 
 // HTTPHeader holds a single key value pair of a HTTP header
@@ -28,6 +27,14 @@ type HTTPClient struct {
 	password         string
 	headers          []HTTPHeader
 	cookies          string
+	method           string
+}
+
+// RequestOptions is used to pass options to a single individual request
+type RequestOptions struct {
+	Host       string
+	Body       io.Reader
+	ReturnBody bool
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -75,102 +82,50 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	client.defaultUserAgent = DefaultUserAgent()
 	client.headers = opt.Headers
 	client.cookies = opt.Cookies
+	client.method = opt.Method
+	if client.method == "" {
+		client.method = http.MethodGet
+	}
 	return &client, nil
 }
 
-// Get gets an URL and returns the status, the length and an error
-func (client *HTTPClient) Get(fullURL, host string, includeLength bool) (*int, *int64, error) {
-	return client.requestWithoutBody(http.MethodGet, fullURL, host, nil, includeLength)
-}
-
-// Post posts to an URL and returns the status, the length and an error
-func (client *HTTPClient) Post(fullURL, host string, data io.Reader, includeLength bool) (*int, *int64, error) {
-	return client.requestWithoutBody(http.MethodPost, fullURL, host, data, includeLength)
-}
-
-// GetWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) GetWithBody(fullURL, host string) (*int, *[]byte, error) {
-	return client.requestWithBody(http.MethodGet, fullURL, host, nil)
-}
-
-// PostWithBody gets an URL and returns the status and the body
-func (client *HTTPClient) PostWithBody(fullURL, host string, data io.Reader) (*int, *[]byte, error) {
-	return client.requestWithBody(http.MethodPost, fullURL, host, data)
-}
-
-// requestWithoutBody makes an http request and returns the status, the length and an error
-func (client *HTTPClient) requestWithoutBody(method, fullURL, host string, data io.Reader, includeLength bool) (*int, *int64, error) {
-	resp, err := client.makeRequest(method, fullURL, host, data)
+// Request makes an http request and returns the status, the content length, the body and an error
+// if you want the body returned set the corresponding property insode RequestOptions
+func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, int64, []byte, error) {
+	resp, err := client.makeRequest(fullURL, opts.Host, opts.Body)
 	if err != nil {
 		// ignore context canceled errors
 		if client.context.Err() == context.Canceled {
-			return nil, nil, nil
+			return nil, 0, nil, nil
 		}
-		return nil, nil, err
+		return nil, 0, nil, err
 	}
 	defer resp.Body.Close()
 
-	var length *int64
-
-	if includeLength {
-		length = new(int64)
-		if resp.ContentLength <= 0 {
-			body, err2 := ioutil.ReadAll(resp.Body)
-			if err2 == nil {
-				*length = int64(utf8.RuneCountInString(string(body)))
-			}
-		} else {
-			*length = resp.ContentLength
+	var body []byte
+	if opts.ReturnBody {
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("could not read body %v", err)
 		}
 	} else {
 		// DO NOT REMOVE!
 		// absolutely needed so golang will reuse connections!
 		_, err := io.Copy(ioutil.Discard, resp.Body)
 		if err != nil {
-			return nil, nil, err
+			return nil, 0, nil, err
 		}
 	}
 
-	return &resp.StatusCode, length, nil
+	length := resp.ContentLength
+
+	return &resp.StatusCode, length, body, nil
 }
 
-// requestWithBody makes an http request and returns the status and the body
-func (client *HTTPClient) requestWithBody(method, fullURL, host string, data io.Reader) (*int, *[]byte, error) {
-	resp, err := client.makeRequest(method, fullURL, host, data)
+func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(client.method, fullURL, data)
 	if err != nil {
-		// ignore context canceled errors
-		if client.context.Err() == context.Canceled {
-			return nil, nil, nil
-		}
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not read body: %v", err)
-	}
-
-	return &resp.StatusCode, &body, nil
-}
-
-func (client *HTTPClient) makeRequest(method, fullURL, host string, data io.Reader) (*http.Response, error) {
-	var req *http.Request
-	var err error
-
-	switch method {
-	case http.MethodGet:
-		req, err = http.NewRequest(http.MethodGet, fullURL, nil)
-		if err != nil {
-			return nil, err
-		}
-	case http.MethodPost:
-		req, err = http.NewRequest(http.MethodPost, fullURL, data)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("invalid method %s", method)
+		return nil, err
 	}
 
 	// add the context so we can easily cancel out

@@ -55,6 +55,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.FollowRedirect = httpOpts.FollowRedirect
 	plugin.InsecureSSL = httpOpts.InsecureSSL
 	plugin.Headers = httpOpts.Headers
+	plugin.Method = httpOpts.Method
 
 	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {

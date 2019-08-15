@@ -3,6 +3,7 @@ linters:
   disable:
     - lll
     - gocyclo
+    - dupl
 
 issues:
   exclude-rules:

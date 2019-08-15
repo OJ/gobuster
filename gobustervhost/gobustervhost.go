@@ -52,6 +52,7 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 		Password:         opts.Password,
 		Headers:          opts.Headers,
 		Cookies:          opts.Cookies,
+		Method:           opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
@@ -82,26 +83,26 @@ func (v *GobusterVhost) PreRun() error {
 	v.domain = url.Host
 
 	// request default vhost for baseline1
-	_, tmp, err := v.http.GetWithBody(v.options.URL, "")
+	_, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
-	v.baseline1 = *tmp
+	v.baseline1 = tmp
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, tmp, err = v.http.GetWithBody(v.options.URL, subdomain)
+	_, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
-	v.baseline2 = *tmp
+	v.baseline2 = tmp
 	return nil
 }
 
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, body, err := v.http.GetWithBody(v.options.URL, subdomain)
+	status, size, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	var ret []libgobuster.Result
 	if err != nil {
 		return ret, err
@@ -109,9 +110,8 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := !bytes.Equal(*body, v.baseline1) && !bytes.Equal(*body, v.baseline2)
+	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
 	if found || v.globalopts.Verbose {
-		size := int64(len(*body))
 		resultStatus := libgobuster.StatusMissed
 		if found {
 			resultStatus = libgobuster.StatusFound
@@ -151,6 +151,10 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := v.options
 	if _, err := fmt.Fprintf(tw, "[+] Url:\t%s\n", o.URL); err != nil {
+		return "", err
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Method:\t%s\n", o.Method); err != nil {
 		return "", err
 	}
 

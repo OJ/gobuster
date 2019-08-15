@@ -43,6 +43,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## Changes in 3.1
 
 * enumerate public AWS S3 buckets
+* specify HTTP method
 
 ## Changes in 3.0
 

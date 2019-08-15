@@ -196,6 +196,12 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if s.globalopts.PermutationFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", s.globalopts.PermutationFile, len(s.globalopts.Permutations)); err != nil {
+			return "", err
+		}
+	}
+
 	if o.Proxy != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Proxy:\t%s\n", o.Proxy); err != nil {
 			return "", err

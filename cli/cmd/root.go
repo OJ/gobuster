@@ -86,18 +86,18 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("wordlist file %q does not exist: %v", globalopts.Wordlist, err2)
 	}
 
-	perms, err := rootCmd.Flags().GetString("permutations")
+	globalopts.PermutationFile, err = rootCmd.Flags().GetString("permutations")
 	if err != nil {
 		return nil, fmt.Errorf("invalid value for permutations: %v", err)
 	}
 
-	if perms != "" {
-		if _, err = os.Stat(perms); os.IsNotExist(err) {
-			return nil, fmt.Errorf("permutation file %q does not exist: %v", perms, err)
+	if globalopts.PermutationFile != "" {
+		if _, err = os.Stat(globalopts.PermutationFile); os.IsNotExist(err) {
+			return nil, fmt.Errorf("permutation file %q does not exist: %v", globalopts.PermutationFile, err)
 		}
-		permFile, err := os.Open(perms)
+		permFile, err := os.Open(globalopts.PermutationFile)
 		if err != nil {
-			return nil, fmt.Errorf("could not open permutation file %q: %v", perms, err)
+			return nil, fmt.Errorf("could not open permutation file %q: %v", globalopts.PermutationFile, err)
 		}
 		defer permFile.Close()
 
@@ -106,7 +106,7 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 			globalopts.Permutations = append(globalopts.Permutations, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("could not read permutation file %q: %v", perms, err)
+			return nil, fmt.Errorf("could not read permutation file %q: %v", globalopts.PermutationFile, err)
 		}
 	}
 

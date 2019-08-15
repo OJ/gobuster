@@ -270,6 +270,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if d.globalopts.PermutationFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", d.globalopts.PermutationFile, len(d.globalopts.Permutations)); err != nil {
+			return "", err
+		}
+	}
+
 	if o.StatusCodesBlacklistParsed.Length() > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
 			return "", err

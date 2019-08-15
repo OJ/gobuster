@@ -203,7 +203,7 @@ func (g *Gobuster) GetConfigString() (string, error) {
 }
 
 func (g *Gobuster) makePermutations(word string) []string {
-	if len(g.Opts.Permutations) == 0 {
+	if g.Opts.PermutationFile == "" {
 		return nil
 	}
 

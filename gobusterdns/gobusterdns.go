@@ -220,6 +220,12 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if d.globalopts.PermutationFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", d.globalopts.PermutationFile, len(d.globalopts.Permutations)); err != nil {
+			return "", err
+		}
+	}
+
 	if d.globalopts.Verbose {
 		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err

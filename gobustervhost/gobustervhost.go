@@ -176,6 +176,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if v.globalopts.PermutationFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", v.globalopts.PermutationFile, len(v.globalopts.Permutations)); err != nil {
+			return "", err
+		}
+	}
+
 	if o.Proxy != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Proxy:\t%s\n", o.Proxy); err != nil {
 			return "", err

@@ -139,8 +139,13 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
 
-	g.requestsExpected = lines
 	g.requestsIssued = 0
+
+	// calcutate expected requests
+	g.requestsExpected = lines
+	if g.Opts.PermutationFile != "" {
+		g.requestsExpected += (lines * len(g.Opts.Permutations))
+	}
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
@@ -181,7 +186,15 @@ Scan:
 		select {
 		case <-g.context.Done():
 			break Scan
-		case wordChan <- scanner.Text():
+		default:
+			word := scanner.Text()
+			perms := g.makePermutations(word)
+			// add the original word
+			wordChan <- word
+			// now create perms
+			for _, w := range perms {
+				wordChan <- w
+			}
 		}
 	}
 	close(wordChan)
@@ -192,4 +205,18 @@ Scan:
 // GetConfigString returns the current config as a printable string
 func (g *Gobuster) GetConfigString() (string, error) {
 	return g.plugin.GetConfigString()
+}
+
+func (g *Gobuster) makePermutations(word string) []string {
+	if g.Opts.PermutationFile == "" {
+		return nil
+	}
+
+	//nolint:prealloc
+	var perms []string
+	for _, x := range g.Opts.Permutations {
+		repl := strings.ReplaceAll(x, "{GOBUSTER}", word)
+		perms = append(perms, repl)
+	}
+	return perms
 }

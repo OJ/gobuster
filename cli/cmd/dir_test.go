@@ -41,7 +41,7 @@ func BenchmarkDirMode(b *testing.B) {
 	pluginopts.ExtensionsParsed = tmpExt
 
 	pluginopts.StatusCodes = "200,204,301,302,307,401,403"
-	tmpStat, err := helper.ParseStatusCodes(pluginopts.StatusCodes)
+	tmpStat, err := helper.ParseCommaSeperatedInt(pluginopts.StatusCodes)
 	if err != nil {
 		b.Fatalf("could not parse status codes: %v", err)
 	}

@@ -71,6 +71,11 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (d *GobusterDNS) Name() string {
+	return "DNS enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun() error {
 	// Resolve a subdomain sthat probably shouldn't exist
@@ -213,6 +218,12 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	}
 	if _, err := fmt.Fprintf(tw, "[+] Wordlist:\t%s\n", wordlist); err != nil {
 		return "", err
+	}
+
+	if d.globalopts.PermutationFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", d.globalopts.PermutationFile, len(d.globalopts.Permutations)); err != nil {
+			return "", err
+		}
 	}
 
 	if d.globalopts.Verbose {

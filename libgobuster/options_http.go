@@ -4,16 +4,22 @@ import (
 	"time"
 )
 
-// OptionsHTTP is the struct to hold all options for common HTTP options
-type OptionsHTTP struct {
+// BasicHTTPOptions defines only core http options
+type BasicHTTPOptions struct {
+	UserAgent string
+	Proxy     string
+	Timeout   time.Duration
+}
+
+// HTTPOptions is the struct to pass in all http options to Gobuster
+type HTTPOptions struct {
+	BasicHTTPOptions
 	Password       string
 	URL            string
-	UserAgent      string
 	Username       string
-	Proxy          string
 	Cookies        string
 	Headers        []HTTPHeader
-	Timeout        time.Duration
 	FollowRedirect bool
 	InsecureSSL    bool
+	Method         string
 }

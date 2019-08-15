@@ -21,12 +21,6 @@ type GobusterS3 struct {
 	bucketRegex *regexp.Regexp
 }
 
-// get issues a GET request to the target and returns
-// the status code, body and an error
-func (s *GobusterS3) get(url string) (*int, *[]byte, error) {
-	return s.http.GetWithBody(url, "")
-}
-
 // NewGobusterS3 creates a new initialized GobusterS3
 func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
 	if globalopts == nil {
@@ -84,7 +78,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 	}
 
 	bucketURL := fmt.Sprintf("http://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
-	status, body, err := s.get(bucketURL)
+	status, _, body, err := s.http.Request(bucketURL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return nil, err
 	}
@@ -117,18 +111,18 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 	extraStr := ""
 	if s.globalopts.Verbose {
 		// get status
-		if bytes.Contains(*body, []byte("<Error>")) {
+		if bytes.Contains(body, []byte("<Error>")) {
 			awsError := AWSError{}
-			err := xml.Unmarshal(*body, &awsError)
+			err := xml.Unmarshal(body, &awsError)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse error xml: %v", err)
 			}
 			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
 			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
-		} else if bytes.Contains(*body, []byte("<ListBucketResult ")) {
+		} else if bytes.Contains(body, []byte("<ListBucketResult ")) {
 			// bucket listing enabled
 			awsListing := AWSListing{}
-			err := xml.Unmarshal(*body, &awsListing)
+			err := xml.Unmarshal(body, &awsListing)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse result xml: %v", err)
 			}

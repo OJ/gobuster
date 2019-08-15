@@ -30,12 +30,6 @@ type GobusterDir struct {
 	http       *libgobuster.HTTPClient
 }
 
-// get issues a GET request to the target and returns
-// the status code, length and an error
-func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.Get(url, "", d.options.IncludeLength)
-}
-
 // NewGobusterDir creates a new initialized GobusterDir
 func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
 	if globalopts == nil {
@@ -65,6 +59,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		Password:         opts.Password,
 		Headers:          opts.Headers,
 		Cookies:          opts.Cookies,
+		Method:           opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
@@ -87,14 +82,14 @@ func (d *GobusterDir) PreRun() error {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}
 
-	_, _, err := d.get(d.options.URL)
+	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", d.options.URL, err)
 	}
 
 	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", d.options.URL, guid)
-	wildcardResp, _, err := d.get(url)
+	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}
@@ -123,7 +118,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 	// Try the DIR first
 	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
-	dirResp, dirSize, err := d.get(url)
+	dirResp, dirSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +142,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 			ret = append(ret, libgobuster.Result{
 				Entity:     fmt.Sprintf("%s%s", word, suffix),
 				StatusCode: *dirResp,
-				Size:       dirSize,
+				Size:       &dirSize,
 				Status:     resultStatus,
 			})
 		}
@@ -157,7 +152,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	for ext := range d.options.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
 		url = fmt.Sprintf("%s%s", d.options.URL, file)
-		fileResp, fileSize, err := d.get(url)
+		fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +176,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 				ret = append(ret, libgobuster.Result{
 					Entity:     file,
 					StatusCode: *fileResp,
-					Size:       fileSize,
+					Size:       &fileSize,
 					Status:     resultStatus,
 				})
 			}
@@ -229,11 +224,12 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 		}
 	}
 
-	if r.Size != nil {
+	if r.Size != nil && d.options.IncludeLength {
 		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
 			return nil, err
 		}
 	}
+
 	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
 		return nil, err
 	}
@@ -249,6 +245,10 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := d.options
 	if _, err := fmt.Fprintf(tw, "[+] Url:\t%s\n", o.URL); err != nil {
+		return "", err
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Method:\t%s\n", o.Method); err != nil {
 		return "", err
 	}
 

@@ -49,9 +49,9 @@ func TestParseCommaSeperatedInt(t *testing.T) {
 		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid status code given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid status code given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid status code string provided"},
+		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", libgobuster.NewIntSet(), "invalid string provided"},
 	}
 
 	for _, x := range tt {
@@ -101,9 +101,9 @@ func BenchmarkParseCommaSeperatedInt(b *testing.B) {
 		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid status code given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid status code given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid status code string provided"},
+		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", libgobuster.NewIntSet(), "invalid string string provided"},
 	}
 
 	for _, x := range tt {

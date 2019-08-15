@@ -21,4 +21,5 @@ type HTTPOptions struct {
 	Headers        []HTTPHeader
 	FollowRedirect bool
 	InsecureSSL    bool
+	Method         string
 }

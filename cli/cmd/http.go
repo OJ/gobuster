@@ -28,6 +28,7 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().BoolP("followredirect", "r", false, "Follow redirects")
 	cmd.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
+	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
 	if err := cmdDir.MarkFlagRequired("url"); err != nil {
 		return fmt.Errorf("error on marking flag as required: %v", err)
@@ -117,6 +118,11 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.InsecureSSL, err = cmd.Flags().GetBool("insecuressl")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for insecuressl: %v", err)
+	}
+
+	options.Method, err = cmd.Flags().GetString("method")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for method: %v", err)
 	}
 
 	headers, err := cmd.Flags().GetStringArray("headers")

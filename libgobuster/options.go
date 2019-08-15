@@ -6,6 +6,7 @@ import "time"
 type Options struct {
 	Threads        int
 	Wordlist       string
+	Permutations   []string
 	OutputFilename string
 	NoStatus       bool
 	NoProgress     bool

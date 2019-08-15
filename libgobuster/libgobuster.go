@@ -181,7 +181,15 @@ Scan:
 		select {
 		case <-g.context.Done():
 			break Scan
-		case wordChan <- scanner.Text():
+		default:
+			word := scanner.Text()
+			perms := g.makePermutations(word)
+			// add the original word
+			wordChan <- word
+			// now create perms
+			for _, w := range perms {
+				wordChan <- w
+			}
 		}
 	}
 	close(wordChan)
@@ -192,4 +200,18 @@ Scan:
 // GetConfigString returns the current config as a printable string
 func (g *Gobuster) GetConfigString() (string, error) {
 	return g.plugin.GetConfigString()
+}
+
+func (g *Gobuster) makePermutations(word string) []string {
+	if len(g.Opts.Permutations) == 0 {
+		return nil
+	}
+
+	//nolint:prealloc
+	var perms []string
+	for _, x := range g.Opts.Permutations {
+		repl := strings.ReplaceAll(x, "{GOBUSTER}", word)
+		perms = append(perms, repl)
+	}
+	return perms
 }

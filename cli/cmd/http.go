@@ -15,7 +15,7 @@ import (
 
 func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
-	cmd.Flags().StringP("proxy", "p", "", "Proxy to use for requests [http(s)://host:port]")
+	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 }
 

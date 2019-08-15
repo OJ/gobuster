@@ -44,6 +44,8 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 * enumerate public AWS S3 buckets
 * specify HTTP method
+* added support for permutations. You can now specify a file containing permutations that are applied to every word, one by line. Every occurence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
+* The shorthand `p` flag which was assigned to proxy is now used by the permutations
 
 ## Changes in 3.0
 
@@ -56,6 +58,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 * dir - the classic directory brute-forcing mode
 * dns - DNS subdomain brute-forcing mode
+* s3 - Enumerate open S3 buckets and look for existence and bucket listings
 * vhost - virtual host brute-forcing mode (not the same as DNS!)
 
 ## Built-in Help
@@ -209,6 +212,24 @@ hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
 ```
 
 Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
+## Permuations
+
+You can supply permutation files that will be applied to every word from the wordlist.
+Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
+This feature is also handy in s3 mode to pre- or postfix certain patterns.
+
+**Caution:** Using a big permutation file can cause a lot of request as every permutation is applied to every word in the wordlist.
+
+### Example file
+
+```text
+{GOBUSTER}Partial
+{GOBUSTER}Service
+PRE{GOBUSTER}POST
+{GOBUSTER}-prod
+{GOBUSTER}-dev
+```
 
 ## Examples
 

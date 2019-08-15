@@ -1,4 +1,4 @@
 # TODO
 
 * no log.Printf inside of plugins
-* Add transformations to s3 bucket list like -dev -prod , .....
+* Update expected requests on files and permutations (currently we only count the wordlist)

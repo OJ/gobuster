@@ -142,7 +142,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	g.requestsIssued = 0
 
 	// calcutate expected requests
-	if g.Opts.PermutationFile == "" {
+	if g.Opts.PermutationFile != "" {
 		g.requestsExpected = lines * len(g.Opts.Permutations)
 	} else {
 		g.requestsExpected = lines

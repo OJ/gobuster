@@ -193,7 +193,12 @@ Scan:
 			wordChan <- word
 			// now create perms
 			for _, w := range perms {
-				wordChan <- w
+				select {
+				// need to check here too otherwise wordChan will block
+				case <-g.context.Done():
+					break Scan
+				case wordChan <- w:
+				}
 			}
 		}
 	}

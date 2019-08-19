@@ -1,3 +1,7 @@
+# Install in Kali
+
+    apt install gobuster -y
+
 # Gobuster v3.0.1 (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
@@ -208,6 +212,10 @@ Note: If the `-w` option is specified at the same time as piping from STDIN, an 
 
 ### `dir` Mode
 
+Ninja Mode
+
+gobuster dir -f -e -k -u http://example.com -t 37 -a random --wildcard -w /usr/share/wordlists/dirb/common.txt -v
+
 Command line might look like this:
 
 ```bash
@@ -342,6 +350,10 @@ https://buffered.io/categories
 ```
 
 ### `dns` Mode
+
+Ninja mode
+
+gobuster dns -c -d http://127.0.0.1 --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v
 
 Command line might look like this:
 

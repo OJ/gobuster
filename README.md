@@ -565,6 +565,21 @@ Command line might look like this:
 gobuster s3 -w bucket-names.txt
 ```
 
+#### Use case in combination with patterns
+
+* Create a custom wordlist for the target containing company names and so on
+* Create a pattern file to use for common bucket names.
+
+```bash
+curl -s --output - https://raw.githubusercontent.com/eth0izzle/bucket-stream/master/permutations/extended.txt | sed -s 's/%s/{GOBUSTER}/' > patterns.txt
+```
+
+* Run gobuster with the custom input. Be sure to turn verbose mode on to see the bucket details
+
+```bash
+gobuster s3 --wordlist my.custom.wordlist -p patterns.txt -v
+```
+
 Normal sample run goes like this:
 
 ```text

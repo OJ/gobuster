@@ -196,8 +196,8 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if s.globalopts.PermutationFile != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", s.globalopts.PermutationFile, len(s.globalopts.Permutations)); err != nil {
+	if s.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", s.globalopts.PatternFile, len(s.globalopts.Patterns)); err != nil {
 			return "", err
 		}
 	}

@@ -270,8 +270,8 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if d.globalopts.PermutationFile != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", d.globalopts.PermutationFile, len(d.globalopts.Permutations)); err != nil {
+	if d.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
 			return "", err
 		}
 	}

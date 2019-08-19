@@ -86,27 +86,27 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("wordlist file %q does not exist: %v", globalopts.Wordlist, err2)
 	}
 
-	globalopts.PermutationFile, err = rootCmd.Flags().GetString("permutations")
+	globalopts.PatternFile, err = rootCmd.Flags().GetString("pattern")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for permutations: %v", err)
+		return nil, fmt.Errorf("invalid value for pattern: %v", err)
 	}
 
-	if globalopts.PermutationFile != "" {
-		if _, err = os.Stat(globalopts.PermutationFile); os.IsNotExist(err) {
-			return nil, fmt.Errorf("permutation file %q does not exist: %v", globalopts.PermutationFile, err)
+	if globalopts.PatternFile != "" {
+		if _, err = os.Stat(globalopts.PatternFile); os.IsNotExist(err) {
+			return nil, fmt.Errorf("pattern file %q does not exist: %v", globalopts.PatternFile, err)
 		}
-		permFile, err := os.Open(globalopts.PermutationFile)
+		permFile, err := os.Open(globalopts.PatternFile)
 		if err != nil {
-			return nil, fmt.Errorf("could not open permutation file %q: %v", globalopts.PermutationFile, err)
+			return nil, fmt.Errorf("could not open pattern file %q: %v", globalopts.PatternFile, err)
 		}
 		defer permFile.Close()
 
 		scanner := bufio.NewScanner(permFile)
 		for scanner.Scan() {
-			globalopts.Permutations = append(globalopts.Permutations, scanner.Text())
+			globalopts.Patterns = append(globalopts.Patterns, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("could not read permutation file %q: %v", globalopts.PermutationFile, err)
+			return nil, fmt.Errorf("could not read pattern file %q: %v", globalopts.PatternFile, err)
 		}
 	}
 
@@ -151,5 +151,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("noprogress", "z", false, "Don't display progress")
-	rootCmd.PersistentFlags().StringP("permutations", "p", "", "File containing permutations")
+	rootCmd.PersistentFlags().StringP("pattern", "p", "", "File containing replacement patterns")
 }

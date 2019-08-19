@@ -143,8 +143,8 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 
 	// calcutate expected requests
 	g.requestsExpected = lines
-	if g.Opts.PermutationFile != "" {
-		g.requestsExpected += (lines * len(g.Opts.Permutations))
+	if g.Opts.PatternFile != "" {
+		g.requestsExpected += (lines * len(g.Opts.Patterns))
 	}
 
 	// rewind wordlist
@@ -188,7 +188,7 @@ Scan:
 			break Scan
 		default:
 			word := scanner.Text()
-			perms := g.makePermutations(word)
+			perms := g.processPatterns(word)
 			// add the original word
 			wordChan <- word
 			// now create perms
@@ -207,16 +207,16 @@ func (g *Gobuster) GetConfigString() (string, error) {
 	return g.plugin.GetConfigString()
 }
 
-func (g *Gobuster) makePermutations(word string) []string {
-	if g.Opts.PermutationFile == "" {
+func (g *Gobuster) processPatterns(word string) []string {
+	if g.Opts.PatternFile == "" {
 		return nil
 	}
 
 	//nolint:prealloc
-	var perms []string
-	for _, x := range g.Opts.Permutations {
+	var pat []string
+	for _, x := range g.Opts.Patterns {
 		repl := strings.ReplaceAll(x, "{GOBUSTER}", word)
-		perms = append(perms, repl)
+		pat = append(pat, repl)
 	}
-	return perms
+	return pat
 }

@@ -176,8 +176,8 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if v.globalopts.PermutationFile != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Permutations:\t%s (%d entries)\n", v.globalopts.PermutationFile, len(v.globalopts.Permutations)); err != nil {
+	if v.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", v.globalopts.PatternFile, len(v.globalopts.Patterns)); err != nil {
 			return "", err
 		}
 	}

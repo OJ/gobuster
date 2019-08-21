@@ -1,5 +1,7 @@
 # Install in Kali
-
+#
+    gem install go
+#
     apt install gobuster -y
 
 # Gobuster v3.0.1 (OJ Reeves @TheColonial)

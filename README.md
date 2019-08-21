@@ -2,7 +2,7 @@
 #
     gem install go
 #
-    apt install gobuster -y
+    apt install golang gobuster -y
 
 # Gobuster v3.0.1 (OJ Reeves @TheColonial)
 

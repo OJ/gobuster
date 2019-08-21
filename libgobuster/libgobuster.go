@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// Pattern for wordlist replacements in pattern file
+const PATTERN = "{GOBUSTER}"
+
 // SetupFunc is the "setup" function prototype for implementations
 type SetupFunc func(*Gobuster) error
 
@@ -220,7 +223,7 @@ func (g *Gobuster) processPatterns(word string) []string {
 	//nolint:prealloc
 	var pat []string
 	for _, x := range g.Opts.Patterns {
-		repl := strings.ReplaceAll(x, "{GOBUSTER}", word)
+		repl := strings.ReplaceAll(x, PATTERN, word)
 		pat = append(pat, repl)
 	}
 	return pat

@@ -1,4 +1,4 @@
-# Install in Kali
+# Install in Kali or Debian Linux distros
 #
     gem install go
 #

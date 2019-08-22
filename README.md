@@ -61,6 +61,8 @@ Help is built-in!
 ## `dns` Mode Help
 
 ```text
+Uses DNS subdomain bruteforcing mode
+
 Usage:
   gobuster dns [flags]
 
@@ -78,7 +80,6 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -86,11 +87,13 @@ Global Flags:
 ## `dir` Mode Options
 
 ```text
+Uses directory/file brutceforcing mode
+
 Usage:
   gobuster dir [flags]
 
 Flags:
-  -f, --addslash                      Append / to each request
+  -f, --addslash                      Apped / to each request
   -c, --cookies string                Cookies to use for the requests
   -e, --expanded                      Expanded mode, print full URLs
   -x, --extensions string             File extension(s) to search for
@@ -115,7 +118,6 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -123,6 +125,8 @@ Global Flags:
 ## `vhost` Mode Options
 
 ```text
+Uses VHOST bruteforcing mode
+
 Usage:
   gobuster vhost [flags]
 
@@ -144,7 +148,6 @@ Global Flags:
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```

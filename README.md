@@ -346,7 +346,7 @@ https://buffered.io/categories
 Ninja mode
 
 ```bash
-gobuster dir -f -e -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_dir_domain.com
+gobuster dir -f c 'session=123456' -e -x .php,.html -l -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -a CustomAgent -v -o /root/gobuster/gobuster_dir_domain.com
 ```
 
 

@@ -343,7 +343,7 @@ https://buffered.io/categories
 Ninja mode
 
 ```bash
-gobuster dir -f -e -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_domain.com
+gobuster dir -f -e -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_dir_domain.com
 ```
 
 
@@ -506,7 +506,7 @@ Found: test.127.0.0.1.xip.io
 Ninja mode
 
 ```bash
-gobuster dns -i -c 'session=123456' -d domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_domain.com -x .php,.html
+gobuster dns -i -c 'session=123456' -d domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_dns_domain.com -x .php,.html
 ```
 
 ### `vhost` Mode

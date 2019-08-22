@@ -30,13 +30,6 @@ Because I wanted:
 1. ... use something that was good with concurrency (hence Go).
 1. ... to build something in Go that wasn't totally useless.
 
-## But it's shit! And your implementation sucks!
-
-Yes, you're probably correct. Feel free to:
-
-* Not use it.
-* Show me how to do it better.
-
 ## Love this tool? Back it!
 
 If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
@@ -214,10 +207,6 @@ Note: If the `-w` option is specified at the same time as piping from STDIN, an 
 
 ### `dir` Mode
 
-Ninja Mode
-
-gobuster dir -f -e -k -u http://example.com -t 37 -a random --wildcard -w /usr/share/wordlists/dirb/common.txt -v
-
 Command line might look like this:
 
 ```bash
@@ -351,11 +340,14 @@ https://buffered.io/posts
 https://buffered.io/categories
 ```
 
-### `dns` Mode
-
 Ninja mode
 
-gobuster dns -c -d http://127.0.0.1 --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v
+```bash
+gobuster dir -f -e -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_domain.com
+```
+
+
+### `dns` Mode
 
 Command line might look like this:
 
@@ -509,6 +501,12 @@ Found: test.127.0.0.1.xip.io
 ===============================================================
 2019/06/21 12:13:53 Finished
 ===============================================================
+```
+
+Ninja mode
+
+```bash
+gobuster dns -i -c 'session=123456' -d domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -v -o /root/gobuster/gobuster_domain.com -x .php,.html
 ```
 
 ### `vhost` Mode

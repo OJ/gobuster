@@ -41,7 +41,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## Changes in 3.0
 
-* New CLI options so modes are strictly seperated (`-m` is now gone!)
+* New CLI options so modes are strictly separated (`-m` is now gone!)
 * Performance Optimizations and better connection handling
 * Ability to bruteforce vhost names
 * Option to supply custom HTTP headers

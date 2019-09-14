@@ -125,7 +125,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 func init() {
 	cmdDir = &cobra.Command{
 		Use:   "dir",
-		Short: "Uses directory/file brutceforcing mode",
+		Short: "Uses directory/file bruteforcing mode",
 		RunE:  runDir,
 	}
 

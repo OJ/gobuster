@@ -16,4 +16,6 @@ type OptionsHTTP struct {
 	Timeout        time.Duration
 	FollowRedirect bool
 	InsecureSSL    bool
+	MTLSCert       string
+	MTLSKey        string
 }

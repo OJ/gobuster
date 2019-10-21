@@ -6,6 +6,7 @@ import (
 
 // OptionsHTTP is the struct to hold all options for common HTTP options
 type OptionsHTTP struct {
+	Host           string
 	Password       string
 	URL            string
 	UserAgent      string

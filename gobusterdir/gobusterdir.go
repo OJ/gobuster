@@ -52,6 +52,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
+		Host:           opts.Host,
 		Proxy:          opts.Proxy,
 		FollowRedirect: opts.FollowRedirect,
 		InsecureSSL:    opts.InsecureSSL,

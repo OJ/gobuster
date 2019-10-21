@@ -116,6 +116,10 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error)
 		if len(key) == 0 {
 			return options, fmt.Errorf("invalid header format for header %q - name is empty", h)
 		}
+		if strings.ToLower(key) == "host" {
+			options.Host = value
+			continue
+		}
 		header := libgobuster.HTTPHeader{Name: key, Value: value}
 		options.Headers = append(options.Headers, header)
 	}

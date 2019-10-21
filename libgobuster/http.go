@@ -23,6 +23,7 @@ type HTTPHeader struct {
 type HTTPClient struct {
 	client           *http.Client
 	context          context.Context
+	host             string
 	userAgent        string
 	defaultUserAgent string
 	username         string
@@ -33,6 +34,7 @@ type HTTPClient struct {
 
 // HTTPOptions provides options to the http client
 type HTTPOptions struct {
+	Host           string
 	Proxy          string
 	Username       string
 	Password       string
@@ -83,6 +85,7 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 			},
 		}}
 	client.context = c
+	client.host = opt.Host
 	client.username = opt.Username
 	client.password = opt.Password
 	client.includeLength = opt.IncludeLength
@@ -192,6 +195,10 @@ func (client *HTTPClient) makeRequest(method, fullURL, host, cookie string, data
 
 	if cookie != "" {
 		req.Header.Set("Cookie", cookie)
+	}
+
+	if client.host != "" {
+		req.Host = client.host
 	}
 
 	if host != "" {

@@ -45,6 +45,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	plugin.Host = httpOpts.Host
 	plugin.Password = httpOpts.Password
 	plugin.URL = httpOpts.URL
 	plugin.UserAgent = httpOpts.UserAgent

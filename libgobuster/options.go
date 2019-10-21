@@ -6,6 +6,8 @@ import "time"
 type Options struct {
 	Threads        int
 	Wordlist       string
+	PatternFile    string
+	Patterns       []string
 	OutputFilename string
 	NoStatus       bool
 	NoProgress     bool

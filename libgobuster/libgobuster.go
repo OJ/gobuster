@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// Pattern for wordlist replacements in pattern file
+const PATTERN = "{GOBUSTER}"
+
 // SetupFunc is the "setup" function prototype for implementations
 type SetupFunc func(*Gobuster) error
 
@@ -22,16 +25,16 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
-	Opts             *Options
-	context          context.Context
-	requestsExpected int
-	requestsIssued   int
-	mu               *sync.RWMutex
-	plugin           GobusterPlugin
-	resultChan       chan Result
-	errorChan        chan error
-	LogInfo          *log.Logger
-	LogError         *log.Logger
+	Opts               *Options
+	context            context.Context
+	RequestsExpected   int
+	RequestsIssued     int
+	RequestsCountMutex *sync.RWMutex
+	plugin             GobusterPlugin
+	resultChan         chan Result
+	errorChan          chan error
+	LogInfo            *log.Logger
+	LogError           *log.Logger
 }
 
 // NewGobuster returns a new Gobuster object
@@ -39,7 +42,7 @@ func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobu
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
-	g.mu = new(sync.RWMutex)
+	g.RequestsCountMutex = new(sync.RWMutex)
 	g.context = c
 	g.resultChan = make(chan Result)
 	g.errorChan = make(chan error)
@@ -60,28 +63,9 @@ func (g *Gobuster) Errors() <-chan error {
 }
 
 func (g *Gobuster) incrementRequests() {
-	g.mu.Lock()
-	g.requestsIssued++
-	g.mu.Unlock()
-}
-
-// PrintProgress outputs the current wordlist progress to stderr
-func (g *Gobuster) PrintProgress() {
-	if !g.Opts.Quiet && !g.Opts.NoProgress {
-		g.mu.RLock()
-		if g.Opts.Wordlist == "-" {
-			fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
-			// only print status if we already read in the wordlist
-		} else if g.requestsExpected > 0 {
-			fmt.Fprintf(os.Stderr, "\rProgress: %d / %d (%3.2f%%)", g.requestsIssued, g.requestsExpected, float32(g.requestsIssued)*100.0/float32(g.requestsExpected))
-		}
-		g.mu.RUnlock()
-	}
-}
-
-// ClearProgress removes the last status line from stderr
-func (g *Gobuster) ClearProgress() {
-	fmt.Fprint(os.Stderr, resetTerminal())
+	g.RequestsCountMutex.Lock()
+	g.RequestsIssued++
+	g.RequestsCountMutex.Unlock()
 }
 
 func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
@@ -139,8 +123,13 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %v", err)
 	}
 
-	g.requestsExpected = lines
-	g.requestsIssued = 0
+	g.RequestsIssued = 0
+
+	// calcutate expected requests
+	g.RequestsExpected = lines
+	if g.Opts.PatternFile != "" {
+		g.RequestsExpected += (lines * len(g.Opts.Patterns))
+	}
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
@@ -181,7 +170,20 @@ Scan:
 		select {
 		case <-g.context.Done():
 			break Scan
-		case wordChan <- scanner.Text():
+		default:
+			word := scanner.Text()
+			perms := g.processPatterns(word)
+			// add the original word
+			wordChan <- word
+			// now create perms
+			for _, w := range perms {
+				select {
+				// need to check here too otherwise wordChan will block
+				case <-g.context.Done():
+					break Scan
+				case wordChan <- w:
+				}
+			}
 		}
 	}
 	close(wordChan)
@@ -192,4 +194,18 @@ Scan:
 // GetConfigString returns the current config as a printable string
 func (g *Gobuster) GetConfigString() (string, error) {
 	return g.plugin.GetConfigString()
+}
+
+func (g *Gobuster) processPatterns(word string) []string {
+	if g.Opts.PatternFile == "" {
+		return nil
+	}
+
+	//nolint:prealloc
+	var pat []string
+	for _, x := range g.Opts.Patterns {
+		repl := strings.ReplaceAll(x, PATTERN, word)
+		pat = append(pat, repl)
+	}
+	return pat
 }

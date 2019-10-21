@@ -81,7 +81,7 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 func init() {
 	cmdDNS = &cobra.Command{
 		Use:   "dns",
-		Short: "Uses DNS subdomain bruteforcing mode",
+		Short: "Uses DNS subdomain enumeration mode",
 		RunE:  runDNS,
 	}
 

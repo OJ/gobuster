@@ -83,14 +83,14 @@ func (d *GobusterDir) PreRun() error {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}
 
-	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{Host: d.options.Host})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %v", d.options.URL, err)
 	}
 
 	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", d.options.URL, guid)
-	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{Host: d.options.Host})
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 	// Try the DIR first
 	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
-	dirResp, dirSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+	dirResp, dirSize, _, err := d.http.Request(url, libgobuster.RequestOptions{Host: d.options.Host})
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	for ext := range d.options.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
 		url = fmt.Sprintf("%s%s", d.options.URL, file)
-		fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+		fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{Host: d.options.Host})
 		if err != nil {
 			return nil, err
 		}

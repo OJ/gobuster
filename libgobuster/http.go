@@ -21,7 +21,6 @@ type HTTPHeader struct {
 type HTTPClient struct {
 	client           *http.Client
 	context          context.Context
-	host             string
 	userAgent        string
 	defaultUserAgent string
 	username         string
@@ -87,7 +86,6 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	if client.method == "" {
 		client.method = http.MethodGet
 	}
-	client.host = opt.Host
 	return &client, nil
 }
 
@@ -135,10 +133,6 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 
 	if client.cookies != "" {
 		req.Header.Set("Cookie", client.cookies)
-	}
-
-	if client.host != "" {
-		req.Host = client.host
 	}
 
 	if host != "" {

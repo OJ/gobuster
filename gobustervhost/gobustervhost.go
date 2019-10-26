@@ -96,6 +96,11 @@ func (v *GobusterVhost) PreRun() error {
 		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
 	}
 	v.baseline2 = tmp
+
+	if v.options.StatusCodesBlacklistParsed.Length() == 0 && v.options.StatusCodesParsed.Length() == 0 {
+		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+	}
+
 	return nil
 }
 
@@ -111,11 +116,21 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
-	if found || v.globalopts.Verbose {
-		resultStatus := libgobuster.StatusMissed
-		if found {
-			resultStatus = libgobuster.StatusFound
+	resultStatus := libgobuster.StatusMissed
+	if found {
+		if v.options.StatusCodesBlacklistParsed.Length() > 0 {
+			if !v.options.StatusCodesBlacklistParsed.Contains(*status) {
+				resultStatus = libgobuster.StatusFound
+			}
+		} else if v.options.StatusCodesParsed.Length() > 0 {
+			if v.options.StatusCodesParsed.Contains(*status) {
+				resultStatus = libgobuster.StatusFound
+			}
+		} else {
+			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
+	}
+	if resultStatus == libgobuster.StatusFound || v.globalopts.Verbose {
 		result := libgobuster.Result{
 			Entity:     subdomain,
 			StatusCode: *status,

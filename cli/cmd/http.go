@@ -59,8 +59,8 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 }
 
 func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error) {
-	options := libgobuster.HTTPOptions{}
 	var err error
+	options := *libgobuster.NewHTTPOptions()
 
 	basic, err := parseBasicHTTPOptions(cmd)
 	if err != nil {

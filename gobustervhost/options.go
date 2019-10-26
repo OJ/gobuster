@@ -8,3 +8,11 @@ import (
 type OptionsVhost struct {
 	libgobuster.HTTPOptions
 }
+
+// NewOptionsVhost returns a new initialized OptionsVhost
+func NewOptionsVhost() *OptionsVhost {
+	optionsHTTP := libgobuster.NewHTTPOptions()
+	return &OptionsVhost{
+		HTTPOptions: *optionsHTTP,
+	}
+}

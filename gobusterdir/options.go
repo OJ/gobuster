@@ -22,9 +22,9 @@ type OptionsDir struct {
 
 // NewOptionsDir returns a new initialized OptionsDir
 func NewOptionsDir() *OptionsDir {
+	httpOptions := libgobuster.NewHTTPOptions()
 	return &OptionsDir{
-		StatusCodesParsed:          libgobuster.NewIntSet(),
-		StatusCodesBlacklistParsed: libgobuster.NewIntSet(),
-		ExtensionsParsed:           libgobuster.NewStringSet(),
+		HTTPOptions:      *httpOptions,
+		ExtensionsParsed: libgobuster.NewStringSet(),
 	}
 }

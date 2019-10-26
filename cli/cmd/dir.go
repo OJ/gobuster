@@ -56,6 +56,10 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.InsecureSSL = httpOpts.InsecureSSL
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+	plugin.StatusCodes = httpOpts.StatusCodes
+	plugin.StatusCodesParsed = httpOpts.StatusCodesParsed
+	plugin.StatusCodesBlacklist = httpOpts.StatusCodesBlacklist
+	plugin.StatusCodesBlacklistParsed = httpOpts.StatusCodesBlacklistParsed
 
 	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {
@@ -133,8 +137,6 @@ func init() {
 	if err := addCommonHTTPOptions(cmdDir); err != nil {
 		log.Fatalf("%v", err)
 	}
-	cmdDir.Flags().StringP("statuscodes", "s", "200,204,301,302,307,401,403", "Positive status codes (will be overwritten with statuscodesblacklist if set)")
-	cmdDir.Flags().StringP("statuscodesblacklist", "b", "", "Negative status codes (will override statuscodes if set)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("nostatus", "n", false, "Don't print status codes")

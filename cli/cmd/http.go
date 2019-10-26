@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -21,6 +22,8 @@ func addBasicHTTPOptions(cmd *cobra.Command) {
 
 func addCommonHTTPOptions(cmd *cobra.Command) error {
 	addBasicHTTPOptions(cmd)
+	cmd.Flags().StringP("statuscodes", "s", "200,204,301,302,307,401,403", "Positive status codes (will be overwritten with statuscodesblacklist if set)")
+	cmd.Flags().StringP("statuscodesblacklist", "b", "", "Negative status codes (will override statuscodes if set)")
 	cmd.Flags().StringP("url", "u", "", "The target URL")
 	cmd.Flags().StringP("cookies", "c", "", "Cookies to use for the requests")
 	cmd.Flags().StringP("username", "U", "", "Username for Basic Auth")
@@ -160,6 +163,32 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	// if it's still empty bail out
 	if options.Username != "" && options.Password == "" {
 		return options, fmt.Errorf("username was provided but password is missing")
+	}
+
+	options.StatusCodesBlacklist, err = cmd.Flags().GetString("statuscodesblacklist")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for statuscodesblacklist: %v", err)
+	}
+	fmt.Printf("blacklist %+v\n", options.StatusCodesBlacklist)
+
+	// blacklist will override the normal status codes
+	if options.StatusCodesBlacklist != "" {
+		ret, err := helper.ParseCommaSeperatedInt(options.StatusCodesBlacklist)
+		if err != nil {
+			return options, fmt.Errorf("invalid value for statuscodesblacklist: %v", err)
+		}
+		options.StatusCodesBlacklistParsed = ret
+	} else {
+		// parse normal status codes
+		options.StatusCodes, err = cmd.Flags().GetString("statuscodes")
+		if err != nil {
+			return options, fmt.Errorf("invalid value for statuscodes: %v", err)
+		}
+		ret, err := helper.ParseCommaSeperatedInt(options.StatusCodes)
+		if err != nil {
+			return options, fmt.Errorf("invalid value for statuscodes: %v", err)
+		}
+		options.StatusCodesParsed = ret
 	}
 
 	return options, nil

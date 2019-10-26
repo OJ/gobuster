@@ -51,6 +51,10 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.InsecureSSL = httpOpts.InsecureSSL
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+	plugin.StatusCodes = httpOpts.StatusCodes
+	plugin.StatusCodesParsed = httpOpts.StatusCodesParsed
+	plugin.StatusCodesBlacklist = httpOpts.StatusCodesBlacklist
+	plugin.StatusCodesBlacklistParsed = httpOpts.StatusCodesBlacklistParsed
 
 	return globalopts, &plugin, nil
 }

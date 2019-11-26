@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,6 +16,7 @@ import (
 
 func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
+	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
 	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 }
@@ -44,6 +46,13 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	options.UserAgent, err = cmd.Flags().GetString("useragent")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for useragent: %v", err)
+	}
+	randomUA, err := cmd.Flags().GetBool("random-agent")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for random-agent: %v", err)
+	}
+	if randomUA {
+		options.UserAgent = helper.GetRandomUserAgent()
 	}
 
 	options.Proxy, err = cmd.Flags().GetString("proxy")

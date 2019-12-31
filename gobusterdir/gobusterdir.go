@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"text/tabwriter"
+	"path"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
@@ -179,7 +180,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 		}
 	}
 
-	// Discover Backup
+	// Discover Backup: Pull all 200's create common backup names.
 	if d.options.DiscoverBackup {
 		for _, r := range ret {
 			if r.StatusCode == 200 {
@@ -187,13 +188,18 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 				// Common Backup Extensions
 				backup_extensions := strings.Fields("~ .bak .bak2 .old .1")
 				for _, backup_extension := range backup_extensions {
+					// Append Backup Extension to File Name
 					file_names = append(file_names , r.Entity + backup_extension)
+					// Strip extension, then append backup extension
+					no_extension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
+					if no_extension != r.Entity {
+						file_names = append(file_names, no_extension + backup_extension)
+					}
 				}
 				// Vim Swap File
 				file_names = append(file_names, "." + r.Entity + ".swp")
 
 				for _, file := range file_names {
-					//file := fmt.Sprintf("%s.%s", word, ext)
 					url = fmt.Sprintf("%s%s", d.options.URL, file)
 					fileResp, fileSize, err := d.get(url)
 					if err != nil {

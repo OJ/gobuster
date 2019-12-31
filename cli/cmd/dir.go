@@ -145,7 +145,7 @@ func init() {
 	cmdDir.Flags().BoolP("includelength", "l", false, "Include the length of the body in the output")
 	cmdDir.Flags().BoolP("addslash", "f", false, "Append / to each request")
 	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
-	cmdDir.Flags().BoolP("discoverbackup", "d", false, "Upon 200 searches for backup files")
+	cmdDir.Flags().BoolP("discoverbackup", "d", false, "Upon finding a file search for backup files")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

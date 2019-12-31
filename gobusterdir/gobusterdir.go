@@ -183,7 +183,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	// Discover Backup: Pull all 200's create common backup names.
 	if d.options.DiscoverBackup {
 		for _, r := range ret {
-			if r.StatusCode == 200 {
+			if d.options.StatusCodesParsed.Contains(r.StatusCode) {
 				file_names := make([]string,0)
 				// Common Backup Extensions
 				backup_extensions := strings.Fields("~ .bak .bak2 .old .1")
@@ -239,6 +239,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 	return ret, nil
 }
+
 
 // ResultToString is the to string implementation of gobusterdir
 func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {

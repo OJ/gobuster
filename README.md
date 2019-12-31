@@ -110,7 +110,7 @@ Flags:
   -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string               Username for Basic Auth
       --wildcard                      Force continued operation when wildcard found
-  -d  --discovercontent               Upon finding a file search for backup files
+  -d  --discoverbackup                Upon finding a file search for backup files
 
 Global Flags:
   -z, --noprogress        Don't display progress

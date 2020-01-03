@@ -118,6 +118,7 @@ Flags:
   -u, --url string                    The target URL
   -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string               Username for Basic Auth
+  -d, --discoverbackup                Upon finding a file search for backup files
       --wildcard                      Force continued operation when wildcard found
 
 Global Flags:

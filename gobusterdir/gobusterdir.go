@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"text/tabwriter"
 
@@ -179,6 +180,59 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 					Size:       &fileSize,
 					Status:     resultStatus,
 				})
+			}
+		}
+	}
+
+	// Discover Backup: Pull all 200's create common backup names.
+	if d.options.DiscoverBackup {
+		for _, r := range ret {
+			file_names := make([]string, 0)
+			// Common Backup Extensions
+			backup_extensions := strings.Fields("~ .bak .bak2 .old .1")
+			for _, backup_extension := range backup_extensions {
+				// Append Backup Extension to File Name
+				file_names = append(file_names, r.Entity+backup_extension)
+				// Strip extension, then append backup extension
+				no_extension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
+				if no_extension != r.Entity {
+					file_names = append(file_names, no_extension+backup_extension)
+				}
+			}
+			// Vim Swap File
+			file_names = append(file_names, "."+r.Entity+".swp")
+
+			for _, file := range file_names {
+				url = fmt.Sprintf("%s%s", d.options.URL, file)
+				fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+				if err != nil {
+					return nil, err
+				}
+
+				if fileResp != nil {
+					resultStatus := libgobuster.StatusMissed
+
+					if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+						if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else if d.options.StatusCodesParsed.Length() > 0 {
+						if d.options.StatusCodesParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else {
+						return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+					}
+
+					if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+						ret = append(ret, libgobuster.Result{
+							Entity:     file,
+							StatusCode: *fileResp,
+							Size:       &fileSize,
+							Status:     resultStatus,
+						})
+					}
+				}
 			}
 		}
 	}

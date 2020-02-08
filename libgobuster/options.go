@@ -14,6 +14,7 @@ type Options struct {
 	Quiet          bool
 	WildcardForced bool
 	Verbose        bool
+	JSON           bool
 	Delay          time.Duration
 }
 

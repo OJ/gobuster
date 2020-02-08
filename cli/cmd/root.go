@@ -130,6 +130,14 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("invalid value for noprogress: %v", err)
 	}
 
+	globalopts.JSON, err = rootCmd.Flags().GetBool("json")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for json: %v", err)
+	}
+	if globalopts.JSON && globalopts.OutputFilename == "" {
+		return nil, fmt.Errorf("json flag can't be used without output flag")
+	}
+
 	return globalopts, nil
 }
 
@@ -148,6 +156,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")
 	rootCmd.PersistentFlags().StringP("wordlist", "w", "", "Path to the wordlist")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to stdout)")
+	rootCmd.PersistentFlags().BoolP("json", "j", false, "Output to file as JSON (requires output flag)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("noprogress", "z", false, "Don't display progress")

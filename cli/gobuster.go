@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -21,6 +22,7 @@ func banner() {
 type outputType struct {
 	Mu              *sync.RWMutex
 	MaxCharsWritten int
+	JSON            bool
 }
 
 // right pad a string
@@ -50,6 +52,11 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 		defer f.Close()
 	}
 
+	if f != nil && output.JSON {
+		writeToFile(f, "[")
+	}
+
+	first := true
 	for r := range g.Results() {
 		s, err := r.ToString(g)
 		if err != nil {
@@ -65,12 +72,27 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 			}
 			output.Mu.Unlock()
 			if f != nil {
-				err = writeToFile(f, s)
+				if output.JSON {
+					var buf []byte
+					buf, err = json.Marshal(r)
+					if err == nil && first {
+						err = writeToFile(f, string(buf))
+						first = false
+					} else {
+						err = writeToFile(f, fmt.Sprintf(",\n%s", string(buf)))
+					}
+				} else {
+					err = writeToFile(f, fmt.Sprintf("%s\n", s))
+				}
 				if err != nil {
 					g.LogError.Fatalf("error on writing output file: %v", err)
 				}
 			}
 		}
+	}
+
+	if f != nil && output.JSON {
+		writeToFile(f, "]")
 	}
 }
 
@@ -126,7 +148,7 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGro
 }
 
 func writeToFile(f *os.File, output string) error {
-	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
+	_, err := f.WriteString(output)
 	if err != nil {
 		return fmt.Errorf("[!] Unable to write to file %v", err)
 	}
@@ -177,6 +199,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	o := &outputType{
 		Mu:              outputMutex,
 		MaxCharsWritten: 0,
+		JSON:            opts.JSON,
 	}
 	go errorWorker(gobuster, &wg, o)
 	go resultWorker(gobuster, opts.OutputFilename, &wg, o)

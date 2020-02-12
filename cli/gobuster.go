@@ -22,7 +22,6 @@ func banner() {
 type outputType struct {
 	Mu              *sync.RWMutex
 	MaxCharsWritten int
-	JSON            bool
 }
 
 // right pad a string
@@ -52,8 +51,8 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 		defer f.Close()
 	}
 
-	if f != nil && output.JSON {
-		writeToFile(f, "[")
+	if f != nil && g.Opts.JSON {
+		writeToFile(f, "[", false)
 	}
 
 	first := true
@@ -72,17 +71,17 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 			}
 			output.Mu.Unlock()
 			if f != nil {
-				if output.JSON {
+				if g.Opts.JSON {
 					var buf []byte
 					buf, err = json.Marshal(r)
 					if err == nil && first {
-						err = writeToFile(f, string(buf))
+						err = writeToFile(f, string(buf), false)
 						first = false
 					} else {
-						err = writeToFile(f, fmt.Sprintf(",\n%s", string(buf)))
+						err = writeToFile(f, fmt.Sprintf(",\n%s", string(buf)), false)
 					}
 				} else {
-					err = writeToFile(f, fmt.Sprintf("%s\n", s))
+					err = writeToFile(f, s, true)
 				}
 				if err != nil {
 					g.LogError.Fatalf("error on writing output file: %v", err)
@@ -91,8 +90,8 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 		}
 	}
 
-	if f != nil && output.JSON {
-		writeToFile(f, "]")
+	if f != nil && g.Opts.JSON {
+		writeToFile(f, "]", false)
 	}
 }
 
@@ -147,8 +146,13 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGro
 	}
 }
 
-func writeToFile(f *os.File, output string) error {
-	_, err := f.WriteString(output)
+func writeToFile(f *os.File, output string, appendNewline bool) error {
+	var err error
+	if appendNewline {
+		_, err = f.WriteString(fmt.Sprintf("%s\n", output))
+	} else {
+		_, err = f.WriteString(output)
+	}
 	if err != nil {
 		return fmt.Errorf("[!] Unable to write to file %v", err)
 	}
@@ -199,7 +203,6 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	o := &outputType{
 		Mu:              outputMutex,
 		MaxCharsWritten: 0,
-		JSON:            opts.JSON,
 	}
 	go errorWorker(gobuster, &wg, o)
 	go resultWorker(gobuster, opts.OutputFilename, &wg, o)

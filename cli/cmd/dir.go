@@ -120,10 +120,10 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for wildcard: %v", err)
 	}
 
-        plugin.DiscoverBackup, err = cmdDir.Flags().GetBool("discoverbackup")
-        if err != nil {
-                return nil, nil, fmt.Errorf("invalid value for discoverbackup: %v", err)
-        }
+	plugin.DiscoverBackup, err = cmdDir.Flags().GetBool("discoverbackup")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for discoverbackup: %v", err)
+	}
 
 	return globalopts, plugin, nil
 }

@@ -187,22 +187,26 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	// Discover Backup: Pull all 200's create common backup names.
 	if d.options.DiscoverBackup {
 		for _, r := range ret {
-			file_names := make([]string, 0)
+			fileNames := make([]string, 0)
 			// Common Backup Extensions
-			backup_extensions := strings.Fields("~ .bak .bak2 .old .1")
-			for _, backup_extension := range backup_extensions {
+			backupExtensions := strings.Fields("~ .bak .bak2 .old .1")
+			for _, backupExtension := range backupExtensions {
 				// Append Backup Extension to File Name
-				file_names = append(file_names, r.Entity+backup_extension)
+				fname := fmt.Sprintf("%s%s", r.Entity, backupExtension)
+				fileNames = append(fileNames, fname)
 				// Strip extension, then append backup extension
-				no_extension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
-				if no_extension != r.Entity {
-					file_names = append(file_names, no_extension+backup_extension)
+				noExtension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
+				if noExtension != r.Entity {
+					fname2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
+					fileNames = append(fileNames, fname2)
 				}
 			}
-			// Vim Swap File
-			file_names = append(file_names, "."+r.Entity+".swp")
 
-			for _, file := range file_names {
+			// Vim Swap File
+			vimFname := fmt.Sprintf(".%s.swp", r.Entity)
+			fileNames = append(fileNames, vimFname)
+
+			for _, file := range fileNames {
 				url = fmt.Sprintf("%s%s", d.options.URL, file)
 				fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 				if err != nil {

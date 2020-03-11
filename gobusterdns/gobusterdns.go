@@ -126,6 +126,10 @@ func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
 	return ret, nil
 }
 
+func (d *GobusterDNS) RequestsPerRun() int {
+	return 1
+}
+
 // ResultToString is the to string implementation of gobusterdns
 func (d *GobusterDNS) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}

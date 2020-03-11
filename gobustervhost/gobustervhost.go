@@ -117,6 +117,10 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	return ret, nil
 }
 
+func (v *GobusterVhost) RequestsPerRun() int {
+	return 1
+}
+
 // ResultToString is the to string implementation of gobusterdir
 func (v *GobusterVhost) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}

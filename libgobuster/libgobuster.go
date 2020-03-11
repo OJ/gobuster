@@ -61,19 +61,23 @@ func (g *Gobuster) Errors() <-chan error {
 
 func (g *Gobuster) incrementRequests() {
 	g.mu.Lock()
-	g.requestsIssued++
+	g.requestsIssued += g.plugin.RequestsPerRun()
 	g.mu.Unlock()
 }
 
 // PrintProgress outputs the current wordlist progress to stderr
 func (g *Gobuster) PrintProgress() {
+	requestsExpected := g.requestsExpected * g.plugin.RequestsPerRun()
 	if !g.Opts.Quiet && !g.Opts.NoProgress {
 		g.mu.RLock()
 		if g.Opts.Wordlist == "-" {
 			fmt.Fprintf(os.Stderr, "\rProgress: %d", g.requestsIssued)
 			// only print status if we already read in the wordlist
-		} else if g.requestsExpected > 0 {
-			fmt.Fprintf(os.Stderr, "\rProgress: %d / %d (%3.2f%%)", g.requestsIssued, g.requestsExpected, float32(g.requestsIssued)*100.0/float32(g.requestsExpected))
+		} else if requestsExpected > 0 {
+			fmt.Fprintf(os.Stderr, "\rProgress: %d / %d (%3.2f%%)",
+				g.requestsIssued,
+				requestsExpected,
+				float32(g.requestsIssued)*100.0/float32(requestsExpected))
 		}
 		g.mu.RUnlock()
 	}

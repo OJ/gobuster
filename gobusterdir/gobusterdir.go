@@ -181,6 +181,11 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	return ret, nil
 }
 
+func (d *GobusterDir) RequestsPerRun() int {
+	// the max number of calls to d.get() per call to d.Run()
+	return 1 + len(d.options.ExtensionsParsed.Set)
+}
+
 // ResultToString is the to string implementation of gobusterdir
 func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 	buf := &bytes.Buffer{}

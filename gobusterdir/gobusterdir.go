@@ -90,6 +90,10 @@ func (d *GobusterDir) PreRun() error {
 
 	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", d.options.URL, guid)
+	if d.options.UseSlash {
+		url = fmt.Sprintf("%s/", d.options.URL)
+	}
+
 	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err

@@ -43,6 +43,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## Changes in 3.1
 
 * enumerate public AWS S3 buckets
+* fuzzing mode
 * specify HTTP method
 * added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 * The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
@@ -564,6 +565,14 @@ Command line might look like this:
 
 ```bash
 gobuster s3 -w bucket-names.txt
+```
+
+### `fuzzing` Mode
+
+Command line might look like this:
+
+```bash
+gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
 ```
 
 #### Use case in combination with patterns

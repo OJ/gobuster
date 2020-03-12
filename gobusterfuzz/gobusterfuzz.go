@@ -71,7 +71,7 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 
 // Name should return the name of the plugin
 func (d *GobusterFuzz) Name() string {
-	return "fuzzing mode"
+	return "fuzzing"
 }
 
 // PreRun is the pre run implementation of gobusterfuzz

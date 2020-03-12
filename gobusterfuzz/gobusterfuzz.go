@@ -87,19 +87,17 @@ func (d *GobusterFuzz) Run(word string) ([]libgobuster.Result, error) {
 		return nil, err
 	}
 	var ret []libgobuster.Result
-	if resp != nil && size != 0 {
-		resultStatus := libgobuster.StatusMissed
+	if resp != nil {
+		resultStatus := libgobuster.StatusFound
 
-		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-			if !d.options.StatusCodesBlacklistParsed.Contains(*resp) {
-				resultStatus = libgobuster.StatusFound
+		if d.options.ExcludeSize >= 0 && size == d.options.ExcludeSize {
+			resultStatus = libgobuster.StatusMissed
+		}
+
+		if d.options.ExcludedStatusCodesParsed.Length() > 0 {
+			if d.options.ExcludedStatusCodesParsed.Contains(*resp) {
+				resultStatus = libgobuster.StatusMissed
 			}
-		} else if d.options.StatusCodesParsed.Length() > 0 {
-			if d.options.StatusCodesParsed.Contains(*resp) {
-				resultStatus = libgobuster.StatusFound
-			}
-		} else {
-			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
@@ -134,20 +132,8 @@ func (d *GobusterFuzz) ResultToString(r *libgobuster.Result) (*string, error) {
 		}
 	}
 
-	if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
+	if _, err := fmt.Fprintf(buf, "[Status=%d] [Length=%d] %s", r.StatusCode, *r.Size, r.Entity); err != nil {
 		return nil, err
-	}
-
-	if !d.options.NoStatus {
-		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
-			return nil, err
-		}
-	}
-
-	if r.Size != nil && d.options.IncludeLength {
-		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
-			return nil, err
-		}
 	}
 
 	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
@@ -196,12 +182,14 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.StatusCodesBlacklistParsed.Length() > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
+	if o.ExcludedStatusCodesParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Excluded Status codes:\t%s\n", o.ExcludedStatusCodesParsed.Stringify()); err != nil {
 			return "", err
 		}
-	} else if o.StatusCodesParsed.Length() > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
+	}
+
+	if o.ExcludeSize >= 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Excluded Response Size:\t%d\n", o.ExcludeSize); err != nil {
 			return "", err
 		}
 	}
@@ -224,44 +212,14 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.IncludeLength {
-		if _, err := fmt.Fprintf(tw, "[+] Show length:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
 	if o.Username != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
 			return "", err
 		}
 	}
 
-	if o.Extensions != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify()); err != nil {
-			return "", err
-		}
-	}
-
-	if o.UseSlash {
-		if _, err := fmt.Fprintf(tw, "[+] Add Slash:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
 	if o.FollowRedirect {
 		if _, err := fmt.Fprintf(tw, "[+] Follow Redir:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if o.Expanded {
-		if _, err := fmt.Fprintf(tw, "[+] Expanded:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if o.NoStatus {
-		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

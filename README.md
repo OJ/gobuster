@@ -532,7 +532,7 @@ Found: mail.mysite.com
 
 ## License
 
-See the LICENSE file.
+SPDX: [Apache-2.0](LICENSE)
 
 ## Thanks
 

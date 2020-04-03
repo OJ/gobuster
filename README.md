@@ -31,6 +31,8 @@ Yes, you're probably correct. Feel free to:
 * Not use it.
 * Show me how to do it better.
 
+Who you gonna call? GOBUSTER!
+
 ## Love this tool? Back it!
 
 If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!

@@ -157,7 +157,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	if options.Username != "" && options.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
 		// please don't remove the int cast here as it is sadly needed on windows :/
-		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		passBytes, err := terminal.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
 		fmt.Println("")

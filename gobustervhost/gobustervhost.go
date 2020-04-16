@@ -70,7 +70,6 @@ func (v *GobusterVhost) Name() string {
 
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun() error {
-
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL, "/") {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)

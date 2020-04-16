@@ -24,6 +24,7 @@ type outputType struct {
 }
 
 // right pad a string
+// nolint:unparam
 func rightPad(s string, padStr string, overallLen int) string {
 	strLen := len(s)
 	if overallLen <= strLen {

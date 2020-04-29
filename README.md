@@ -146,7 +146,7 @@ Global Flags:
   -w, --wordlist string   Path to the wordlist
 ```
 
-## 1. Install Go Pre-Requisites
+## 1. Install Go pre-requisites
 
     gem install go && apt install golang -y 
 

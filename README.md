@@ -146,11 +146,11 @@ Global Flags:
   -w, --wordlist string   Path to the wordlist
 ```
 
-## 1. Install Pre-Requisites
+## 1. Install Go Pre-Requisites
 
     gem install go && apt install golang -y 
 
-### 2. Install [Go](https://golang.org/doc/install).
+### 2. Install [Go](https://golang.org/doc/install?download=go1.14.2.linux-amd64.tar.gz).
 
 ### 3. Install GoBuster:
 

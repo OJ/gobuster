@@ -1,4 +1,4 @@
-# Gobuster v3.0.1 (OJ Reeves @TheColonial)
+# Gobuster (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
 
@@ -170,7 +170,7 @@ cd /root && go get github.com/OJ/gobuster
 
 ## Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Follow the installation instructions [here](https://golang.org/doc/install). Once installed execute the below lines:
 
 ### Compiling
 
@@ -180,7 +180,7 @@ Since this tool is written in [Go](https://golang.org/) you need to install the 
 cd /root && git clone https://github.com/OJ/gobuster.git && cd /gobuster && go get && go build && go install
 ```
 
-If you have all the dependencies already, you can make use of the build scripts:
+Optional= If you have all the dependencies already, you can make use of the build scripts:
 
 * `make` - builds for the current Go configuration (ie. runs `go build`).
 * `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` subfolder.

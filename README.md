@@ -1,9 +1,3 @@
-# Install in Kali or Debian Linux distros
-#
-    gem install go
-#
-    apt install golang gobuster -y
-
 # Gobuster v3.0.1 (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
@@ -154,6 +148,12 @@ Global Flags:
 
 ## Easy Installation
 
+# Install in Kali or Debian Linux distros
+#
+    gem install go
+#
+    apt install golang gobuster -y
+
 ### Binary Releases
 
 We are now shipping binaries for each of the releases so that you don't even have to build them yourself! How wonderful is that!
@@ -165,7 +165,7 @@ If you're stupid enough to trust binaries that I've put together, you can downlo
 If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
 
 ```bash
-go get github.com/OJ/gobuster
+cd /root && go get github.com/OJ/gobuster
 ```
 
 ## Building From Source
@@ -174,16 +174,10 @@ Since this tool is written in [Go](https://golang.org/) you need to install the 
 
 ### Compiling
 
-`gobuster` now has external dependencies, and so they need to be pulled in first:
+`gobuster` now has external dependencies, and so let's install them:
 
 ```bash
-go get && go build
-```
-
-This will create a `gobuster` binary for you. If you want to install it in the `$GOPATH/bin` folder you can run:
-
-```bash
-go install
+cd /root && git clone https://github.com/OJ/gobuster.git && cd /gobuster && go get && go build && go install
 ```
 
 If you have all the dependencies already, you can make use of the build scripts:

@@ -146,12 +146,11 @@ Global Flags:
   -w, --wordlist string   Path to the wordlist
 ```
 
-## Easy Installation
+## Install Pre-Requisites
 
-#
     gem install go && apt install golang gobuster -y 
 
-### Install [Go](https://golang.org/doc/install). Once installed execute the below lines:
+### Install [Go](https://golang.org/doc/install). Once installed execute the below lines to install GoBuster:
 
 ```bash
 cd /root && go get github.com/OJ/gobuster && cd /root && git clone https://github.com/OJ/gobuster.git && cd /gobuster && go get && go build && go install

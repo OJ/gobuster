@@ -15,7 +15,7 @@ const ruler = "==============================================================="
 
 func banner() {
 	fmt.Printf("Gobuster v%s\n", libgobuster.VERSION)
-	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)")
+	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)")
 }
 
 type outputType struct {
@@ -24,6 +24,7 @@ type outputType struct {
 }
 
 // right pad a string
+// nolint:unparam
 func rightPad(s string, padStr string, overallLen int) string {
 	strLen := len(s)
 	if overallLen <= strLen {

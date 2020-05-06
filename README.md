@@ -43,6 +43,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## Changes in 3.1
 
 * enumerate public AWS S3 buckets
+* fuzzing mode
 * specify HTTP method
 * added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 * The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
@@ -118,6 +119,7 @@ Flags:
   -u, --url string                    The target URL
   -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string               Username for Basic Auth
+  -d, --discoverbackup                Upon finding a file search for backup files
       --wildcard                      Force continued operation when wildcard found
 
 Global Flags:
@@ -248,7 +250,7 @@ gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -276,7 +278,7 @@ gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -305,7 +307,7 @@ gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -336,7 +338,7 @@ gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
 [+] Url/Domain   : https://buffered.io/
@@ -383,7 +385,7 @@ gobuster dns -d google.com -w ~/wordlists/subdomains.txt
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -422,7 +424,7 @@ gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : google.com
@@ -461,7 +463,7 @@ gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : yp.to
@@ -484,7 +486,7 @@ gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io
@@ -507,7 +509,7 @@ gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
 [+] Url/Domain   : 0.0.1.xip.io
@@ -539,7 +541,7 @@ gobuster vhost -u https://mysite.com -w common-vhosts.txt
 
 ===============================================================
 Gobuster v3.0.1
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Url:          https://mysite.com
 [+] Threads:      10
@@ -565,6 +567,14 @@ Command line might look like this:
 gobuster s3 -w bucket-names.txt
 ```
 
+### `fuzzing` Mode
+
+Command line might look like this:
+
+```bash
+gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
+```
+
 #### Use case in combination with patterns
 
 * Create a custom wordlist for the target containing company names and so on
@@ -586,7 +596,7 @@ Normal sample run goes like this:
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt
 ===============================================================
 Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
@@ -615,7 +625,7 @@ Verbose and sample run
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -v
 ===============================================================
 Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
@@ -645,7 +655,7 @@ Extended sample run
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -e
 ===============================================================
 Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt

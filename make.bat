@@ -41,6 +41,11 @@ IF "%ARG%"=="fmt" (
   GOTO Done
 )
 
+IF "%ARG%"=="lint" (
+  CALL :Lint
+  GOTO Done
+)
+
 IF "%ARG%"=="all" (
   CALL :Fmt
   CALL :Update

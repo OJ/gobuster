@@ -4,6 +4,11 @@ linters:
     - lll
     - gocyclo
     - dupl
+    - funlen
+    - gocognit
+    - dogsled
+    - wsl
+    - gomnd
 
 issues:
   exclude-rules:
@@ -23,6 +28,10 @@ issues:
     - path: cli/cmd/.+\.go
       linters:
         - gochecknoinits
+        - gochecknoglobals
+
+    - path: helper/useragents.go
+      linters:
         - gochecknoglobals
 
     - path: _test\.go

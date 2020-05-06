@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"text/tabwriter"
 
@@ -90,6 +91,10 @@ func (d *GobusterDir) PreRun() error {
 
 	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", d.options.URL, guid)
+	if d.options.UseSlash {
+		url = fmt.Sprintf("%s/", url)
+	}
+
 	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{Host: d.options.Host})
 	if err != nil {
 		return err
@@ -180,6 +185,63 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 					Size:       &fileSize,
 					Status:     resultStatus,
 				})
+			}
+		}
+	}
+
+	// Discover Backup: Pull all 200's create common backup names.
+	if d.options.DiscoverBackup {
+		for _, r := range ret {
+			fileNames := make([]string, 0)
+			// Common Backup Extensions
+			backupExtensions := strings.Fields("~ .bak .bak2 .old .1")
+			for _, backupExtension := range backupExtensions {
+				// Append Backup Extension to File Name
+				fname := fmt.Sprintf("%s%s", r.Entity, backupExtension)
+				fileNames = append(fileNames, fname)
+				// Strip extension, then append backup extension
+				noExtension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
+				if noExtension != r.Entity {
+					fname2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
+					fileNames = append(fileNames, fname2)
+				}
+			}
+
+			// Vim Swap File
+			vimFname := fmt.Sprintf(".%s.swp", r.Entity)
+			fileNames = append(fileNames, vimFname)
+
+			for _, file := range fileNames {
+				url = fmt.Sprintf("%s%s", d.options.URL, file)
+				fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+				if err != nil {
+					return nil, err
+				}
+
+				if fileResp != nil {
+					resultStatus := libgobuster.StatusMissed
+
+					if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+						if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else if d.options.StatusCodesParsed.Length() > 0 {
+						if d.options.StatusCodesParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else {
+						return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+					}
+
+					if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+						ret = append(ret, libgobuster.Result{
+							Entity:     file,
+							StatusCode: *fileResp,
+							Size:       &fileSize,
+							Status:     resultStatus,
+						})
+					}
+				}
 			}
 		}
 	}

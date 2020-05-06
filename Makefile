@@ -46,10 +46,11 @@ test:
 	echo "Done."
 
 lint:
-	@go get -u github.com/golangci/golangci-lint@master ; \
-	golangci-lint run ./... ; \
-	go mod tidy ; \
-	echo Done
+	@if [ ! -f "$$(go env GOPATH)/bin/golangci-lint" ]; then \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.24.0; \
+	fi
+	"$$(go env GOPATH)/bin/golangci-lint" run ./...
+	go mod tidy
 
 clean:
 	@rm -rf ${TARGET}/* ; \

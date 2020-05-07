@@ -104,21 +104,21 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	defer resp.Body.Close()
 
 	var body []byte
+	var length int64
 	if opts.ReturnBody {
 		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("could not read body %w", err)
 		}
+		length = int64(len(body))
 	} else {
 		// DO NOT REMOVE!
 		// absolutely needed so golang will reuse connections!
-		_, err := io.Copy(ioutil.Discard, resp.Body)
+		length, err = io.Copy(ioutil.Discard, resp.Body)
 		if err != nil {
 			return nil, 0, nil, err
 		}
 	}
-
-	length := resp.ContentLength
 
 	return &resp.StatusCode, length, body, nil
 }

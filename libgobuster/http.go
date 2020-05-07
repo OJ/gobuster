@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -50,7 +51,7 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	if opt.Proxy != "" {
 		proxyURL, err := url.Parse(opt.Proxy)
 		if err != nil {
-			return nil, fmt.Errorf("proxy URL is invalid (%v)", err)
+			return nil, fmt.Errorf("proxy URL is invalid (%w)", err)
 		}
 		proxyURLFunc = http.ProxyURL(proxyURL)
 	}
@@ -95,7 +96,7 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	resp, err := client.makeRequest(fullURL, opts.Host, opts.Body)
 	if err != nil {
 		// ignore context canceled errors
-		if client.context.Err() == context.Canceled {
+		if errors.Is(client.context.Err(), context.Canceled) {
 			return nil, 0, nil, nil
 		}
 		return nil, 0, nil, err
@@ -106,7 +107,7 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	if opts.ReturnBody {
 		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, 0, nil, fmt.Errorf("could not read body %v", err)
+			return nil, 0, nil, fmt.Errorf("could not read body %w", err)
 		}
 	} else {
 		// DO NOT REMOVE!
@@ -158,7 +159,7 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
-				return nil, fmt.Errorf("invalid certificate: %v", ue.Err)
+				return nil, fmt.Errorf("invalid certificate: %w", ue.Err)
 			}
 		}
 		return nil, err

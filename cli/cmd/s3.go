@@ -14,16 +14,16 @@ var cmdS3 *cobra.Command
 func runS3(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseS3Options()
 	if err != nil {
-		return fmt.Errorf("error on parsing arguments: %v", err)
+		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
 	plugin, err := gobusters3.NewGobusterS3(mainContext, globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("error on creating gobusters3: %v", err)
+		return fmt.Errorf("error on creating gobusters3: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		return fmt.Errorf("error on running gobuster: %v", err)
+		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil
 }
@@ -47,12 +47,12 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 
 	plugin.MaxFilesToList, err = cmdS3.Flags().GetInt("maxfiles")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for maxfiles: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
 
 	plugin.Expanded, err = cmdS3.Flags().GetBool("expanded")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for expanded: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for expanded: %w", err)
 	}
 
 	return globalopts, plugin, nil

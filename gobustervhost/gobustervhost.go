@@ -77,14 +77,14 @@ func (v *GobusterVhost) PreRun() error {
 
 	url, err := url.Parse(v.options.URL)
 	if err != nil {
-		return fmt.Errorf("invalid url %s: %v", v.options.URL, err)
+		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
 	}
 	v.domain = url.Host
 
 	// request default vhost for baseline1
 	_, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.baseline1 = tmp
 
@@ -92,7 +92,7 @@ func (v *GobusterVhost) PreRun() error {
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
 	_, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.baseline2 = tmp
 	return nil
@@ -216,11 +216,11 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

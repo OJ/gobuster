@@ -1,14 +1,17 @@
 linters:
   enable-all: true
   disable:
-    - lll
-    - gocyclo
-    - dupl
-    - funlen
-    - gocognit
-    - dogsled
     - wsl
+    - gocyclo
+    - gocognit
+    - funlen
+    - lll
+    - dogsled
     - gomnd
+    - nestif
+    - testpackage
+    - godot
+    - goerr113
 
 issues:
   exclude-rules:

@@ -12,6 +12,7 @@ import (
 )
 
 const ruler = "==============================================================="
+const cliProgressUpdate = 500 * time.Millisecond
 
 func banner() {
 	fmt.Printf("Gobuster v%s\n", libgobuster.VERSION)
@@ -94,7 +95,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType
 func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
-	tick := time.NewTicker(500 * time.Millisecond)
+	tick := time.NewTicker(cliProgressUpdate)
 
 	for {
 		select {
@@ -129,7 +130,7 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGro
 func writeToFile(f *os.File, output string) error {
 	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
 	if err != nil {
-		return fmt.Errorf("[!] Unable to write to file %v", err)
+		return fmt.Errorf("[!] Unable to write to file %w", err)
 	}
 	return nil
 }
@@ -159,7 +160,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		fmt.Println(ruler)
 		c, err := gobuster.GetConfigString()
 		if err != nil {
-			return fmt.Errorf("error on creating config string: %v", err)
+			return fmt.Errorf("error on creating config string: %w", err)
 		}
 		fmt.Println(c)
 		fmt.Println(ruler)

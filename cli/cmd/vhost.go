@@ -15,16 +15,16 @@ var cmdVhost *cobra.Command
 func runVhost(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseVhostOptions()
 	if err != nil {
-		return fmt.Errorf("error on parsing arguments: %v", err)
+		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
 	plugin, err := gobustervhost.NewGobusterVhost(mainContext, globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("error on creating gobustervhost: %v", err)
+		return fmt.Errorf("error on creating gobustervhost: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		return fmt.Errorf("error on running gobuster: %v", err)
+		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil
 }

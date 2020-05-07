@@ -33,7 +33,7 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
 	if err := cmd.MarkFlagRequired("url"); err != nil {
-		return fmt.Errorf("error on marking flag as required: %v", err)
+		return fmt.Errorf("error on marking flag as required: %w", err)
 	}
 
 	return nil
@@ -45,11 +45,11 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 
 	options.UserAgent, err = cmd.Flags().GetString("useragent")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for useragent: %v", err)
+		return options, fmt.Errorf("invalid value for useragent: %w", err)
 	}
 	randomUA, err := cmd.Flags().GetBool("random-agent")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for random-agent: %v", err)
+		return options, fmt.Errorf("invalid value for random-agent: %w", err)
 	}
 	if randomUA {
 		options.UserAgent = helper.GetRandomUserAgent()
@@ -57,12 +57,12 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 
 	options.Proxy, err = cmd.Flags().GetString("proxy")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for proxy: %v", err)
+		return options, fmt.Errorf("invalid value for proxy: %w", err)
 	}
 
 	options.Timeout, err = cmd.Flags().GetDuration("timeout")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for timeout: %v", err)
+		return options, fmt.Errorf("invalid value for timeout: %w", err)
 	}
 	return options, nil
 }
@@ -81,7 +81,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for url: %v", err)
+		return options, fmt.Errorf("invalid value for url: %w", err)
 	}
 
 	if !strings.HasPrefix(options.URL, "http") {
@@ -106,37 +106,37 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 
 	options.Cookies, err = cmd.Flags().GetString("cookies")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for cookies: %v", err)
+		return options, fmt.Errorf("invalid value for cookies: %w", err)
 	}
 
 	options.Username, err = cmd.Flags().GetString("username")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for username: %v", err)
+		return options, fmt.Errorf("invalid value for username: %w", err)
 	}
 
 	options.Password, err = cmd.Flags().GetString("password")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for password: %v", err)
+		return options, fmt.Errorf("invalid value for password: %w", err)
 	}
 
 	options.FollowRedirect, err = cmd.Flags().GetBool("followredirect")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for followredirect: %v", err)
+		return options, fmt.Errorf("invalid value for followredirect: %w", err)
 	}
 
 	options.InsecureSSL, err = cmd.Flags().GetBool("insecuressl")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for insecuressl: %v", err)
+		return options, fmt.Errorf("invalid value for insecuressl: %w", err)
 	}
 
 	options.Method, err = cmd.Flags().GetString("method")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for method: %v", err)
+		return options, fmt.Errorf("invalid value for method: %w", err)
 	}
 
 	headers, err := cmd.Flags().GetStringArray("headers")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for headers: %v", err)
+		return options, fmt.Errorf("invalid value for headers: %w", err)
 	}
 
 	for _, h := range headers {

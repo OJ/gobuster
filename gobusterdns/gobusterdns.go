@@ -233,11 +233,11 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

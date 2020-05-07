@@ -85,7 +85,7 @@ func (d *GobusterDir) PreRun() error {
 
 	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", d.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
 
 	guid := uuid.New()
@@ -419,11 +419,11 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

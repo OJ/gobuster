@@ -16,19 +16,19 @@ var cmdFuzz *cobra.Command
 func runFuzz(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseFuzzOptions()
 	if err != nil {
-		return fmt.Errorf("error on parsing arguments: %v", err)
+		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
 	plugin, err := gobusterfuzz.NewGobusterFuzz(mainContext, globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("error on creating gobusterfuzz: %v", err)
+		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		if goberr, ok := err.(*gobusterfuzz.ErrWildcard); ok {
 			return fmt.Errorf("%s. To force processing of Wildcard responses, specify the '--wildcard' switch", goberr.Error())
 		}
-		return fmt.Errorf("error on running gobuster: %v", err)
+		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil
 }
@@ -59,26 +59,26 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
 
 	// blacklist will override the normal status codes
 	if plugin.ExcludedStatusCodes != "" {
 		ret, err := helper.ParseCommaSeperatedInt(plugin.ExcludedStatusCodes)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %v", err)
+			return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 		}
 		plugin.ExcludedStatusCodesParsed = ret
 	}
 
 	plugin.WildcardForced, err = cmdFuzz.Flags().GetBool("wildcard")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for wildcard: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for wildcard: %w", err)
 	}
 
 	plugin.ExcludeSize, err = cmdFuzz.Flags().GetInt64("excludesize")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for excludesize: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for excludesize: %w", err)
 	}
 
 	return globalopts, plugin, nil

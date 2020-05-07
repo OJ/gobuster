@@ -57,7 +57,7 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 
 	threads, err := rootCmd.Flags().GetInt("threads")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for threads: %v", err)
+		return nil, fmt.Errorf("invalid value for threads: %w", err)
 	}
 
 	if threads <= 0 {
@@ -67,7 +67,7 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 
 	delay, err := rootCmd.Flags().GetDuration("delay")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for delay: %v", err)
+		return nil, fmt.Errorf("invalid value for delay: %w", err)
 	}
 
 	if delay < 0 {
@@ -77,27 +77,27 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 
 	globalopts.Wordlist, err = rootCmd.Flags().GetString("wordlist")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for wordlist: %v", err)
+		return nil, fmt.Errorf("invalid value for wordlist: %w", err)
 	}
 
 	if globalopts.Wordlist == "-" {
 		// STDIN
 	} else if _, err2 := os.Stat(globalopts.Wordlist); os.IsNotExist(err2) {
-		return nil, fmt.Errorf("wordlist file %q does not exist: %v", globalopts.Wordlist, err2)
+		return nil, fmt.Errorf("wordlist file %q does not exist: %w", globalopts.Wordlist, err2)
 	}
 
 	globalopts.PatternFile, err = rootCmd.Flags().GetString("pattern")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for pattern: %v", err)
+		return nil, fmt.Errorf("invalid value for pattern: %w", err)
 	}
 
 	if globalopts.PatternFile != "" {
 		if _, err = os.Stat(globalopts.PatternFile); os.IsNotExist(err) {
-			return nil, fmt.Errorf("pattern file %q does not exist: %v", globalopts.PatternFile, err)
+			return nil, fmt.Errorf("pattern file %q does not exist: %w", globalopts.PatternFile, err)
 		}
 		permFile, err := os.Open(globalopts.PatternFile)
 		if err != nil {
-			return nil, fmt.Errorf("could not open pattern file %q: %v", globalopts.PatternFile, err)
+			return nil, fmt.Errorf("could not open pattern file %q: %w", globalopts.PatternFile, err)
 		}
 		defer permFile.Close()
 
@@ -106,28 +106,28 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 			globalopts.Patterns = append(globalopts.Patterns, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("could not read pattern file %q: %v", globalopts.PatternFile, err)
+			return nil, fmt.Errorf("could not read pattern file %q: %w", globalopts.PatternFile, err)
 		}
 	}
 
 	globalopts.OutputFilename, err = rootCmd.Flags().GetString("output")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for output filename: %v", err)
+		return nil, fmt.Errorf("invalid value for output filename: %w", err)
 	}
 
 	globalopts.Verbose, err = rootCmd.Flags().GetBool("verbose")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for verbose: %v", err)
+		return nil, fmt.Errorf("invalid value for verbose: %w", err)
 	}
 
 	globalopts.Quiet, err = rootCmd.Flags().GetBool("quiet")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for quiet: %v", err)
+		return nil, fmt.Errorf("invalid value for quiet: %w", err)
 	}
 
 	globalopts.NoProgress, err = rootCmd.Flags().GetBool("noprogress")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for noprogress: %v", err)
+		return nil, fmt.Errorf("invalid value for noprogress: %w", err)
 	}
 
 	return globalopts, nil

@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -162,7 +163,7 @@ func TestLineCounter(t *testing.T) {
 func TestLineCounterError(t *testing.T) {
 	r := iotest.TimeoutReader(strings.NewReader("test"))
 	_, err := lineCounter(r)
-	if err != iotest.ErrTimeout {
+	if !errors.Is(err, iotest.ErrTimeout) {
 		t.Fatalf("Got wrong error! %v", err)
 	}
 }

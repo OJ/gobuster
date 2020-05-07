@@ -115,12 +115,12 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	// Pull content from the wordlist
 	wordlist, err := os.Open(g.Opts.Wordlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open wordlist: %v", err)
+		return nil, fmt.Errorf("failed to open wordlist: %w", err)
 	}
 
 	lines, err := lineCounter(wordlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get number of lines: %v", err)
+		return nil, fmt.Errorf("failed to get number of lines: %w", err)
 	}
 
 	g.RequestsIssued = 0
@@ -134,7 +134,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to rewind wordlist: %v", err)
+		return nil, fmt.Errorf("failed to rewind wordlist: %w", err)
 	}
 	return bufio.NewScanner(wordlist), nil
 }

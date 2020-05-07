@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 	"text/tabwriter"
@@ -90,10 +91,10 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 	// looks like 404 and 400 are the only negative status codes
 	found := false
 	switch *status {
-	case 400:
-	case 404:
+	case http.StatusBadRequest:
+	case http.StatusNotFound:
 		found = false
-	case 200:
+	case http.StatusOK:
 		// listing enabled
 		found = true
 		// parse xml
@@ -115,7 +116,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 			awsError := AWSError{}
 			err := xml.Unmarshal(body, &awsError)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse error xml: %v", err)
+				return nil, fmt.Errorf("could not parse error xml: %w", err)
 			}
 			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
 			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
@@ -124,7 +125,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 			awsListing := AWSListing{}
 			err := xml.Unmarshal(body, &awsListing)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse result xml: %v", err)
+				return nil, fmt.Errorf("could not parse result xml: %w", err)
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range awsListing.Contents {
@@ -235,11 +236,11 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

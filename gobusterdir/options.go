@@ -19,6 +19,7 @@ type OptionsDir struct {
 	Expanded                   bool
 	NoStatus                   bool
 	DiscoverBackup             bool
+	ExcludeLength              []int
 }
 
 // NewOptionsDir returns a new initialized OptionsDir

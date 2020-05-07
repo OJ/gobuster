@@ -76,9 +76,9 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 		return nil, nil, fmt.Errorf("invalid value for wildcard: %w", err)
 	}
 
-	plugin.ExcludeSize, err = cmdFuzz.Flags().GetInt64("excludesize")
+	plugin.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for excludesize: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
 	return globalopts, plugin, nil
@@ -95,7 +95,7 @@ func init() {
 		log.Fatalf("%v", err)
 	}
 	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Negative status codes (will override statuscodes if set)")
-	cmdFuzz.Flags().Int64P("excludesize", "s", -1, "Exclude the following content size")
+	cmdFuzz.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 	cmdFuzz.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
 
 	cmdFuzz.PersistentPreRun = func(cmd *cobra.Command, args []string) {

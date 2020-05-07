@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -143,7 +144,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+		if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(dirSize))) || d.globalopts.Verbose {
 			ret = append(ret, libgobuster.Result{
 				Entity:     fmt.Sprintf("%s%s", word, suffix),
 				StatusCode: *dirResp,
@@ -177,7 +178,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
-			if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+			if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
 				ret = append(ret, libgobuster.Result{
 					Entity:     file,
 					StatusCode: *fileResp,
@@ -232,7 +233,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 						return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 					}
 
-					if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+					if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
 						ret = append(ret, libgobuster.Result{
 							Entity:     file,
 							StatusCode: *fileResp,
@@ -344,6 +345,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	} else if o.StatusCodesParsed.Length() > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
+	if len(o.ExcludeLength) > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
 			return "", err
 		}
 	}

@@ -9,8 +9,8 @@ type OptionsFuzz struct {
 	libgobuster.HTTPOptions
 	ExcludedStatusCodes       string
 	ExcludedStatusCodesParsed libgobuster.IntSet
-	ExcludeSize               int64
 	WildcardForced            bool
+	ExcludeLength             []int
 }
 
 // NewOptionsFuzz returns a new initialized OptionsFuzz

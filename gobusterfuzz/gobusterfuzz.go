@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
@@ -90,7 +91,7 @@ func (d *GobusterFuzz) Run(word string) ([]libgobuster.Result, error) {
 	if resp != nil {
 		resultStatus := libgobuster.StatusFound
 
-		if d.options.ExcludeSize >= 0 && size == d.options.ExcludeSize {
+		if helper.SliceContains(d.options.ExcludeLength, int(size)) {
 			resultStatus = libgobuster.StatusMissed
 		}
 
@@ -188,8 +189,8 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.ExcludeSize >= 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Excluded Response Size:\t%d\n", o.ExcludeSize); err != nil {
+	if len(o.ExcludeLength) > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
 			return "", err
 		}
 	}

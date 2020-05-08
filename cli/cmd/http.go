@@ -8,37 +8,80 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+func addBasicHTTPOptions(cmd *cobra.Command) {
+	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
+	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
+	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
+	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
+}
+
 func addCommonHTTPOptions(cmd *cobra.Command) error {
+	addBasicHTTPOptions(cmd)
 	cmd.Flags().StringP("url", "u", "", "The target URL")
 	cmd.Flags().StringP("cookies", "c", "", "Cookies to use for the requests")
 	cmd.Flags().StringP("username", "U", "", "Username for Basic Auth")
 	cmd.Flags().StringP("password", "P", "", "Password for Basic Auth")
-	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
-	cmd.Flags().StringP("proxy", "p", "", "Proxy to use for requests [http(s)://host:port]")
-	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 	cmd.Flags().BoolP("followredirect", "r", false, "Follow redirects")
 	cmd.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
+	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
-	if err := cmdDir.MarkFlagRequired("url"); err != nil {
-		return fmt.Errorf("error on marking flag as required: %v", err)
+	if err := cmd.MarkFlagRequired("url"); err != nil {
+		return fmt.Errorf("error on marking flag as required: %w", err)
 	}
 
 	return nil
 }
 
-func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error) {
-	options := libgobuster.OptionsHTTP{}
+func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, error) {
+	options := libgobuster.BasicHTTPOptions{}
 	var err error
+
+	options.UserAgent, err = cmd.Flags().GetString("useragent")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for useragent: %w", err)
+	}
+	randomUA, err := cmd.Flags().GetBool("random-agent")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for random-agent: %w", err)
+	}
+	if randomUA {
+		options.UserAgent = helper.GetRandomUserAgent()
+	}
+
+	options.Proxy, err = cmd.Flags().GetString("proxy")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for proxy: %w", err)
+	}
+
+	options.Timeout, err = cmd.Flags().GetDuration("timeout")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for timeout: %w", err)
+	}
+	return options, nil
+}
+
+func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error) {
+	options := libgobuster.HTTPOptions{}
+	var err error
+
+	basic, err := parseBasicHTTPOptions(cmd)
+	if err != nil {
+		return options, err
+	}
+	options.Proxy = basic.Proxy
+	options.Timeout = basic.Timeout
+	options.UserAgent = basic.UserAgent
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for url: %v", err)
+		return options, fmt.Errorf("invalid value for url: %w", err)
 	}
 
 	if !strings.HasPrefix(options.URL, "http") {
@@ -63,47 +106,37 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error)
 
 	options.Cookies, err = cmd.Flags().GetString("cookies")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for cookies: %v", err)
+		return options, fmt.Errorf("invalid value for cookies: %w", err)
 	}
 
 	options.Username, err = cmd.Flags().GetString("username")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for username: %v", err)
+		return options, fmt.Errorf("invalid value for username: %w", err)
 	}
 
 	options.Password, err = cmd.Flags().GetString("password")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for password: %v", err)
-	}
-
-	options.UserAgent, err = cmd.Flags().GetString("useragent")
-	if err != nil {
-		return options, fmt.Errorf("invalid value for useragent: %v", err)
-	}
-
-	options.Proxy, err = cmd.Flags().GetString("proxy")
-	if err != nil {
-		return options, fmt.Errorf("invalid value for proxy: %v", err)
-	}
-
-	options.Timeout, err = cmd.Flags().GetDuration("timeout")
-	if err != nil {
-		return options, fmt.Errorf("invalid value for timeout: %v", err)
+		return options, fmt.Errorf("invalid value for password: %w", err)
 	}
 
 	options.FollowRedirect, err = cmd.Flags().GetBool("followredirect")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for followredirect: %v", err)
+		return options, fmt.Errorf("invalid value for followredirect: %w", err)
 	}
 
 	options.InsecureSSL, err = cmd.Flags().GetBool("insecuressl")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for insecuressl: %v", err)
+		return options, fmt.Errorf("invalid value for insecuressl: %w", err)
+	}
+
+	options.Method, err = cmd.Flags().GetString("method")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for method: %w", err)
 	}
 
 	headers, err := cmd.Flags().GetStringArray("headers")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for headers: %v", err)
+		return options, fmt.Errorf("invalid value for headers: %w", err)
 	}
 
 	for _, h := range headers {
@@ -124,7 +157,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.OptionsHTTP, error)
 	if options.Username != "" && options.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
 		// please don't remove the int cast here as it is sadly needed on windows :/
-		passBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		passBytes, err := terminal.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
 		fmt.Println("")

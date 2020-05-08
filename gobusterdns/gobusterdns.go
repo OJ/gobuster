@@ -71,6 +71,11 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (d *GobusterDNS) Name() string {
+	return "DNS enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun() error {
 	// Resolve a subdomain sthat probably shouldn't exist
@@ -215,6 +220,12 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if d.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
+			return "", err
+		}
+	}
+
 	if d.globalopts.Verbose {
 		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
@@ -222,11 +233,11 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

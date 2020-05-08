@@ -38,15 +38,21 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 		globalopts: globalopts,
 	}
 
+	basicOptions := libgobuster.BasicHTTPOptions{
+		Proxy:     opts.Proxy,
+		Timeout:   opts.Timeout,
+		UserAgent: opts.UserAgent,
+	}
+
 	httpOpts := libgobuster.HTTPOptions{
-		Proxy:          opts.Proxy,
-		FollowRedirect: opts.FollowRedirect,
-		InsecureSSL:    opts.InsecureSSL,
-		Timeout:        opts.Timeout,
-		Username:       opts.Username,
-		Password:       opts.Password,
-		UserAgent:      opts.UserAgent,
-		Headers:        opts.Headers,
+		BasicHTTPOptions: basicOptions,
+		FollowRedirect:   opts.FollowRedirect,
+		InsecureSSL:      opts.InsecureSSL,
+		Username:         opts.Username,
+		Password:         opts.Password,
+		Headers:          opts.Headers,
+		Cookies:          opts.Cookies,
+		Method:           opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
@@ -57,9 +63,13 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (v *GobusterVhost) Name() string {
+	return "VHOST enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun() error {
-
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL, "/") {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
@@ -67,31 +77,31 @@ func (v *GobusterVhost) PreRun() error {
 
 	url, err := url.Parse(v.options.URL)
 	if err != nil {
-		return fmt.Errorf("invalid url %s: %v", v.options.URL, err)
+		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
 	}
 	v.domain = url.Host
 
 	// request default vhost for baseline1
-	_, tmp, err := v.http.GetWithBody(v.options.URL, "", v.options.Cookies)
+	_, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
-	v.baseline1 = *tmp
+	v.baseline1 = tmp
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, tmp, err = v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
+	_, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", v.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
-	v.baseline2 = *tmp
+	v.baseline2 = tmp
 	return nil
 }
 
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, body, err := v.http.GetWithBody(v.options.URL, subdomain, v.options.Cookies)
+	status, size, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	var ret []libgobuster.Result
 	if err != nil {
 		return ret, err
@@ -99,9 +109,8 @@ func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := !bytes.Equal(*body, v.baseline1) && !bytes.Equal(*body, v.baseline2)
+	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
 	if found || v.globalopts.Verbose {
-		size := int64(len(*body))
 		resultStatus := libgobuster.StatusMissed
 		if found {
 			resultStatus = libgobuster.StatusFound
@@ -144,6 +153,10 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if _, err := fmt.Fprintf(tw, "[+] Method:\t%s\n", o.Method); err != nil {
+		return "", err
+	}
+
 	if _, err := fmt.Fprintf(tw, "[+] Threads:\t%d\n", v.globalopts.Threads); err != nil {
 		return "", err
 	}
@@ -160,6 +173,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 	if _, err := fmt.Fprintf(tw, "[+] Wordlist:\t%s\n", wordlist); err != nil {
 		return "", err
+	}
+
+	if v.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", v.globalopts.PatternFile, len(v.globalopts.Patterns)); err != nil {
+			return "", err
+		}
 	}
 
 	if o.Proxy != "" {
@@ -197,11 +216,11 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

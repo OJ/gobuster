@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"text/tabwriter"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -30,12 +32,6 @@ type GobusterDir struct {
 	http       *libgobuster.HTTPClient
 }
 
-// GetRequest issues a GET request to the target and returns
-// the status code, length and an error
-func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.Get(url, "", d.options.Cookies)
-}
-
 // NewGobusterDir creates a new initialized GobusterDir
 func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
 	if globalopts == nil {
@@ -51,16 +47,21 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		globalopts: globalopts,
 	}
 
+	basicOptions := libgobuster.BasicHTTPOptions{
+		Proxy:     opts.Proxy,
+		Timeout:   opts.Timeout,
+		UserAgent: opts.UserAgent,
+	}
+
 	httpOpts := libgobuster.HTTPOptions{
-		Proxy:          opts.Proxy,
-		FollowRedirect: opts.FollowRedirect,
-		InsecureSSL:    opts.InsecureSSL,
-		IncludeLength:  opts.IncludeLength,
-		Timeout:        opts.Timeout,
-		Username:       opts.Username,
-		Password:       opts.Password,
-		UserAgent:      opts.UserAgent,
-		Headers:        opts.Headers,
+		BasicHTTPOptions: basicOptions,
+		FollowRedirect:   opts.FollowRedirect,
+		InsecureSSL:      opts.InsecureSSL,
+		Username:         opts.Username,
+		Password:         opts.Password,
+		Headers:          opts.Headers,
+		Cookies:          opts.Cookies,
+		Method:           opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
@@ -71,6 +72,11 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	return &g, nil
 }
 
+// Name should return the name of the plugin
+func (d *GobusterDir) Name() string {
+	return "directory enumeration"
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun() error {
 	// add trailing slash
@@ -78,14 +84,18 @@ func (d *GobusterDir) PreRun() error {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}
 
-	_, _, err := d.get(d.options.URL)
+	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
-		return fmt.Errorf("unable to connect to %s: %v", d.options.URL, err)
+		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
 
 	guid := uuid.New()
 	url := fmt.Sprintf("%s%s", d.options.URL, guid)
-	wildcardResp, _, err := d.get(url)
+	if d.options.UseSlash {
+		url = fmt.Sprintf("%s/", url)
+	}
+
+	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}
@@ -114,7 +124,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 
 	// Try the DIR first
 	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
-	dirResp, dirSize, err := d.get(url)
+	dirResp, dirSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +144,11 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+		if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(dirSize))) || d.globalopts.Verbose {
 			ret = append(ret, libgobuster.Result{
 				Entity:     fmt.Sprintf("%s%s", word, suffix),
 				StatusCode: *dirResp,
-				Size:       dirSize,
+				Size:       &dirSize,
 				Status:     resultStatus,
 			})
 		}
@@ -148,7 +158,7 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	for ext := range d.options.ExtensionsParsed.Set {
 		file := fmt.Sprintf("%s.%s", word, ext)
 		url = fmt.Sprintf("%s%s", d.options.URL, file)
-		fileResp, fileSize, err := d.get(url)
+		fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -168,13 +178,70 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
-			if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
+			if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
 				ret = append(ret, libgobuster.Result{
 					Entity:     file,
 					StatusCode: *fileResp,
-					Size:       fileSize,
+					Size:       &fileSize,
 					Status:     resultStatus,
 				})
+			}
+		}
+	}
+
+	// Discover Backup: Pull all 200's create common backup names.
+	if d.options.DiscoverBackup {
+		for _, r := range ret {
+			fileNames := make([]string, 0)
+			// Common Backup Extensions
+			backupExtensions := strings.Fields("~ .bak .bak2 .old .1")
+			for _, backupExtension := range backupExtensions {
+				// Append Backup Extension to File Name
+				fname := fmt.Sprintf("%s%s", r.Entity, backupExtension)
+				fileNames = append(fileNames, fname)
+				// Strip extension, then append backup extension
+				noExtension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
+				if noExtension != r.Entity {
+					fname2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
+					fileNames = append(fileNames, fname2)
+				}
+			}
+
+			// Vim Swap File
+			vimFname := fmt.Sprintf(".%s.swp", r.Entity)
+			fileNames = append(fileNames, vimFname)
+
+			for _, file := range fileNames {
+				url = fmt.Sprintf("%s%s", d.options.URL, file)
+				fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+				if err != nil {
+					return nil, err
+				}
+
+				if fileResp != nil {
+					resultStatus := libgobuster.StatusMissed
+
+					if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+						if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else if d.options.StatusCodesParsed.Length() > 0 {
+						if d.options.StatusCodesParsed.Contains(*fileResp) {
+							resultStatus = libgobuster.StatusFound
+						}
+					} else {
+						return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+					}
+
+					if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
+						ret = append(ret, libgobuster.Result{
+							Entity:     file,
+							StatusCode: *fileResp,
+							Size:       &fileSize,
+							Status:     resultStatus,
+						})
+					}
+				}
 			}
 		}
 	}
@@ -220,11 +287,12 @@ func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
 		}
 	}
 
-	if r.Size != nil {
+	if r.Size != nil && d.options.IncludeLength {
 		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
 			return nil, err
 		}
 	}
+
 	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
 		return nil, err
 	}
@@ -240,6 +308,10 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := d.options
 	if _, err := fmt.Fprintf(tw, "[+] Url:\t%s\n", o.URL); err != nil {
+		return "", err
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Method:\t%s\n", o.Method); err != nil {
 		return "", err
 	}
 
@@ -261,12 +333,24 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if d.globalopts.PatternFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
+			return "", err
+		}
+	}
+
 	if o.StatusCodesBlacklistParsed.Length() > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
 			return "", err
 		}
 	} else if o.StatusCodesParsed.Length() > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
+	if len(o.ExcludeLength) > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
 			return "", err
 		}
 	}
@@ -342,11 +426,11 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	}
 
 	if err := tw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	if err := bw.Flush(); err != nil {
-		return "", fmt.Errorf("error on tostring: %v", err)
+		return "", fmt.Errorf("error on tostring: %w", err)
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

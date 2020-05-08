@@ -1,8 +1,10 @@
 package libgobuster
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,28 +26,43 @@ func httpServerT(t *testing.T, content string) *httptest.Server {
 	return ts
 }
 
-func TestGet(t *testing.T) {
-	h := httpServerT(t, "test")
+func randomString(length int) string {
+	var letter = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	letterLen := len(letter)
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letter[rand.Intn(letterLen)]
+	}
+	return string(b)
+}
+
+func TestRequest(t *testing.T) {
+	ret := randomString(100)
+	h := httpServerT(t, ret)
 	defer h.Close()
 	var o HTTPOptions
 	c, err := NewHTTPClient(context.Background(), &o)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	a, b, err := c.Get(h.URL, "", "")
+	status, length, body, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	if *a != 200 {
-		t.Fatalf("Invalid status returned: %d", a)
+	if *status != 200 {
+		t.Fatalf("Invalid status returned: %d", status)
 	}
-	if b != nil && *b != int64(len("test")) {
-		t.Fatalf("Invalid length returned: %d", b)
+	if length != int64(len(ret)) {
+		t.Fatalf("Invalid length returned: %d", length)
+	}
+	if body == nil || !bytes.Equal(body, []byte(ret)) {
+		t.Fatalf("Invalid body returned: %d", body)
 	}
 }
 
-func BenchmarkGet(b *testing.B) {
-	h := httpServerB(b, "test")
+func BenchmarkRequestWithoutBody(b *testing.B) {
+	h := httpServerB(b, randomString(10000))
 	defer h.Close()
 	var o HTTPOptions
 	c, err := NewHTTPClient(context.Background(), &o)
@@ -53,7 +70,23 @@ func BenchmarkGet(b *testing.B) {
 		b.Fatalf("Got Error: %v", err)
 	}
 	for x := 0; x < b.N; x++ {
-		_, _, err := c.Get(h.URL, "", "")
+		_, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: false})
+		if err != nil {
+			b.Fatalf("Got Error: %v", err)
+		}
+	}
+}
+
+func BenchmarkRequestWitBody(b *testing.B) {
+	h := httpServerB(b, randomString(10000))
+	defer h.Close()
+	var o HTTPOptions
+	c, err := NewHTTPClient(context.Background(), &o)
+	if err != nil {
+		b.Fatalf("Got Error: %v", err)
+	}
+	for x := 0; x < b.N; x++ {
+		_, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -61,7 +94,7 @@ func BenchmarkGet(b *testing.B) {
 }
 
 func BenchmarkNewHTTPClient(b *testing.B) {
-	h := httpServerB(b, "test")
+	h := httpServerB(b, randomString(500))
 	defer h.Close()
 	var o HTTPOptions
 	for x := 0; x < b.N; x++ {

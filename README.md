@@ -155,7 +155,7 @@ Global Flags:
 ### 3. Install GoBuster:
 
 ```bash
-apt install gobuster -y && cd /root && go get github.com/OJ/gobuster && cd /root && git clone https://github.com/OJ/gobuster.git && cd /gobuster && go get && go build && go install
+apt install gobuster -y && cd /root && go get github.com/OJ/gobuster && cd /root && git clone https://github.com/OJ/gobuster.git && cd gobuster && go get && go build && go install
 ```
 
 Optional= If you have all the dependencies already, you can make use of the build scripts:

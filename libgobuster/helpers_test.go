@@ -22,7 +22,7 @@ func TestStringSetAdd(t *testing.T) {
 	x := NewStringSet()
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %v", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %v", len(x.Set))
 	}
 }
 
@@ -31,7 +31,7 @@ func TestStringSetAddDouble(t *testing.T) {
 	x.Add("test")
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
@@ -39,7 +39,7 @@ func TestStringSetAddRange(t *testing.T) {
 	x := NewStringSet()
 	x.AddRange([]string{"asdf", "ghjk"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
 }
 
@@ -47,7 +47,7 @@ func TestStringSetAddRangeDouble(t *testing.T) {
 	x := NewStringSet()
 	x.AddRange([]string{"asdf", "ghjk", "asdf", "ghjk"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
 }
 
@@ -93,7 +93,7 @@ func TestIntSetAdd(t *testing.T) {
 	x := NewIntSet()
 	x.Add(1)
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
@@ -102,7 +102,7 @@ func TestIntSetAddDouble(t *testing.T) {
 	x.Add(1)
 	x.Add(1)
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
@@ -153,7 +153,7 @@ func TestLineCounter(t *testing.T) {
 				t.Fatalf("Got error: %v", err)
 			}
 			if l != x.expected {
-				t.Fatalf("wrong line count! Got %d expected %d", l, x.expected)
+				t.Fatalf("Wrong line count! Got %d expected %d", l, x.expected)
 			}
 		})
 	}

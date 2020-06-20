@@ -131,7 +131,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		g.RequestsExpected += (lines * len(g.Opts.Patterns))
 	}
 
-	g.RequestsExpected = g.RequestsExpected * g.plugin.RequestsPerRun()
+	g.RequestsExpected *= g.plugin.RequestsPerRun()
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)

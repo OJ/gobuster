@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// nolint:gochecknoglobals
 var (
 	backupExtensions    = []string{"~", ".bak", ".bak2", ".old", ".1"}
 	backupDotExtensions = []string{".swp"}
@@ -140,7 +141,7 @@ func (d *GobusterDir) PreRun() error {
 }
 
 func getBackupFilenames(word string) []string {
-	var ret []string
+	ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
 	for _, b := range backupExtensions {
 		ret = append(ret, fmt.Sprintf("%s%s", word, b))
 	}

@@ -64,7 +64,7 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 
 	// blacklist will override the normal status codes
 	if plugin.ExcludedStatusCodes != "" {
-		ret, err := helper.ParseCommaSeperatedInt(plugin.ExcludedStatusCodes)
+		ret, err := helper.ParseCommaSeparatedInt(plugin.ExcludedStatusCodes)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 		}

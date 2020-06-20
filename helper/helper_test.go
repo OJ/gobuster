@@ -37,7 +37,7 @@ func TestParseExtensions(t *testing.T) {
 	}
 }
 
-func TestParseCommaSeperatedInt(t *testing.T) {
+func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
 
 	var tt = []struct {
@@ -56,7 +56,7 @@ func TestParseCommaSeperatedInt(t *testing.T) {
 
 	for _, x := range tt {
 		t.Run(x.testName, func(t *testing.T) {
-			ret, err := ParseCommaSeperatedInt(x.stringCodes)
+			ret, err := ParseCommaSeparatedInt(x.stringCodes)
 			if x.expectedError != "" {
 				if err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
@@ -91,7 +91,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 	}
 }
 
-func BenchmarkParseCommaSeperatedInt(b *testing.B) {
+func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	var tt = []struct {
 		testName      string
 		stringCodes   string
@@ -109,7 +109,7 @@ func BenchmarkParseCommaSeperatedInt(b *testing.B) {
 	for _, x := range tt {
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
-				_, _ = ParseCommaSeperatedInt(x.stringCodes)
+				_, _ = ParseCommaSeparatedInt(x.stringCodes)
 			}
 		})
 	}

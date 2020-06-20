@@ -24,8 +24,8 @@ func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	return ret, nil
 }
 
-// ParseCommaSeperatedInt parses the status codes provided as a comma separated list
-func ParseCommaSeperatedInt(inputString string) (libgobuster.IntSet, error) {
+// ParseCommaSeparatedInt parses the status codes provided as a comma separated list
+func ParseCommaSeparatedInt(inputString string) (libgobuster.IntSet, error) {
 	if inputString == "" {
 		return libgobuster.IntSet{}, fmt.Errorf("invalid string provided")
 	}
@@ -42,8 +42,8 @@ func ParseCommaSeperatedInt(inputString string) (libgobuster.IntSet, error) {
 	return ret, nil
 }
 
-// ParseCommaSeperatedString parses the status codes provided as a comma separated list
-func ParseCommaSeperatedString(inputString string) (libgobuster.StringSet, error) {
+// ParseCommaSeparatedString parses the status codes provided as a comma separated list
+func ParseCommaSeparatedString(inputString string) (libgobuster.StringSet, error) {
 	if inputString == "" {
 		return libgobuster.StringSet{}, fmt.Errorf("invalid string provided")
 	}

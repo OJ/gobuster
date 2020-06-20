@@ -77,7 +77,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 
 	// blacklist will override the normal status codes
 	if plugin.StatusCodesBlacklist != "" {
-		ret, err := helper.ParseCommaSeperatedInt(plugin.StatusCodesBlacklist)
+		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodesBlacklist)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodesblacklist: %w", err)
 		}
@@ -88,7 +88,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodes: %w", err)
 		}
-		ret, err := helper.ParseCommaSeperatedInt(plugin.StatusCodes)
+		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodes)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for statuscodes: %w", err)
 		}

@@ -192,7 +192,7 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	err = gobuster.Start()
 
 	// call cancel func so progressWorker will exit (the only goroutine in this
-	// file using the context) and to free ressources
+	// file using the context) and to free resources
 	cancel()
 	// wait for all spun up goroutines to finish (all have to call wg.Done())
 	wg.Wait()

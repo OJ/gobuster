@@ -2,6 +2,7 @@ package gobusters3
 
 import "encoding/xml"
 
+// AWSError represents a returned error from AWS
 type AWSError struct {
 	XMLName   xml.Name `xml:"Error"`
 	Code      string   `xml:"Code"`
@@ -10,7 +11,7 @@ type AWSError struct {
 	HostID    string   `xml:"HostId"`
 }
 
-// parse only a subset of returned properties
+// AWSListing contains only a subset of returned properties
 type AWSListing struct {
 	XMLName     xml.Name `xml:"ListBucketResult"`
 	Name        string   `xml:"Name"`

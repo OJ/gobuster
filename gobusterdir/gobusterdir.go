@@ -56,7 +56,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	httpOpts := libgobuster.HTTPOptions{
 		BasicHTTPOptions: basicOptions,
 		FollowRedirect:   opts.FollowRedirect,
-		InsecureSSL:      opts.InsecureSSL,
+		NoTLSValidation:  opts.NoTLSValidation,
 		Username:         opts.Username,
 		Password:         opts.Password,
 		Headers:          opts.Headers,
@@ -197,19 +197,19 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 			backupExtensions := strings.Fields("~ .bak .bak2 .old .1")
 			for _, backupExtension := range backupExtensions {
 				// Append Backup Extension to File Name
-				fname := fmt.Sprintf("%s%s", r.Entity, backupExtension)
-				fileNames = append(fileNames, fname)
+				filename := fmt.Sprintf("%s%s", r.Entity, backupExtension)
+				fileNames = append(fileNames, filename)
 				// Strip extension, then append backup extension
 				noExtension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
 				if noExtension != r.Entity {
-					fname2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
-					fileNames = append(fileNames, fname2)
+					filename2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
+					fileNames = append(fileNames, filename2)
 				}
 			}
 
 			// Vim Swap File
-			vimFname := fmt.Sprintf(".%s.swp", r.Entity)
-			fileNames = append(fileNames, vimFname)
+			vimFilename := fmt.Sprintf(".%s.swp", r.Entity)
+			fileNames = append(fileNames, vimFilename)
 
 			for _, file := range fileNames {
 				url = fmt.Sprintf("%s%s", d.options.URL, file)
@@ -398,7 +398,7 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	}
 
 	if o.FollowRedirect {
-		if _, err := fmt.Fprintf(tw, "[+] Follow Redir:\ttrue\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Follow Redirect:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

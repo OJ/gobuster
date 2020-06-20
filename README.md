@@ -45,7 +45,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 * enumerate public AWS S3 buckets
 * fuzzing mode
 * specify HTTP method
-* added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
+* added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 * The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
 
 ## Changes in 3.0
@@ -79,13 +79,13 @@ Flags:
   -d, --domain string      The target domain
   -h, --help               help for dns
   -r, --resolver string    Use custom DNS server (format server.com or server.com:port)
-  -c, --showcname          Show CNAME records (cannot be used with '-i' option)
-  -i, --showips            Show IP addresses
+  -c, --show-cname         Show CNAME records (cannot be used with '-i' option)
+  -i, --show-ips           Show IP addresses
       --timeout duration   DNS resolver timeout (default 1s)
       --wildcard           Force continued operation when wildcard found
 
 Global Flags:
-  -z, --noprogress        Don't display progress
+  -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
@@ -101,29 +101,29 @@ Usage:
   gobuster dir [flags]
 
 Flags:
-  -f, --addslash                      Append / to each request
+  -f, --add-slash                     Append / to each request
   -c, --cookies string                Cookies to use for the requests
   -e, --expanded                      Expanded mode, print full URLs
   -x, --extensions string             File extension(s) to search for
-  -r, --followredirect                Follow redirects
+  -r, --follow-redirect               Follow redirects
   -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
   -h, --help                          help for dir
-  -l, --includelength                 Include the length of the body in the output
-  -k, --insecuressl                   Skip SSL certificate verification
-  -n, --nostatus                      Don't print status codes
+  -l, --include-length                Include the length of the body in the output
+  -k, --no-tls-validation             Skip TLS certificate verification
+  -n, --no-status                     Don't print status codes
   -P, --password string               Password for Basic Auth
   -p, --proxy string                  Proxy to use for requests [http(s)://host:port]
-  -s, --statuscodes string            Positive status codes (will be overwritten with statuscodesblacklist if set) (default "200,204,301,302,307,401,403")
-  -b, --statuscodesblacklist string   Negative status codes (will override statuscodes if set)
+  -s, --status-codes string           Positive status codes (will be overwritten with status-codes-blacklist if set) (default "200,204,301,302,307,401,403")
+  -b, --status-codes-blacklist string Negative status codes (will override status-codes if set)
       --timeout duration              HTTP Timeout (default 10s)
   -u, --url string                    The target URL
   -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
   -U, --username string               Username for Basic Auth
-  -d, --discoverbackup                Upon finding a file search for backup files
+  -d, --discover-backup               Upon finding a file search for backup files
       --wildcard                      Force continued operation when wildcard found
 
 Global Flags:
-  -z, --noprogress        Don't display progress
+  -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
@@ -140,10 +140,10 @@ Usage:
 
 Flags:
   -c, --cookies string        Cookies to use for the requests
-  -r, --followredirect        Follow redirects
+  -r, --follow-redirect       Follow redirects
   -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
   -h, --help                  help for vhost
-  -k, --insecuressl           Skip SSL certificate verification
+  -k, --no-tls-validation     Skip TLS certificate verification
   -P, --password string       Password for Basic Auth
   -p, --proxy string          Proxy to use for requests [http(s)://host:port]
       --timeout duration      HTTP Timeout (default 10s)
@@ -152,7 +152,7 @@ Flags:
   -U, --username string       Username for Basic Auth
 
 Global Flags:
-  -z, --noprogress        Don't display progress
+  -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
@@ -198,11 +198,11 @@ go install
 If you have all the dependencies already, you can make use of the build scripts:
 
 * `make` - builds for the current Go configuration (ie. runs `go build`).
-* `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` subfolder.
-* `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` subfolder.
-* `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` subfolder.
-* `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` subfolder.
-* `make clean` - clears out the `build` subfolder.
+* `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` folder.
+* `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` folder.
+* `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` folder.
+* `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` folder.
+* `make clean` - clears out the `build` folder.
 * `make test` - runs the tests.
 
 ## Wordlists via STDIN

@@ -15,8 +15,7 @@ func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	}
 
 	ret := libgobuster.NewStringSet()
-	exts := strings.Split(extensions, ",")
-	for _, e := range exts {
+	for _, e := range strings.Split(extensions, ",") {
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
 		ret.Add(strings.TrimPrefix(e, "."))

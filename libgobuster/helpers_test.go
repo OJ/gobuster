@@ -38,7 +38,7 @@ func TestStringSetAddDouble(t *testing.T) {
 
 func TestStringSetAddRange(t *testing.T) {
 	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk"})
+	x.AddRange([]string{"string1", "string2"})
 	if len(x.Set) != 2 {
 		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
@@ -46,7 +46,7 @@ func TestStringSetAddRange(t *testing.T) {
 
 func TestStringSetAddRangeDouble(t *testing.T) {
 	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk", "asdf", "ghjk"})
+	x.AddRange([]string{"string1", "string2", "string1", "string2"})
 	if len(x.Set) != 2 {
 		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
@@ -54,7 +54,7 @@ func TestStringSetAddRangeDouble(t *testing.T) {
 
 func TestStringSetContains(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	for _, y := range v {
 		if !x.Contains(y) {
@@ -65,7 +65,7 @@ func TestStringSetContains(t *testing.T) {
 
 func TestStringSetContainsAny(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	if !x.ContainsAny(v) {
 		t.Fatalf("Did not find any")
@@ -79,7 +79,7 @@ func TestStringSetContainsAny(t *testing.T) {
 
 func TestStringSetStringify(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	z := x.Stringify()
 	// order is random

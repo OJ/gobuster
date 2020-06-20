@@ -27,8 +27,8 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringP("cookies", "c", "", "Cookies to use for the requests")
 	cmd.Flags().StringP("username", "U", "", "Username for Basic Auth")
 	cmd.Flags().StringP("password", "P", "", "Password for Basic Auth")
-	cmd.Flags().BoolP("followredirect", "r", false, "Follow redirects")
-	cmd.Flags().BoolP("insecuressl", "k", false, "Skip SSL certificate verification")
+	cmd.Flags().BoolP("follow-redirect", "r", false, "Follow redirects")
+	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
@@ -119,14 +119,14 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 		return options, fmt.Errorf("invalid value for password: %w", err)
 	}
 
-	options.FollowRedirect, err = cmd.Flags().GetBool("followredirect")
+	options.FollowRedirect, err = cmd.Flags().GetBool("follow-redirect")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for followredirect: %w", err)
+		return options, fmt.Errorf("invalid value for follow-redirect: %w", err)
 	}
 
-	options.InsecureSSL, err = cmd.Flags().GetBool("insecuressl")
+	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
 	if err != nil {
-		return options, fmt.Errorf("invalid value for insecuressl: %w", err)
+		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
 	}
 
 	options.Method, err = cmd.Flags().GetString("method")

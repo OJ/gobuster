@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Pattern for wordlist replacements in pattern file
+// PATTERN is the pattern for wordlist replacements in pattern file
 const PATTERN = "{GOBUSTER}"
 
 // SetupFunc is the "setup" function prototype for implementations

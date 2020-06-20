@@ -125,9 +125,9 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("invalid value for quiet: %w", err)
 	}
 
-	globalopts.NoProgress, err = rootCmd.Flags().GetBool("noprogress")
+	globalopts.NoProgress, err = rootCmd.Flags().GetBool("no-progress")
 	if err != nil {
-		return nil, fmt.Errorf("invalid value for noprogress: %w", err)
+		return nil, fmt.Errorf("invalid value for no-progress: %w", err)
 	}
 
 	return globalopts, nil
@@ -136,7 +136,7 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 // This has to be called as part of the pre-run for sub commands. Including
 // this in the init() function results in the built-in `help` command not
 // working as intended. The required flags should only be marked as required
-// on the global flags when one of the non-help commands is utilised.
+// on the global flags when one of the non-help commands is used.
 func configureGlobalOptions() {
 	if err := rootCmd.MarkPersistentFlagRequired("wordlist"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)
@@ -150,6 +150,6 @@ func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to stdout)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
-	rootCmd.PersistentFlags().BoolP("noprogress", "z", false, "Don't display progress")
+	rootCmd.PersistentFlags().BoolP("no-progress", "z", false, "Don't display progress")
 	rootCmd.PersistentFlags().StringP("pattern", "p", "", "File containing replacement patterns")
 }

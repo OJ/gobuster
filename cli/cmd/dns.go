@@ -46,14 +46,14 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 		return nil, nil, fmt.Errorf("invalid value for domain: %w", err)
 	}
 
-	plugin.ShowIPs, err = cmdDNS.Flags().GetBool("showips")
+	plugin.ShowIPs, err = cmdDNS.Flags().GetBool("show-ips")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for showips: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for show-ips: %w", err)
 	}
 
-	plugin.ShowCNAME, err = cmdDNS.Flags().GetBool("showcname")
+	plugin.ShowCNAME, err = cmdDNS.Flags().GetBool("show-cname")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for showcname: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for show-cname: %w", err)
 	}
 
 	plugin.WildcardForced, err = cmdDNS.Flags().GetBool("wildcard")
@@ -86,8 +86,8 @@ func init() {
 	}
 
 	cmdDNS.Flags().StringP("domain", "d", "", "The target domain")
-	cmdDNS.Flags().BoolP("showips", "i", false, "Show IP addresses")
-	cmdDNS.Flags().BoolP("showcname", "c", false, "Show CNAME records (cannot be used with '-i' option)")
+	cmdDNS.Flags().BoolP("show-ips", "i", false, "Show IP addresses")
+	cmdDNS.Flags().BoolP("show-cname", "c", false, "Show CNAME records (cannot be used with '-i' option)")
 	cmdDNS.Flags().DurationP("timeout", "", time.Second, "DNS resolver timeout")
 	cmdDNS.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
 	cmdDNS.Flags().StringP("resolver", "r", "", "Use custom DNS server (format server.com or server.com:port)")

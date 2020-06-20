@@ -78,7 +78,7 @@ func (d *GobusterDNS) Name() string {
 
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun() error {
-	// Resolve a subdomain sthat probably shouldn't exist
+	// Resolve a subdomain that probably shouldn't exist
 	guid := uuid.New()
 	wildcardIps, err := d.dnsLookup(fmt.Sprintf("%s.%s", guid, d.options.Domain))
 	if err == nil {

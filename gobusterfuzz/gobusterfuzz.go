@@ -54,7 +54,7 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 	httpOpts := libgobuster.HTTPOptions{
 		BasicHTTPOptions: basicOptions,
 		FollowRedirect:   opts.FollowRedirect,
-		InsecureSSL:      opts.InsecureSSL,
+		NoTLSValidation:  opts.NoTLSValidation,
 		Username:         opts.Username,
 		Password:         opts.Password,
 		Headers:          opts.Headers,
@@ -220,7 +220,7 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 	}
 
 	if o.FollowRedirect {
-		if _, err := fmt.Fprintf(tw, "[+] Follow Redir:\ttrue\n"); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Follow Redirect:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

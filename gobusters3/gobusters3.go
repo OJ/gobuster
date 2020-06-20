@@ -64,6 +64,11 @@ func (s *GobusterS3) Name() string {
 	return "S3 bucket enumeration"
 }
 
+// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
+func (s *GobusterS3) RequestsPerRun() int {
+	return 1
+}
+
 // PreRun is the pre run implementation of GobusterS3
 func (s *GobusterS3) PreRun() error {
 	return nil

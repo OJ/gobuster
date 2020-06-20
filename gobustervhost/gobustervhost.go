@@ -68,6 +68,11 @@ func (v *GobusterVhost) Name() string {
 	return "VHOST enumeration"
 }
 
+// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
+func (v *GobusterVhost) RequestsPerRun() int {
+	return 1
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun() error {
 	// add trailing slash

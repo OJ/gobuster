@@ -64,7 +64,7 @@ func (g *Gobuster) Errors() <-chan error {
 
 func (g *Gobuster) incrementRequests() {
 	g.RequestsCountMutex.Lock()
-	g.RequestsIssued++
+	g.RequestsIssued += g.plugin.RequestsPerRun()
 	g.RequestsCountMutex.Unlock()
 }
 
@@ -130,6 +130,8 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	if g.Opts.PatternFile != "" {
 		g.RequestsExpected += (lines * len(g.Opts.Patterns))
 	}
+
+	g.RequestsExpected = g.RequestsExpected * g.plugin.RequestsPerRun()
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)

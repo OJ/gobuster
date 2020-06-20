@@ -76,6 +76,11 @@ func (d *GobusterDNS) Name() string {
 	return "DNS enumeration"
 }
 
+// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
+func (d *GobusterDNS) RequestsPerRun() int {
+	return 1
+}
+
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun() error {
 	// Resolve a subdomain that probably shouldn't exist

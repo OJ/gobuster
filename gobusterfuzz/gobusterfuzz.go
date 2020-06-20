@@ -75,6 +75,11 @@ func (d *GobusterFuzz) Name() string {
 	return "fuzzing"
 }
 
+// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
+func (d *GobusterFuzz) RequestsPerRun() int {
+	return 1
+}
+
 // PreRun is the pre run implementation of gobusterfuzz
 func (d *GobusterFuzz) PreRun() error {
 	return nil

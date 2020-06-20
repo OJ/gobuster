@@ -5,13 +5,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
+)
+
+var (
+	backupExtensions    = []string{"~", ".bak", ".bak2", ".old", ".1"}
+	backupDotExtensions = []string{".swp"}
 )
 
 // ErrWildcard is returned if a wildcard response is found
@@ -27,9 +31,10 @@ func (e *ErrWildcard) Error() string {
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
-	options    *OptionsDir
-	globalopts *libgobuster.Options
-	http       *libgobuster.HTTPClient
+	options        *OptionsDir
+	globalopts     *libgobuster.Options
+	http           *libgobuster.HTTPClient
+	requestsPerRun *int // helper variable so we do not recalculate this over and over
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -77,6 +82,25 @@ func (d *GobusterDir) Name() string {
 	return "directory enumeration"
 }
 
+// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
+func (d *GobusterDir) RequestsPerRun() int {
+	if d.requestsPerRun != nil {
+		return *d.requestsPerRun
+	}
+
+	num := 1 + len(d.options.ExtensionsParsed.Set)
+	if d.options.DiscoverBackup {
+		// default word
+		num += len(backupExtensions)
+		num += len(backupDotExtensions)
+		// backups of filenames
+		num += len(d.options.ExtensionsParsed.Set) * len(backupExtensions)
+		num += len(d.options.ExtensionsParsed.Set) * len(backupDotExtensions)
+	}
+	d.requestsPerRun = &num
+	return *d.requestsPerRun
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun() error {
 	// add trailing slash
@@ -115,6 +139,17 @@ func (d *GobusterDir) PreRun() error {
 	return nil
 }
 
+func getBackupFilenames(word string) []string {
+	var ret []string
+	for _, b := range backupExtensions {
+		ret = append(ret, fmt.Sprintf("%s%s", word, b))
+	}
+	for _, b := range backupDotExtensions {
+		ret = append(ret, fmt.Sprintf(".%s%s", word, b))
+	}
+	return ret
+}
+
 // Run is the process implementation of gobusterdir
 func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 	suffix := ""
@@ -122,129 +157,64 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 		suffix = "/"
 	}
 
-	// Try the DIR first
-	url := fmt.Sprintf("%s%s%s", d.options.URL, word, suffix)
-	dirResp, dirSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
-	if err != nil {
-		return nil, err
-	}
-	var ret []libgobuster.Result
-	if dirResp != nil {
-		resultStatus := libgobuster.StatusMissed
-
-		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-			if !d.options.StatusCodesBlacklistParsed.Contains(*dirResp) {
-				resultStatus = libgobuster.StatusFound
-			}
-		} else if d.options.StatusCodesParsed.Length() > 0 {
-			if d.options.StatusCodesParsed.Contains(*dirResp) {
-				resultStatus = libgobuster.StatusFound
-			}
-		} else {
-			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
-		}
-
-		if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(dirSize))) || d.globalopts.Verbose {
-			ret = append(ret, libgobuster.Result{
-				Entity:     fmt.Sprintf("%s%s", word, suffix),
-				StatusCode: *dirResp,
-				Size:       &dirSize,
-				Status:     resultStatus,
-			})
+	// build list of urls to check
+	//   1: No extension
+	//   2: With extension
+	//   3: backupextension
+	urlsToCheck := make(map[string]string)
+	entity := fmt.Sprintf("%s%s", word, suffix)
+	dirURL := fmt.Sprintf("%s%s", d.options.URL, entity)
+	urlsToCheck[entity] = dirURL
+	if d.options.DiscoverBackup {
+		for _, u := range getBackupFilenames(word) {
+			url := fmt.Sprintf("%s%s", d.options.URL, u)
+			urlsToCheck[u] = url
 		}
 	}
-
-	// Follow up with files using each ext.
 	for ext := range d.options.ExtensionsParsed.Set {
-		file := fmt.Sprintf("%s.%s", word, ext)
-		url = fmt.Sprintf("%s%s", d.options.URL, file)
-		fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+		filename := fmt.Sprintf("%s.%s", word, ext)
+		url := fmt.Sprintf("%s%s", d.options.URL, filename)
+		urlsToCheck[filename] = url
+		if d.options.DiscoverBackup {
+			for _, u := range getBackupFilenames(filename) {
+				url2 := fmt.Sprintf("%s%s", d.options.URL, u)
+				urlsToCheck[u] = url2
+			}
+		}
+	}
+
+	var ret []libgobuster.Result
+	for entity, url := range urlsToCheck {
+		resp, size, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 		if err != nil {
 			return nil, err
 		}
-
-		if fileResp != nil {
+		if resp != nil {
 			resultStatus := libgobuster.StatusMissed
 
 			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-				if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
+				if !d.options.StatusCodesBlacklistParsed.Contains(*resp) {
 					resultStatus = libgobuster.StatusFound
 				}
 			} else if d.options.StatusCodesParsed.Length() > 0 {
-				if d.options.StatusCodesParsed.Contains(*fileResp) {
+				if d.options.StatusCodesParsed.Contains(*resp) {
 					resultStatus = libgobuster.StatusFound
 				}
 			} else {
 				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
-			if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
+			if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
 				ret = append(ret, libgobuster.Result{
-					Entity:     file,
-					StatusCode: *fileResp,
-					Size:       &fileSize,
+					Entity:     entity,
+					StatusCode: *resp,
+					Size:       &size,
 					Status:     resultStatus,
 				})
 			}
 		}
 	}
 
-	// Discover Backup: Pull all 200's create common backup names.
-	if d.options.DiscoverBackup {
-		for _, r := range ret {
-			fileNames := make([]string, 0)
-			// Common Backup Extensions
-			backupExtensions := strings.Fields("~ .bak .bak2 .old .1")
-			for _, backupExtension := range backupExtensions {
-				// Append Backup Extension to File Name
-				filename := fmt.Sprintf("%s%s", r.Entity, backupExtension)
-				fileNames = append(fileNames, filename)
-				// Strip extension, then append backup extension
-				noExtension := strings.TrimSuffix(r.Entity, path.Ext(r.Entity))
-				if noExtension != r.Entity {
-					filename2 := fmt.Sprintf("%s%s", noExtension, backupExtension)
-					fileNames = append(fileNames, filename2)
-				}
-			}
-
-			// Vim Swap File
-			vimFilename := fmt.Sprintf(".%s.swp", r.Entity)
-			fileNames = append(fileNames, vimFilename)
-
-			for _, file := range fileNames {
-				url = fmt.Sprintf("%s%s", d.options.URL, file)
-				fileResp, fileSize, _, err := d.http.Request(url, libgobuster.RequestOptions{})
-				if err != nil {
-					return nil, err
-				}
-
-				if fileResp != nil {
-					resultStatus := libgobuster.StatusMissed
-
-					if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-						if !d.options.StatusCodesBlacklistParsed.Contains(*fileResp) {
-							resultStatus = libgobuster.StatusFound
-						}
-					} else if d.options.StatusCodesParsed.Length() > 0 {
-						if d.options.StatusCodesParsed.Contains(*fileResp) {
-							resultStatus = libgobuster.StatusFound
-						}
-					} else {
-						return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
-					}
-
-					if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(fileSize))) || d.globalopts.Verbose {
-						ret = append(ret, libgobuster.Result{
-							Entity:     file,
-							StatusCode: *fileResp,
-							Size:       &fileSize,
-							Status:     resultStatus,
-						})
-					}
-				}
-			}
-		}
-	}
 	return ret, nil
 }
 

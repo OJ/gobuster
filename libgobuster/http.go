@@ -42,6 +42,8 @@ type HTTPOptions struct {
 	FollowRedirect bool
 	InsecureSSL    bool
 	IncludeLength  bool
+	MTLSCert       string
+	MTLSKey        string
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -70,6 +72,18 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	} else {
 		redirectFunc = nil
 	}
+	tlsConfig := tls.Config{
+		InsecureSkipVerify: opt.InsecureSSL,
+	}
+
+	if opt.MTLSCert != "" {
+		// LoadX509KeyPair reads files, so we give it the paths
+		clientCert, err := tls.LoadX509KeyPair(opt.MTLSCert, opt.MTLSKey)
+		if err != nil {
+			return nil, fmt.Errorf("error loading MTLS certificate and key (%v)", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{clientCert}
+	}
 
 	client.client = &http.Client{
 		Timeout:       opt.Timeout,
@@ -78,9 +92,7 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 			Proxy:               proxyURLFunc,
 			MaxIdleConns:        100,
 			MaxIdleConnsPerHost: 100,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: opt.InsecureSSL,
-			},
+			TLSClientConfig:     &tlsConfig,
 		}}
 	client.context = c
 	client.username = opt.Username

@@ -61,6 +61,8 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		Password:       opts.Password,
 		UserAgent:      opts.UserAgent,
 		Headers:        opts.Headers,
+		MTLSCert:       opts.MTLSCert,
+		MTLSKey:        opts.MTLSKey,
 	}
 
 	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)

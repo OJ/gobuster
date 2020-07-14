@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"strings"
 	"text/tabwriter"
+	"unicode/utf8"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
+	"github.com/texttheater/golang-levenshtein/levenshtein"
 )
 
 // ErrWildcard is returned if a wildcard response is found
@@ -25,15 +27,38 @@ func (e *ErrWildcard) Error() string {
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
-	options    *OptionsDir
-	globalopts *libgobuster.Options
-	http       *libgobuster.HTTPClient
+	options          *OptionsDir
+	globalopts       *libgobuster.Options
+	http             *libgobuster.HTTPClient
+	wildcardStatus   int
+	wildcardBody     string
+	wildcardDistance int
 }
 
 // GetRequest issues a GET request to the target and returns
 // the status code, length and an error
 func (d *GobusterDir) get(url string) (*int, *int64, error) {
-	return d.http.Get(url, "", d.options.Cookies)
+	if d.options.WildcardDetect {
+		var length *int64
+		status, body, err := d.http.GetWithBody(url, "", d.options.Cookies)
+		if body != nil && d.options.IncludeLength {
+			length = new(int64)
+			*length = int64(utf8.RuneCountInString(string(*body)))
+		}
+
+		distance := levenshtein.DistanceForStrings(
+			[]rune(d.wildcardBody),
+			[]rune(string(*body)),
+			levenshtein.DefaultOptionsWithSub,
+		)
+
+		if *status == d.wildcardStatus && distance > d.wildcardDistance {
+			return nil, nil, nil
+		}
+		return status, length, err
+	} else {
+		return d.http.Get(url, "", d.options.Cookies)
+	}
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -71,6 +96,52 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 	return &g, nil
 }
 
+func (d *GobusterDir) handleWildcard(url string, statusCode int) error {
+	if !d.options.WildcardDetect && !d.options.WildcardForced {
+		return &ErrWildcard{url: url, statusCode: statusCode}
+	}
+	if d.options.WildcardDetect {
+		// calculate maximum distance out of 3 samples
+		d.wildcardStatus = statusCode
+		var guid uuid.UUID
+		var newurl string
+		var distance int
+		var status *int
+		var err error
+		var body *[]byte
+
+		for i := 1; i <= 3; i++ {
+			guid = uuid.New()
+			newurl = fmt.Sprintf("%s%s", d.options.URL, guid)
+			status, body, err = d.http.GetWithBody(newurl, "", d.options.Cookies)
+			if err != nil {
+				return err
+			}
+			if *status != d.wildcardStatus {
+				return fmt.Errorf(
+					"wildcard-detect failed to calculate status code: %d vs %d",
+					d.wildcardStatus,
+					*status,
+				)
+			}
+
+			if d.wildcardBody == "" {
+				// first iteration
+				d.wildcardBody = string(*body)
+				d.wildcardDistance = 0
+			} else {
+				distance = levenshtein.DistanceForStrings([]rune(d.wildcardBody), []rune(string(*body)), levenshtein.DefaultOptionsWithSub)
+				if distance > d.wildcardDistance {
+					d.wildcardBody = string(*body)
+					d.wildcardDistance = distance
+				}
+			}
+		}
+		fmt.Printf("Maximum levenshtein distance for wildcard: %d\n", d.wildcardDistance)
+	}
+	return nil
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun() error {
 	// add trailing slash
@@ -91,12 +162,12 @@ func (d *GobusterDir) PreRun() error {
 	}
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) {
+			return d.handleWildcard(url, *wildcardResp)
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
-		if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+		if d.options.StatusCodesParsed.Contains(*wildcardResp) {
+			return d.handleWildcard(url, *wildcardResp)
 		}
 	} else {
 		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")

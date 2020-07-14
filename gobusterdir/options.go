@@ -15,6 +15,7 @@ type OptionsDir struct {
 	StatusCodesBlacklistParsed libgobuster.IntSet
 	UseSlash                   bool
 	WildcardForced             bool
+	WildcardDetect             bool
 	IncludeLength              bool
 	Expanded                   bool
 	NoStatus                   bool

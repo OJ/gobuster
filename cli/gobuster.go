@@ -82,7 +82,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType
 	defer wg.Done()
 
 	for e := range g.Errors() {
-		if !g.Opts.Quiet {
+		if !g.Opts.Quiet && !g.Opts.NoError {
 			output.Mu.Lock()
 			g.LogError.Printf("[!] %v", e)
 			output.Mu.Unlock()
@@ -182,10 +182,8 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	wg.Add(1)
 	go resultWorker(gobuster, opts.OutputFilename, &wg, o)
 
-	if !opts.Quiet && !opts.NoError {
-		wg.Add(1)
-		go errorWorker(gobuster, &wg, o)
-	}
+	wg.Add(1)
+	go errorWorker(gobuster, &wg, o)
 
 	if !opts.Quiet && !opts.NoProgress {
 		// if not quiet add a new workgroup entry and start the goroutine

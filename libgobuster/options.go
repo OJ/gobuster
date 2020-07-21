@@ -11,6 +11,7 @@ type Options struct {
 	OutputFilename string
 	NoStatus       bool
 	NoProgress     bool
+	NoError        bool
 	Quiet          bool
 	WildcardForced bool
 	Verbose        bool

@@ -174,14 +174,18 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	var wg sync.WaitGroup
 
 	outputMutex := new(sync.RWMutex)
-	// 2 is the number of goroutines we spin up
-	wg.Add(2)
 	o := &outputType{
 		Mu:              outputMutex,
 		MaxCharsWritten: 0,
 	}
-	go errorWorker(gobuster, &wg, o)
+
+	wg.Add(1)
 	go resultWorker(gobuster, opts.OutputFilename, &wg, o)
+
+	if !opts.Quiet && !opts.NoError {
+		wg.Add(1)
+		go errorWorker(gobuster, &wg, o)
+	}
 
 	if !opts.Quiet && !opts.NoProgress {
 		// if not quiet add a new workgroup entry and start the goroutine

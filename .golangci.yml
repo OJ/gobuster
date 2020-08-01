@@ -12,6 +12,7 @@ linters:
     - testpackage
     - godot
     - goerr113
+    - gofumpt
 
 issues:
   exclude-rules:

@@ -46,7 +46,7 @@ func TestRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	status, length, body, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
+	status, length, _, body, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -70,7 +70,7 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 		b.Fatalf("Got Error: %v", err)
 	}
 	for x := 0; x < b.N; x++ {
-		_, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: false})
+		_, _, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: false})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -86,7 +86,7 @@ func BenchmarkRequestWitBody(b *testing.B) {
 		b.Fatalf("Got Error: %v", err)
 	}
 	for x := 0; x < b.N; x++ {
-		_, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
+		_, _, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}

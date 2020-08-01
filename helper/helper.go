@@ -53,7 +53,7 @@ func SliceContains(s []int, e int) bool {
 
 // JoinIntSlice joins an int slice by ,
 func JoinIntSlice(s []int) string {
-	var valuesText []string
+	valuesText := make([]string, len(s))
 	for _, number := range s {
 		text := strconv.Itoa(number)
 		valuesText = append(valuesText, text)

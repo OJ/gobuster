@@ -39,7 +39,7 @@ darwin:
 	done; \
 	echo "Done."
 
-all: clean fmt update lint test darwin linux windows
+all: clean fmt update test lint darwin linux windows
 
 test:
 	@go test -v -race ./... ; \

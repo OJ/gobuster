@@ -110,9 +110,9 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for no-status: %w", err)
 	}
 
-	plugin.IncludeLength, err = cmdDir.Flags().GetBool("include-length")
+	plugin.HideLength, err = cmdDir.Flags().GetBool("hide-length")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for include-length: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for hide-length: %w", err)
 	}
 
 	plugin.WildcardForced, err = cmdDir.Flags().GetBool("wildcard")
@@ -148,7 +148,7 @@ func init() {
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
-	cmdDir.Flags().BoolP("include-length", "l", false, "Include the length of the body in the output")
+	cmdDir.Flags().Bool("hide-length", true, "Hide the length of the body in the output")
 	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")
 	cmdDir.Flags().Bool("wildcard", false, "Force continued operation when wildcard found")
 	cmdDir.Flags().BoolP("discover-backup", "d", false, "Upon finding a file search for backup files")

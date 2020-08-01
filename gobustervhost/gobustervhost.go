@@ -80,14 +80,14 @@ func (v *GobusterVhost) PreRun() error {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
 	}
 
-	url, err := url.Parse(v.options.URL)
+	urlParsed, err := url.Parse(v.options.URL)
 	if err != nil {
 		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
 	}
-	v.domain = url.Host
+	v.domain = urlParsed.Host
 
 	// request default vhost for baseline1
-	_, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	_, _, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -95,7 +95,7 @@ func (v *GobusterVhost) PreRun() error {
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -104,48 +104,30 @@ func (v *GobusterVhost) PreRun() error {
 }
 
 // Run is the process implementation of gobusterdir
-func (v *GobusterVhost) Run(word string) ([]libgobuster.Result, error) {
+func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) error {
 	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, size, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
-	var ret []libgobuster.Result
+	status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
-		return ret, err
+		return err
 	}
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
 	if found || v.globalopts.Verbose {
-		resultStatus := libgobuster.StatusMissed
+		resultStatus := false
 		if found {
-			resultStatus = libgobuster.StatusFound
+			resultStatus = true
 		}
-		result := libgobuster.Result{
-			Entity:     subdomain,
+		resChannel <- Result{
+			Found:      resultStatus,
+			Vhost:      subdomain,
 			StatusCode: *status,
 			Size:       &size,
-			Status:     resultStatus,
+			Header:     header,
 		}
-		ret = append(ret, result)
 	}
-	return ret, nil
-}
-
-// ResultToString is the to string implementation of gobusterdir
-func (v *GobusterVhost) ResultToString(r *libgobuster.Result) (*string, error) {
-	buf := &bytes.Buffer{}
-
-	statusText := "Found"
-	if r.Status == libgobuster.StatusMissed {
-		statusText = "Missed"
-	}
-
-	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Entity, r.StatusCode, *r.Size); err != nil {
-		return nil, err
-	}
-
-	s := buf.String()
-	return &s, nil
+	return nil
 }
 
 // GetConfigString returns the string representation of the current config

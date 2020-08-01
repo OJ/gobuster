@@ -27,7 +27,7 @@ func TestParseExtensions(t *testing.T) {
 		t.Run(x.testName, func(t *testing.T) {
 			ret, err := ParseExtensions(x.extensions)
 			if x.expectedError != "" {
-				if err.Error() != x.expectedError {
+				if err != nil && err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
 			} else if !reflect.DeepEqual(x.expectedExtensions, ret) {
@@ -58,7 +58,7 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 		t.Run(x.testName, func(t *testing.T) {
 			ret, err := ParseCommaSeparatedInt(x.stringCodes)
 			if x.expectedError != "" {
-				if err.Error() != x.expectedError {
+				if err != nil && err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
 			} else if !reflect.DeepEqual(x.expectedCodes, ret) {

@@ -109,7 +109,7 @@ func (d *GobusterDir) PreRun() error {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}
 
-	_, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
@@ -120,7 +120,7 @@ func (d *GobusterDir) PreRun() error {
 		url = fmt.Sprintf("%s/", url)
 	}
 
-	wildcardResp, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+	wildcardResp, _, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func getBackupFilenames(word string) []string {
 }
 
 // Run is the process implementation of gobusterdir
-func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
+func (d *GobusterDir) Run(word string, resChannel chan<- libgobuster.Result) error {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
@@ -184,92 +184,44 @@ func (d *GobusterDir) Run(word string) ([]libgobuster.Result, error) {
 		}
 	}
 
-	var ret []libgobuster.Result
 	for entity, url := range urlsToCheck {
-		resp, size, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+		statusCode, size, header, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if resp != nil {
-			resultStatus := libgobuster.StatusMissed
+		if statusCode != nil {
+			resultStatus := false
 
 			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-				if !d.options.StatusCodesBlacklistParsed.Contains(*resp) {
-					resultStatus = libgobuster.StatusFound
+				if !d.options.StatusCodesBlacklistParsed.Contains(*statusCode) {
+					resultStatus = true
 				}
 			} else if d.options.StatusCodesParsed.Length() > 0 {
-				if d.options.StatusCodesParsed.Contains(*resp) {
-					resultStatus = libgobuster.StatusFound
+				if d.options.StatusCodesParsed.Contains(*statusCode) {
+					resultStatus = true
 				}
 			} else {
-				return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
-			if (resultStatus == libgobuster.StatusFound && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
-				ret = append(ret, libgobuster.Result{
-					Entity:     entity,
-					StatusCode: *resp,
+			if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+				resChannel <- Result{
+					URL:        d.options.URL,
+					Path:       entity,
+					Verbose:    d.globalopts.Verbose,
+					Expanded:   d.options.Expanded,
+					NoStatus:   d.options.NoStatus,
+					HideLength: d.options.HideLength,
+					Found:      resultStatus,
+					Header:     header,
+					StatusCode: *statusCode,
 					Size:       &size,
-					Status:     resultStatus,
-				})
+				}
 			}
 		}
 	}
 
-	return ret, nil
-}
-
-// ResultToString is the to string implementation of gobusterdir
-func (d *GobusterDir) ResultToString(r *libgobuster.Result) (*string, error) {
-	buf := &bytes.Buffer{}
-
-	// Prefix if we're in verbose mode
-	if d.globalopts.Verbose {
-		switch r.Status {
-		case libgobuster.StatusFound:
-			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-				return nil, err
-			}
-		case libgobuster.StatusMissed:
-			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-				return nil, err
-			}
-		default:
-			return nil, fmt.Errorf("unknown status %d", r.Status)
-		}
-	}
-
-	if d.options.Expanded {
-		if _, err := fmt.Fprintf(buf, "%s", d.options.URL); err != nil {
-			return nil, err
-		}
-	} else {
-		if _, err := fmt.Fprintf(buf, "/"); err != nil {
-			return nil, err
-		}
-	}
-	if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
-		return nil, err
-	}
-
-	if !d.options.NoStatus {
-		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
-			return nil, err
-		}
-	}
-
-	if r.Size != nil && d.options.IncludeLength {
-		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
-			return nil, err
-		}
-	}
-
-	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
-		return nil, err
-	}
-
-	s := buf.String()
-	return &s, nil
+	return nil
 }
 
 // GetConfigString returns the string representation of the current config
@@ -344,8 +296,8 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.IncludeLength {
-		if _, err := fmt.Fprintf(tw, "[+] Show length:\ttrue\n"); err != nil {
+	if o.HideLength {
+		if _, err := fmt.Fprintf(tw, "[+] Show length:\tfalse\n"); err != nil {
 			return "", err
 		}
 	}

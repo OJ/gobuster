@@ -95,13 +95,13 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		if _, err = os.Stat(globalopts.PatternFile); os.IsNotExist(err) {
 			return nil, fmt.Errorf("pattern file %q does not exist: %w", globalopts.PatternFile, err)
 		}
-		permFile, err := os.Open(globalopts.PatternFile)
+		patternFile, err := os.Open(globalopts.PatternFile)
 		if err != nil {
 			return nil, fmt.Errorf("could not open pattern file %q: %w", globalopts.PatternFile, err)
 		}
-		defer permFile.Close()
+		defer patternFile.Close()
 
-		scanner := bufio.NewScanner(permFile)
+		scanner := bufio.NewScanner(patternFile)
 		for scanner.Scan() {
 			globalopts.Patterns = append(globalopts.Patterns, scanner.Text())
 		}

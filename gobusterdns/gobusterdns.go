@@ -107,65 +107,36 @@ func (d *GobusterDNS) PreRun() error {
 }
 
 // Run is the process implementation of gobusterdns
-func (d *GobusterDNS) Run(word string) ([]libgobuster.Result, error) {
+func (d *GobusterDNS) Run(word string, resChannel chan<- libgobuster.Result) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	ips, err := d.dnsLookup(subdomain)
-	var ret []libgobuster.Result
 	if err == nil {
 		if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
-			result := libgobuster.Result{
-				Entity: subdomain,
-				Status: libgobuster.StatusFound,
+			result := Result{
+				Subdomain: subdomain,
+				Found:     true,
+				ShowIPs:   d.options.ShowIPs,
+				ShowCNAME: d.options.ShowCNAME,
 			}
 			if d.options.ShowIPs {
-				result.Extra = strings.Join(ips, ", ")
+				result.IPs = ips
 			} else if d.options.ShowCNAME {
 				cname, err := d.dnsLookupCname(subdomain)
 				if err == nil {
-					result.Extra = cname
+					result.CNAME = cname
 				}
 			}
-			ret = append(ret, result)
+			resChannel <- result
 		}
 	} else if d.globalopts.Verbose {
-		ret = append(ret, libgobuster.Result{
-			Entity: subdomain,
-			Status: libgobuster.StatusMissed,
-		})
-	}
-	return ret, nil
-}
-
-// ResultToString is the to string implementation of gobusterdns
-func (d *GobusterDNS) ResultToString(r *libgobuster.Result) (*string, error) {
-	buf := &bytes.Buffer{}
-
-	if r.Status == libgobuster.StatusFound {
-		if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-			return nil, err
-		}
-	} else if r.Status == libgobuster.StatusMissed {
-		if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-			return nil, err
+		resChannel <- Result{
+			Subdomain: subdomain,
+			Found:     false,
+			ShowIPs:   d.options.ShowIPs,
+			ShowCNAME: d.options.ShowCNAME,
 		}
 	}
-
-	if d.options.ShowIPs {
-		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Entity, r.Extra); err != nil {
-			return nil, err
-		}
-	} else if d.options.ShowCNAME {
-		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Entity, r.Extra); err != nil {
-			return nil, err
-		}
-	} else {
-		if _, err := fmt.Fprintf(buf, "%s\n", r.Entity); err != nil {
-			return nil, err
-		}
-	}
-
-	s := buf.String()
-	return &s, nil
+	return nil
 }
 
 // GetConfigString returns the string representation of the current config

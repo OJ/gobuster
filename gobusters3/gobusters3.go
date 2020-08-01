@@ -54,7 +54,7 @@ func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *
 		return nil, err
 	}
 	g.http = h
-	g.bucketRegex = regexp.MustCompile(`^[a-z0-9\-\.]{3,63}$`)
+	g.bucketRegex = regexp.MustCompile(`^[a-z0-9\-.]{3,63}$`)
 
 	return &g, nil
 }
@@ -75,22 +75,20 @@ func (s *GobusterS3) PreRun() error {
 }
 
 // Run is the process implementation of GobusterS3
-func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
-	var ret []libgobuster.Result
-
+func (s *GobusterS3) Run(word string, resChannel chan<- libgobuster.Result) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
-		return ret, nil
+		return nil
 	}
 
 	bucketURL := fmt.Sprintf("http://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
-	status, _, body, err := s.http.Request(bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+	status, _, _, body, err := s.http.Request(bucketURL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if status == nil || body == nil {
-		return ret, nil
+		return nil
 	}
 
 	// looks like 404 and 400 are the only negative status codes
@@ -111,7 +109,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 	// nothing found, bail out
 	// may add the result later if we want to enable verbose output
 	if !found {
-		return ret, nil
+		return nil
 	}
 
 	extraStr := ""
@@ -121,7 +119,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 			awsError := AWSError{}
 			err := xml.Unmarshal(body, &awsError)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse error xml: %w", err)
+				return fmt.Errorf("could not parse error xml: %w", err)
 			}
 			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
 			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
@@ -130,7 +128,7 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 			awsListing := AWSListing{}
 			err := xml.Unmarshal(body, &awsListing)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse result xml: %w", err)
+				return fmt.Errorf("could not parse result xml: %w", err)
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range awsListing.Contents {
@@ -140,41 +138,13 @@ func (s *GobusterS3) Run(word string) ([]libgobuster.Result, error) {
 		}
 	}
 
-	ret = append(ret, libgobuster.Result{
-		Entity: word,
-		Status: libgobuster.StatusFound,
-		Extra:  extraStr,
-	})
-
-	return ret, nil
-}
-
-// ResultToString is the to string implementation of GobusterS3
-func (s *GobusterS3) ResultToString(r *libgobuster.Result) (*string, error) {
-	buf := &bytes.Buffer{}
-
-	if s.options.Expanded {
-		if _, err := fmt.Fprintf(buf, "http://%s.s3.amazonaws.com/", r.Entity); err != nil {
-			return nil, err
-		}
-	} else {
-		if _, err := fmt.Fprintf(buf, "%s", r.Entity); err != nil {
-			return nil, err
-		}
+	resChannel <- Result{
+		Found:      found,
+		BucketName: word,
+		Status:     extraStr,
 	}
 
-	if r.Extra != "" {
-		if _, err := fmt.Fprintf(buf, " [%s]", r.Extra); err != nil {
-			return nil, err
-		}
-	}
-
-	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
-		return nil, err
-	}
-
-	str := buf.String()
-	return &str, nil
+	return nil
 }
 
 // GetConfigString returns the string representation of the current config
@@ -226,12 +196,6 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 
 	if s.globalopts.Verbose {
 		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if o.Expanded {
-		if _, err := fmt.Fprintf(tw, "[+] Expanded:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

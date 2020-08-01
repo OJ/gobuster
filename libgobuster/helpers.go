@@ -60,7 +60,7 @@ func (set *StringSet) Length() int {
 
 // Stringify the set
 func (set *StringSet) Stringify() string {
-	values := []string{}
+	var values []string
 	for s := range set.Set {
 		values = append(values, s)
 	}
@@ -87,7 +87,7 @@ func (set *IntSet) Contains(i int) bool {
 
 // Stringify the set
 func (set *IntSet) Stringify() string {
-	values := []int{}
+	var values []int
 	for s := range set.Set {
 		values = append(values, s)
 	}

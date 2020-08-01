@@ -53,7 +53,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 	}
 
 	for r := range g.Results() {
-		s, err := r.ToString(g)
+		s, err := r.ResultToString()
 		if err != nil {
 			g.LogError.Fatal(err)
 		}
@@ -110,7 +110,7 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGro
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 					// only print status if we already read in the wordlist
 				} else if g.RequestsExpected > 0 {
-					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", g.RequestsIssued, g.RequestsExpected, (float32(g.RequestsIssued) * 100.0 / float32(g.RequestsExpected)))
+					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", g.RequestsIssued, g.RequestsExpected, float32(g.RequestsIssued)*100.0/float32(g.RequestsExpected))
 					s = rightPad(s, " ", output.MaxCharsWritten)
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 				}

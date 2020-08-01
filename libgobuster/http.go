@@ -90,16 +90,16 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	return &client, nil
 }
 
-// Request makes an http request and returns the status, the content length, the body and an error
-// if you want the body returned set the corresponding property insode RequestOptions
-func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, int64, []byte, error) {
+// Request makes an http request and returns the status, the content length, the headers, the body and an error
+// if you want the body returned set the corresponding property inside RequestOptions
+func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(fullURL, opts.Host, opts.Body)
 	if err != nil {
 		// ignore context canceled errors
 		if errors.Is(client.context.Err(), context.Canceled) {
-			return nil, 0, nil, nil
+			return nil, 0, nil, nil, nil
 		}
-		return nil, 0, nil, err
+		return nil, 0, nil, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -108,7 +108,7 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	if opts.ReturnBody {
 		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, 0, nil, fmt.Errorf("could not read body %w", err)
+			return nil, 0, nil, nil, fmt.Errorf("could not read body %w", err)
 		}
 		length = int64(len(body))
 	} else {
@@ -116,11 +116,11 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 		// absolutely needed so golang will reuse connections!
 		length, err = io.Copy(ioutil.Discard, resp.Body)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, 0, nil, nil, err
 		}
 	}
 
-	return &resp.StatusCode, length, body, nil
+	return &resp.StatusCode, length, resp.Header, body, nil
 }
 
 func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*http.Response, error) {

@@ -88,15 +88,11 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			}
 
 			// Mode-specific processing
-			res, err := g.plugin.Run(wordCleaned)
+			err := g.plugin.Run(wordCleaned, g.resultChan)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err
 				continue
-			} else {
-				for _, r := range res {
-					g.resultChan <- r
-				}
 			}
 
 			select {
@@ -128,7 +124,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	// calcutate expected requests
 	g.RequestsExpected = lines
 	if g.Opts.PatternFile != "" {
-		g.RequestsExpected += (lines * len(g.Opts.Patterns))
+		g.RequestsExpected += lines * len(g.Opts.Patterns)
 	}
 
 	g.RequestsExpected *= g.plugin.RequestsPerRun()

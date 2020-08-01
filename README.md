@@ -9,7 +9,7 @@ Gobuster is a tool used to brute-force:
 
 ## Tags, Statuses, etc
 
-[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](#sponsors)
+[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)] [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)]
 
 ## Oh dear God.. WHY!?
 

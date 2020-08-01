@@ -86,68 +86,36 @@ func (d *GobusterFuzz) PreRun() error {
 }
 
 // Run is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) Run(word string) ([]libgobuster.Result, error) {
+func (d *GobusterFuzz) Run(word string, resChannel chan<- libgobuster.Result) error {
 	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
-	resp, size, _, err := d.http.Request(workingURL, libgobuster.RequestOptions{})
+	statusCode, size, _, _, err := d.http.Request(workingURL, libgobuster.RequestOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var ret []libgobuster.Result
-	if resp != nil {
-		resultStatus := libgobuster.StatusFound
+	if statusCode != nil {
+		resultStatus := true
 
 		if helper.SliceContains(d.options.ExcludeLength, int(size)) {
-			resultStatus = libgobuster.StatusMissed
+			resultStatus = false
 		}
 
 		if d.options.ExcludedStatusCodesParsed.Length() > 0 {
-			if d.options.ExcludedStatusCodesParsed.Contains(*resp) {
-				resultStatus = libgobuster.StatusMissed
+			if d.options.ExcludedStatusCodesParsed.Contains(*statusCode) {
+				resultStatus = false
 			}
 		}
 
-		if resultStatus == libgobuster.StatusFound || d.globalopts.Verbose {
-			ret = append(ret, libgobuster.Result{
-				Entity:     workingURL,
-				StatusCode: *resp,
+		if resultStatus || d.globalopts.Verbose {
+			resChannel <- Result{
+				Verbose:    d.globalopts.Verbose,
+				Found:      resultStatus,
+				Path:       workingURL,
+				StatusCode: *statusCode,
 				Size:       &size,
-				Status:     resultStatus,
-			})
+			}
 		}
 	}
-	return ret, nil
-}
-
-// ResultToString is the to string implementation of gobusterfuzz
-func (d *GobusterFuzz) ResultToString(r *libgobuster.Result) (*string, error) {
-	buf := &bytes.Buffer{}
-
-	// Prefix if we're in verbose mode
-	if d.globalopts.Verbose {
-		switch r.Status {
-		case libgobuster.StatusFound:
-			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-				return nil, err
-			}
-		case libgobuster.StatusMissed:
-			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-				return nil, err
-			}
-		default:
-			return nil, fmt.Errorf("unknown status %d", r.Status)
-		}
-	}
-
-	if _, err := fmt.Fprintf(buf, "[Status=%d] [Length=%d] %s", r.StatusCode, *r.Size, r.Entity); err != nil {
-		return nil, err
-	}
-
-	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
-		return nil, err
-	}
-
-	s := buf.String()
-	return &s, nil
+	return nil
 }
 
 // GetConfigString returns the string representation of the current config

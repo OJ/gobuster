@@ -123,7 +123,7 @@ func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) e
 			Found:      resultStatus,
 			Vhost:      subdomain,
 			StatusCode: *status,
-			Size:       &size,
+			Size:       size,
 			Header:     header,
 		}
 	}

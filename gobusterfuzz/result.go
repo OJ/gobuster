@@ -11,7 +11,7 @@ type Result struct {
 	Found      bool
 	Path       string
 	StatusCode int
-	Size       *int64
+	Size       int64
 }
 
 // ToString converts the Result to it's textual representation
@@ -35,7 +35,7 @@ func (r Result) ResultToString() (string, error) {
 		}
 	}
 
-	if _, err := fmt.Fprintf(buf, "[Status=%d] [Length=%d] %s", r.StatusCode, *r.Size, r.Path); err != nil {
+	if _, err := fmt.Fprintf(buf, "[Status=%d] [Length=%d] %s", r.StatusCode, r.Size, r.Path); err != nil {
 		return "", err
 	}
 

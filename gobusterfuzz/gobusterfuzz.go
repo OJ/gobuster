@@ -111,7 +111,7 @@ func (d *GobusterFuzz) Run(word string, resChannel chan<- libgobuster.Result) er
 				Found:      resultStatus,
 				Path:       workingURL,
 				StatusCode: *statusCode,
-				Size:       &size,
+				Size:       size,
 			}
 		}
 	}

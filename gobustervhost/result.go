@@ -11,7 +11,7 @@ type Result struct {
 	Found      bool
 	Vhost      string
 	StatusCode int
-	Size       *int64
+	Size       int64
 	Header     http.Header
 }
 
@@ -24,7 +24,7 @@ func (r Result) ResultToString() (string, error) {
 		statusText = "Found"
 	}
 
-	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Vhost, r.StatusCode, *r.Size); err != nil {
+	if _, err := fmt.Fprintf(buf, "%s: %s (Status: %d) [Size: %d]\n", statusText, r.Vhost, r.StatusCode, r.Size); err != nil {
 		return "", err
 	}
 

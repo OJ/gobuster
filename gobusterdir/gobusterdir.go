@@ -142,11 +142,14 @@ func (d *GobusterDir) PreRun() error {
 
 func getBackupFilenames(word string) []string {
 	ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
+	i := 0
 	for _, b := range backupExtensions {
-		ret = append(ret, fmt.Sprintf("%s%s", word, b))
+		ret[i] = fmt.Sprintf("%s%s", word, b)
+		i++
 	}
 	for _, b := range backupDotExtensions {
-		ret = append(ret, fmt.Sprintf(".%s%s", word, b))
+		ret[i] = fmt.Sprintf(".%s%s", word, b)
+		i++
 	}
 	return ret
 }
@@ -215,7 +218,7 @@ func (d *GobusterDir) Run(word string, resChannel chan<- libgobuster.Result) err
 					Found:      resultStatus,
 					Header:     header,
 					StatusCode: *statusCode,
-					Size:       &size,
+					Size:       size,
 				}
 			}
 		}

@@ -17,7 +17,7 @@ type Result struct {
 	Found      bool
 	Header     http.Header
 	StatusCode int
-	Size       *int64
+	Size       int64
 }
 
 // ToString converts the Result to it's textual representation
@@ -46,7 +46,7 @@ func (r Result) ResultToString() (string, error) {
 			return "", err
 		}
 	}
-	if _, err := fmt.Fprintf(buf, "%s", r.Path); err != nil {
+	if _, err := fmt.Fprintf(buf, "%-20s", r.Path); err != nil {
 		return "", err
 	}
 
@@ -56,8 +56,8 @@ func (r Result) ResultToString() (string, error) {
 		}
 	}
 
-	if r.Size != nil && !r.HideLength {
-		if _, err := fmt.Fprintf(buf, " [Size: %d]", *r.Size); err != nil {
+	if !r.HideLength {
+		if _, err := fmt.Fprintf(buf, " [Size: %d]", r.Size); err != nil {
 			return "", err
 		}
 	}

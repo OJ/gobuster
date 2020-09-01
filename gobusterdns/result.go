@@ -34,7 +34,7 @@ func (r Result) ResultToString() (string, error) {
 		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Subdomain, strings.Join(r.IPs, ",")); err != nil {
 			return "", err
 		}
-	} else if r.ShowCNAME && r.Found {
+	} else if r.ShowCNAME && r.Found && r.CNAME != "" {
 		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Subdomain, r.CNAME); err != nil {
 			return "", err
 		}

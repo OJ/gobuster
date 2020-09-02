@@ -74,5 +74,6 @@ func (r Result) ResultToString() (string, error) {
 	}
 
 	s := buf.String()
+
 	return s, nil
 }

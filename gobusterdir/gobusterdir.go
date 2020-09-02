@@ -23,11 +23,12 @@ var (
 type ErrWildcard struct {
 	url        string
 	statusCode int
+	length     int64
 }
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d", e.url, e.statusCode)
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d (Length: %d)", e.url, e.statusCode, e.length)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -75,6 +76,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		return nil, err
 	}
 	g.http = h
+
 	return &g, nil
 }
 
@@ -99,6 +101,7 @@ func (d *GobusterDir) RequestsPerRun() int {
 		num += len(d.options.ExtensionsParsed.Set) * len(backupDotExtensions)
 	}
 	d.requestsPerRun = &num
+
 	return *d.requestsPerRun
 }
 
@@ -120,18 +123,18 @@ func (d *GobusterDir) PreRun() error {
 		url = fmt.Sprintf("%s/", url)
 	}
 
-	wildcardResp, _, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
 		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
 		if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp}
+			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
 		}
 	} else {
 		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -151,6 +154,7 @@ func getBackupFilenames(word string) []string {
 		ret[i] = fmt.Sprintf(".%s%s", word, b)
 		i++
 	}
+
 	return ret
 }
 

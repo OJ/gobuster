@@ -26,7 +26,7 @@ func runDir(cmd *cobra.Command, args []string) error {
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		if goberr, ok := err.(*gobusterdir.ErrWildcard); ok {
-			return fmt.Errorf("%s. To force processing of Wildcard responses, specify the '--wildcard' switch", goberr.Error())
+			return fmt.Errorf("%s. To continue please exclude the status code, the length or use the --wildcard switch", goberr.Error())
 		}
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}

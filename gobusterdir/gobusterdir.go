@@ -128,6 +128,11 @@ func (d *GobusterDir) PreRun() error {
 		return err
 	}
 
+	if helper.SliceContains(d.options.ExcludeLength, int(wildcardLength)) {
+		// we are done and ignore the request as the length is excluded
+		return nil
+	}
+
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
 		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
 			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}

@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -22,7 +23,7 @@ func TestStringSetAdd(t *testing.T) {
 	x := NewStringSet()
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %v", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %v", len(x.Set))
 	}
 }
 
@@ -31,29 +32,29 @@ func TestStringSetAddDouble(t *testing.T) {
 	x.Add("test")
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
 func TestStringSetAddRange(t *testing.T) {
 	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk"})
+	x.AddRange([]string{"string1", "string2"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
 }
 
 func TestStringSetAddRangeDouble(t *testing.T) {
 	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk", "asdf", "ghjk"})
+	x.AddRange([]string{"string1", "string2", "string1", "string2"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 2 Got %d", len(x.Set))
 	}
 }
 
 func TestStringSetContains(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	for _, y := range v {
 		if !x.Contains(y) {
@@ -64,7 +65,7 @@ func TestStringSetContains(t *testing.T) {
 
 func TestStringSetContainsAny(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	if !x.ContainsAny(v) {
 		t.Fatalf("Did not find any")
@@ -78,7 +79,7 @@ func TestStringSetContainsAny(t *testing.T) {
 
 func TestStringSetStringify(t *testing.T) {
 	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	z := x.Stringify()
 	// order is random
@@ -93,7 +94,7 @@ func TestIntSetAdd(t *testing.T) {
 	x := NewIntSet()
 	x.Add(1)
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
@@ -102,7 +103,7 @@ func TestIntSetAddDouble(t *testing.T) {
 	x.Add(1)
 	x.Add(1)
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected size. Should have 1 Got %d", len(x.Set))
 	}
 }
 
@@ -162,7 +163,7 @@ func TestLineCounter(t *testing.T) {
 func TestLineCounterError(t *testing.T) {
 	r := iotest.TimeoutReader(strings.NewReader("test"))
 	_, err := lineCounter(r)
-	if err != iotest.ErrTimeout {
+	if !errors.Is(err, iotest.ErrTimeout) {
 		t.Fatalf("Got wrong error! %v", err)
 	}
 }

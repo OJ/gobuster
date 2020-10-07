@@ -60,9 +60,11 @@ func (set *StringSet) Length() int {
 
 // Stringify the set
 func (set *StringSet) Stringify() string {
-	values := []string{}
+	values := make([]string, len(set.Set))
+	i := 0
 	for s := range set.Set {
-		values = append(values, s)
+		values[i] = s
+		i++
 	}
 	return strings.Join(values, ",")
 }
@@ -87,9 +89,11 @@ func (set *IntSet) Contains(i int) bool {
 
 // Stringify the set
 func (set *IntSet) Stringify() string {
-	values := []int{}
+	values := make([]int, len(set.Set))
+	i := 0
 	for s := range set.Set {
-		values = append(values, s)
+		values[i] = s
+		i++
 	}
 	sort.Ints(values)
 

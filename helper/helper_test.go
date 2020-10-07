@@ -27,7 +27,7 @@ func TestParseExtensions(t *testing.T) {
 		t.Run(x.testName, func(t *testing.T) {
 			ret, err := ParseExtensions(x.extensions)
 			if x.expectedError != "" {
-				if err.Error() != x.expectedError {
+				if err != nil && err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
 			} else if !reflect.DeepEqual(x.expectedExtensions, ret) {
@@ -37,7 +37,7 @@ func TestParseExtensions(t *testing.T) {
 	}
 }
 
-func TestParseStatusCodes(t *testing.T) {
+func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
 
 	var tt = []struct {
@@ -49,16 +49,16 @@ func TestParseStatusCodes(t *testing.T) {
 		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid status code given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid status code given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid status code string provided"},
+		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", libgobuster.NewIntSet(), "invalid string provided"},
 	}
 
 	for _, x := range tt {
 		t.Run(x.testName, func(t *testing.T) {
-			ret, err := ParseStatusCodes(x.stringCodes)
+			ret, err := ParseCommaSeparatedInt(x.stringCodes)
 			if x.expectedError != "" {
-				if err.Error() != x.expectedError {
+				if err != nil && err.Error() != x.expectedError {
 					t.Fatalf("Expected error %q but got %q", x.expectedError, err.Error())
 				}
 			} else if !reflect.DeepEqual(x.expectedCodes, ret) {
@@ -91,7 +91,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 	}
 }
 
-func BenchmarkParseStatusCodes(b *testing.B) {
+func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	var tt = []struct {
 		testName      string
 		stringCodes   string
@@ -101,15 +101,15 @@ func BenchmarkParseStatusCodes(b *testing.B) {
 		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
 		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid status code given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid status code given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid status code string provided"},
+		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", libgobuster.NewIntSet(), "invalid string string provided"},
 	}
 
 	for _, x := range tt {
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
-				_, _ = ParseStatusCodes(x.stringCodes)
+				_, _ = ParseCommaSeparatedInt(x.stringCodes)
 			}
 		})
 	}

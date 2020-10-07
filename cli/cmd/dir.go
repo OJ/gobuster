@@ -16,19 +16,19 @@ var cmdDir *cobra.Command
 func runDir(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseDirOptions()
 	if err != nil {
-		return fmt.Errorf("error on parsing arguments: %v", err)
+		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
 	plugin, err := gobusterdir.NewGobusterDir(mainContext, globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("error on creating gobusterdir: %v", err)
+		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		if goberr, ok := err.(*gobusterdir.ErrWildcard); ok {
-			return fmt.Errorf("%s. To force processing of Wildcard responses, specify the '--wildcard' switch", goberr.Error())
+			return fmt.Errorf("%s. To continue please exclude the status code, the length or use the --wildcard switch", goberr.Error())
 		}
-		return fmt.Errorf("error on running gobuster: %v", err)
+		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil
 }
@@ -53,70 +53,81 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.Cookies = httpOpts.Cookies
 	plugin.Timeout = httpOpts.Timeout
 	plugin.FollowRedirect = httpOpts.FollowRedirect
-	plugin.InsecureSSL = httpOpts.InsecureSSL
+	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
+	plugin.Method = httpOpts.Method
 
 	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for extensions: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
 
 	if plugin.Extensions != "" {
 		ret, err := helper.ParseExtensions(plugin.Extensions)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for extensions: %v", err)
+			return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 		}
 		plugin.ExtensionsParsed = ret
 	}
 
-	plugin.StatusCodesBlacklist, err = cmdDir.Flags().GetString("statuscodesblacklist")
+	plugin.StatusCodesBlacklist, err = cmdDir.Flags().GetString("status-codes-blacklist")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for statuscodesblacklist: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
 
 	// blacklist will override the normal status codes
 	if plugin.StatusCodesBlacklist != "" {
-		ret, err := helper.ParseStatusCodes(plugin.StatusCodesBlacklist)
+		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodesBlacklist)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for statuscodesblacklist: %v", err)
+			return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 		}
 		plugin.StatusCodesBlacklistParsed = ret
 	} else {
 		// parse normal status codes
-		plugin.StatusCodes, err = cmdDir.Flags().GetString("statuscodes")
+		plugin.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
+			return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 		}
-		ret, err := helper.ParseStatusCodes(plugin.StatusCodes)
+		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodes)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for statuscodes: %v", err)
+			return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 		}
 		plugin.StatusCodesParsed = ret
 	}
 
-	plugin.UseSlash, err = cmdDir.Flags().GetBool("addslash")
+	plugin.UseSlash, err = cmdDir.Flags().GetBool("add-slash")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for addslash: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for add-slash: %w", err)
 	}
 
 	plugin.Expanded, err = cmdDir.Flags().GetBool("expanded")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for expanded: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for expanded: %w", err)
 	}
 
-	plugin.NoStatus, err = cmdDir.Flags().GetBool("nostatus")
+	plugin.NoStatus, err = cmdDir.Flags().GetBool("no-status")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for nostatus: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for no-status: %w", err)
 	}
 
-	plugin.IncludeLength, err = cmdDir.Flags().GetBool("includelength")
+	plugin.HideLength, err = cmdDir.Flags().GetBool("hide-length")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for includelength: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for hide-length: %w", err)
 	}
 
 	plugin.WildcardForced, err = cmdDir.Flags().GetBool("wildcard")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for wildcard: %v", err)
+		return nil, nil, fmt.Errorf("invalid value for wildcard: %w", err)
+	}
+
+	plugin.DiscoverBackup, err = cmdDir.Flags().GetBool("discover-backup")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for discover-backup: %w", err)
+	}
+
+	plugin.ExcludeLength, err = cmdDir.Flags().GetIntSlice("exclude-length")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
 	return globalopts, plugin, nil
@@ -125,21 +136,23 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 func init() {
 	cmdDir = &cobra.Command{
 		Use:   "dir",
-		Short: "Uses directory/file brutceforcing mode",
+		Short: "Uses directory/file enumeration mode",
 		RunE:  runDir,
 	}
 
 	if err := addCommonHTTPOptions(cmdDir); err != nil {
 		log.Fatalf("%v", err)
 	}
-	cmdDir.Flags().StringP("statuscodes", "s", "200,204,301,302,307,401,403", "Positive status codes (will be overwritten with statuscodesblacklist if set)")
-	cmdDir.Flags().StringP("statuscodesblacklist", "b", "", "Negative status codes (will override statuscodes if set)")
+	cmdDir.Flags().StringP("status-codes", "s", "", "Positive status codes (will be overwritten with status-codes-blacklist if set)")
+	cmdDir.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
-	cmdDir.Flags().BoolP("nostatus", "n", false, "Don't print status codes")
-	cmdDir.Flags().BoolP("includelength", "l", false, "Include the length of the body in the output")
-	cmdDir.Flags().BoolP("addslash", "f", false, "Append / to each request")
-	cmdDir.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
+	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")
+	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")
+	cmdDir.Flags().Bool("wildcard", false, "Force continued operation when wildcard found")
+	cmdDir.Flags().BoolP("discover-backup", "d", false, "Upon finding a file search for backup files")
+	cmdDir.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

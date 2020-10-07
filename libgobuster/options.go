@@ -2,13 +2,16 @@ package libgobuster
 
 import "time"
 
-// Options helds all options that can be passed to libgobuster
+// Options holds all options that can be passed to libgobuster
 type Options struct {
 	Threads        int
 	Wordlist       string
+	PatternFile    string
+	Patterns       []string
 	OutputFilename string
 	NoStatus       bool
 	NoProgress     bool
+	NoError        bool
 	Quiet          bool
 	WildcardForced bool
 	Verbose        bool

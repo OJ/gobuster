@@ -2,7 +2,7 @@
 
 SET ARG=%1
 SET TARGET=.\build
-SET BUILDARGS=-ldflags="-s -w" -gcflags="all=-trimpath=%GOPATH%\src" -asmflags="all=-trimpath=%GOPATH%\src"
+SET BUILDARGS=-ldflags="-s -w" -trimpath
 
 IF "%ARG%"=="test" (
   CALL :Test
@@ -38,6 +38,11 @@ IF "%ARG%"=="update" (
 
 IF "%ARG%"=="fmt" (
   CALL :Fmt
+  GOTO Done
+)
+
+IF "%ARG%"=="lint" (
+  CALL :Lint
   GOTO Done
 )
 

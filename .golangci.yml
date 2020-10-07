@@ -1,8 +1,18 @@
 linters:
   enable-all: true
   disable:
-    - lll
+    - wsl
     - gocyclo
+    - gocognit
+    - funlen
+    - lll
+    - dogsled
+    - gomnd
+    - nestif
+    - testpackage
+    - godot
+    - goerr113
+    - gofumpt
 
 issues:
   exclude-rules:
@@ -22,6 +32,10 @@ issues:
     - path: cli/cmd/.+\.go
       linters:
         - gochecknoinits
+        - gochecknoglobals
+
+    - path: helper/useragents.go
+      linters:
         - gochecknoglobals
 
     - path: _test\.go

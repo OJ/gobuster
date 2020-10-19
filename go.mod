@@ -1,11 +1,10 @@
 module github.com/OJ/gobuster/v3
 
 require (
-	github.com/google/uuid v1.1.1
-	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
-	golang.org/x/sys v0.0.0-20200810151505-1b9f1253b3ed // indirect
+	github.com/google/uuid v1.1.2
+	github.com/spf13/cobra v1.1.1
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13 // indirect
 )
 
 go 1.15

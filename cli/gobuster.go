@@ -179,10 +179,8 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		MaxCharsWritten: 0,
 	}
 
-	wg.Add(1)
+	wg.Add(2)
 	go resultWorker(gobuster, opts.OutputFilename, &wg, o)
-
-	wg.Add(1)
 	go errorWorker(gobuster, &wg, o)
 
 	if !opts.Quiet && !opts.NoProgress {

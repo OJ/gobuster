@@ -108,7 +108,6 @@ Flags:
   -r, --follow-redirect               Follow redirects
   -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
   -h, --help                          help for dir
-  -l, --include-length                Include the length of the body in the output
   -k, --no-tls-validation             Skip TLS certificate verification
   -n, --no-status                     Don't print status codes
   -P, --password string               Password for Basic Auth

@@ -40,6 +40,10 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	if err != nil {
 		return nil, nil, err
 	}
+	plugin.AbsoluteVhost, err = cmdVhost.Flags().GetBool("absolute-vhost")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid argument for absolute-vhost: %w", err)
+	}
 	plugin.Password = httpOpts.Password
 	plugin.URL = httpOpts.URL
 	plugin.UserAgent = httpOpts.UserAgent
@@ -65,6 +69,7 @@ func init() {
 		log.Fatalf("%v", err)
 	}
 
+	cmdVhost.Flags().BoolP("absolute-vhost", "A", false, "vhost provided in wordlist are absolute")
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()
 	}

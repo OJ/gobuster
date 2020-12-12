@@ -196,7 +196,7 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 
 	if o.AbsoluteVhost {
-		if _, err := fmt.Fprintf(tw, "[+] Vhost are absolute\n", o.AbsoluteVhost); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Vhost are absolute\n"); err != nil {
 			return "", err
 		}
 	}

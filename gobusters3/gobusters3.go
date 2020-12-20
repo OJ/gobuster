@@ -81,7 +81,7 @@ func (s *GobusterS3) Run(word string, resChannel chan<- libgobuster.Result) erro
 		return nil
 	}
 
-	bucketURL := fmt.Sprintf("http://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
+	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
 	status, _, _, body, err := s.http.Request(bucketURL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return err

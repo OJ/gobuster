@@ -45,6 +45,10 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 		globalopts: globalopts,
 	}
 
+	if strings.Contains(options.URL, "FUZZ") == false{
+		return nil, fmt.Errorf("please provide the FUZZ keyword")
+	}
+
 	basicOptions := libgobuster.BasicHTTPOptions{
 		Proxy:     opts.Proxy,
 		Timeout:   opts.Timeout,

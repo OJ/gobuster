@@ -45,7 +45,7 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 		globalopts: globalopts,
 	}
 
-	if strings.Contains(options.URL, "FUZZ") == false{
+	if strings.Contains(opts.URL, "FUZZ") == false {
 		return nil, fmt.Errorf("please provide the FUZZ keyword")
 	}
 

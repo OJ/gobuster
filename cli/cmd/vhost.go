@@ -63,6 +63,7 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 			return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
 		}
 		plugin.Ports = ret
+	}
 
 	return globalopts, &plugin, nil
 }

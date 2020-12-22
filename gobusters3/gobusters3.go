@@ -116,6 +116,9 @@ func (s *GobusterS3) Run(word string, resChannel chan<- libgobuster.Result) erro
 	if s.globalopts.Verbose {
 		// get status
 		if bytes.Contains(body, []byte("<Error>")) {
+			if s.options.OpenOnly {
+				return nil
+			}
 			awsError := AWSError{}
 			err := xml.Unmarshal(body, &awsError)
 			if err != nil {

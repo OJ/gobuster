@@ -161,6 +161,68 @@ Global Flags:
   -w, --wordlist string   Path to the wordlist
 ```
 
+## `s3` Mode Options
+
+```
+Usage:
+  gobuster s3 [flags]
+
+Flags:
+  -h, --help               help for s3
+  -m, --maxfiles int       max files to list when listing buckets (only shown in verbose mode) (default 5)
+      --proxy string       Proxy to use for requests [http(s)://host:port]
+      --random-agent       Use a random User-Agent string
+      --timeout duration   HTTP Timeout (default 10s)
+  -a, --useragent string   Set the User-Agent string (default "gobuster/3.1.0")
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+## `fuzz` Mode Options
+
+```
+Usage:
+  gobuster fuzz [flags]
+
+Flags:
+  -c, --cookies string              Cookies to use for the requests
+      --exclude-length ints         exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -b, --excludestatuscodes string   Negative status codes (will override statuscodes if set)
+  -r, --follow-redirect             Follow redirects
+  -H, --headers stringArray         Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                        help for fuzz
+  -m, --method string               Use the following HTTP method (default "GET")
+  -k, --no-tls-validation           Skip TLS certificate verification
+  -P, --password string             Password for Basic Auth
+      --proxy string                Proxy to use for requests [http(s)://host:port]
+      --random-agent                Use a random User-Agent string
+      --timeout duration            HTTP Timeout (default 10s)
+  -u, --url string                  The target URL
+  -a, --useragent string            Set the User-Agent string (default "gobuster/3.1.0")
+  -U, --username string             Username for Basic Auth
+      --wildcard                    Force continued operation when wildcard found
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
 ## Easy Installation
 
 ### Binary Releases

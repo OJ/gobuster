@@ -8,4 +8,5 @@ import (
 type OptionsVhost struct {
 	libgobuster.HTTPOptions
 	Ports                     string
+	PortsParsed               libgobuster.IntSet
 }

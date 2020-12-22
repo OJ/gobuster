@@ -52,6 +52,11 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
+	plugin.Ports, err = cmdVhost.Flags().GetString("ports")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
+	}
+
 	return globalopts, &plugin, nil
 }
 
@@ -64,6 +69,7 @@ func init() {
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {
 		log.Fatalf("%v", err)
 	}
+	cmdVhost.Flags().String("ports", "", "check for the following ports (The host header will be come [host]:[port])")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

@@ -207,6 +207,12 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 		return "", err
 	}
 
+	if o.OpenOnly {
+		if _, err := fmt.Fprintf(tw, "[+] Show open buckets:\ttrue\n"); err != nil {
+			return "", err
+		}
+	}
+
 	if err := tw.Flush(); err != nil {
 		return "", fmt.Errorf("error on tostring: %w", err)
 	}

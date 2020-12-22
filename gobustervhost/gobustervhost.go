@@ -205,6 +205,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		}
 	}
 
+	if o.Ports != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Ports:\t%s\n", o.PortsParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
 	if v.globalopts.Verbose {
 		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err

@@ -49,6 +49,7 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
+	plugin.OpenOnly = cmdS3.Flags().GetInt("open")
 
 	return globalopts, plugin, nil
 }
@@ -62,6 +63,7 @@ func init() {
 
 	addBasicHTTPOptions(cmdS3)
 	cmdS3.Flags().IntP("maxfiles", "m", 5, "max files to list when listing buckets (only shown in verbose mode)")
+	cmdS3.Flags().IntP("open", "", false, "show only open-listing S3 buckets")
 
 	cmdS3.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

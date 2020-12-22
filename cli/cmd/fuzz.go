@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterfuzz"
@@ -56,6 +57,10 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+
+	if !strings.Contains(plugin.URL, "FUZZ") {
+		return nil, fmt.Errorf("please provide the FUZZ keyword")
+	}
 
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")
 	if err != nil {

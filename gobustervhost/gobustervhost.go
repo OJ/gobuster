@@ -110,7 +110,7 @@ func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) e
 	subdomains[0] = sub
 
 	if v.options.Ports != "" {
-		for Port := range v.options.PortsParsed {
+		for Port := range v.options.PortsParsed.Set {
 			subwithport := fmt.Sprintf("%s.%s:%i", word, v.domain, Port)
 			subdomains[Port] = subwithport
 		}

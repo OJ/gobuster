@@ -53,12 +53,11 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
-	plugin.Ports, err = cmdVhost.Flags().GetString("ports")
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
-	}
-
 	if plugin.Ports != "" {
+		plugin.Ports, err = cmdVhost.Flags().GetString("ports")
+	        if err != nil {
+		        return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
+	        }
 		ret, err := helper.ParseCommaSeparatedInt(plugin.Ports)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for ports: %w", err)

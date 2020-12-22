@@ -59,8 +59,9 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 * dir - the classic directory brute-forcing mode
 * dns - DNS subdomain brute-forcing mode
-* s3 - Enumerate open S3 buckets and look for existence and bucket listings
+* s3 - S3 bucket enumeration mode
 * vhost - virtual host brute-forcing mode (not the same as DNS!)
+* fuzz - URL fuzzing mode
 
 ## Built-in Help
 

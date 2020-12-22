@@ -49,7 +49,11 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
-	plugin.OpenOnly = cmdS3.Flags().GetBool("open")
+
+	plugin.OpenOnly, err = cmdS3.Flags().GetBool("open")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for open: %w", err)
+	}
 
 	return globalopts, plugin, nil
 }

@@ -59,7 +59,7 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	plugin.Method = httpOpts.Method
 
 	if !strings.Contains(plugin.URL, "FUZZ") {
-		return nil, fmt.Errorf("please provide the FUZZ keyword")
+		return nil, nil, fmt.Errorf("please provide the FUZZ keyword")
 	}
 
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")

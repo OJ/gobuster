@@ -6,6 +6,7 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobustervhost"
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 )
@@ -52,6 +53,18 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
+	if plugin.Ports != "" {
+		plugin.Ports, err = cmdVhost.Flags().GetString("ports")
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
+		}
+		ret, err := helper.ParseCommaSeparatedInt(plugin.Ports)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid value for ports: %w", err)
+		}
+		plugin.PortsParsed = ret
+	}
+
 	return globalopts, &plugin, nil
 }
 
@@ -64,6 +77,7 @@ func init() {
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {
 		log.Fatalf("%v", err)
 	}
+	cmdVhost.Flags().String("ports", "", "check for the following ports (The host header will be come [host]:[port])")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

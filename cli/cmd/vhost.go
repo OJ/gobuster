@@ -6,8 +6,8 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobustervhost"
-	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/OJ/gobuster/v3/helper"
+	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 )
 

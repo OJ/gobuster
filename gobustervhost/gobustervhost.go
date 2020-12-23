@@ -105,28 +105,41 @@ func (v *GobusterVhost) PreRun() error {
 
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) error {
-	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
-	status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
-	if err != nil {
-		return err
+	subdomains := make(map[int]string)
+	sub := fmt.Sprintf("%s.%s", word, v.domain)
+	subdomains[0] = sub
+
+	if v.options.Ports != "" {
+		for Port := range v.options.PortsParsed.Set {
+			subwithport := fmt.Sprintf("%s.%s:%d", word, v.domain, Port)
+			subdomains[Port] = subwithport
+		}
 	}
 
-	// subdomain must not match default vhost and non existent vhost
-	// or verbose mode is enabled
-	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
-	if found || v.globalopts.Verbose {
-		resultStatus := false
-		if found {
-			resultStatus = true
+	for _, subdomain := range subdomains {
+		status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+		if err != nil {
+			return err
 		}
-		resChannel <- Result{
-			Found:      resultStatus,
-			Vhost:      subdomain,
-			StatusCode: *status,
-			Size:       size,
-			Header:     header,
+
+		// subdomain must not match default vhost and non existent vhost
+		// or verbose mode is enabled
+		found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
+		if found || v.globalopts.Verbose {
+			resultStatus := false
+			if found {
+				resultStatus = true
+			}
+			resChannel <- Result{
+				Found:      resultStatus,
+				Vhost:      subdomain,
+				StatusCode: *status,
+				Size:       size,
+				Header:     header,
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -188,6 +201,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if o.Username != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
+			return "", err
+		}
+	}
+
+	if o.Ports != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Ports:\t%s\n", o.PortsParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

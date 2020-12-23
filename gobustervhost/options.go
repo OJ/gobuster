@@ -7,4 +7,6 @@ import (
 // OptionsVhost is the struct to hold all options for this plugin
 type OptionsVhost struct {
 	libgobuster.HTTPOptions
+	Ports       string
+	PortsParsed libgobuster.IntSet
 }

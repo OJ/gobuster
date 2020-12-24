@@ -106,7 +106,7 @@ func (v *GobusterVhost) PreRun() error {
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) error {
 	var subdomain = word
-	if !v.options.AbsoluteVhost {
+	if !v.options.FqdnVhost {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
 	}
 	status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
@@ -195,7 +195,7 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.AbsoluteVhost {
+	if o.FqdnVhost {
 		if _, err := fmt.Fprintf(tw, "[+] Vhost are absolute\n"); err != nil {
 			return "", err
 		}

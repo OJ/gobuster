@@ -6,6 +6,7 @@ Gobuster is a tool used to brute-force:
 * DNS subdomains (with wildcard support).
 * Virtual Host names on target web servers.
 * Open Amazon S3 buckets
+* Anything in the URL
 
 ## Tags, Statuses, etc
 

@@ -20,13 +20,15 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	if r.Found {
-		if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-			return "", err
-		}
-	} else {
-		if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-			return "", err
+	if r.Verbose {
+		if r.Found {
+			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
+				return "", err
+			}
+		} else {
+			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
+				return "", err
+			}
 		}
 	}
 
@@ -38,7 +40,7 @@ func (r Result) ResultToString() (string, error) {
 		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Subdomain, r.CNAME); err != nil {
 			return "", err
 		}
-	} else {
+	} else if r.Found || r.Verbose {
 		if _, err := fmt.Fprintf(buf, "%s\n", r.Subdomain); err != nil {
 			return "", err
 		}

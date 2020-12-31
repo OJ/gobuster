@@ -22,6 +22,7 @@ type HTTPHeader struct {
 type HTTPClient struct {
 	client           *http.Client
 	context          context.Context
+	host             string
 	userAgent        string
 	defaultUserAgent string
 	username         string
@@ -87,6 +88,13 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	if client.method == "" {
 		client.method = http.MethodGet
 	}
+	client.host = ""
+	for _, h := range opt.Headers {
+		if h.Name == "Host" {
+			client.host = h.Value
+			break
+		}
+	}
 	return &client, nil
 }
 
@@ -138,6 +146,8 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 
 	if host != "" {
 		req.Host = host
+	} else if client.host != "" {
+		req.Host = client.host
 	}
 
 	if client.userAgent != "" {

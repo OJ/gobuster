@@ -13,6 +13,7 @@ linters:
     - godot
     - goerr113
     - gofumpt
+    - exhaustivestruct
 
 issues:
   exclude-rules:

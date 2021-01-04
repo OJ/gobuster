@@ -52,7 +52,11 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 		return options, fmt.Errorf("invalid value for random-agent: %w", err)
 	}
 	if randomUA {
-		options.UserAgent = helper.GetRandomUserAgent()
+		ua, err := helper.GetRandomUserAgent()
+		if err != nil {
+			return options, err
+		}
+		options.UserAgent = ua
 	}
 
 	options.Proxy, err = cmd.Flags().GetString("proxy")

@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"math/big"
 )
 
 var userAgents = [...]string{
@@ -4666,7 +4666,10 @@ var userAgents = [...]string{
 }
 
 // GetRandomUserAgent picks a random user agent from a predefined list
-func GetRandomUserAgent() string {
-	rand.Seed(time.Now().Unix())
-	return userAgents[rand.Intn(len(userAgents))]
+func GetRandomUserAgent() (string, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(userAgents))))
+	if err != nil {
+		return "", err
+	}
+	return userAgents[n.Int64()], err
 }

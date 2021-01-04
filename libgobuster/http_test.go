@@ -3,8 +3,9 @@ package libgobuster
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,19 +27,26 @@ func httpServerT(t *testing.T, content string) *httptest.Server {
 	return ts
 }
 
-func randomString(length int) string {
+func randomString(length int) (string, error) {
 	var letter = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	letterLen := len(letter)
 
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = letter[rand.Intn(letterLen)]
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(letterLen)))
+		if err != nil {
+			return "", err
+		}
+		b[i] = letter[n.Int64()]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 func TestRequest(t *testing.T) {
-	ret := randomString(100)
+	ret, err := randomString(100)
+	if err != nil {
+		t.Fatal(err)
+	}
 	h := httpServerT(t, ret)
 	defer h.Close()
 	var o HTTPOptions
@@ -62,7 +70,11 @@ func TestRequest(t *testing.T) {
 }
 
 func BenchmarkRequestWithoutBody(b *testing.B) {
-	h := httpServerB(b, randomString(10000))
+	r, err := randomString(10000)
+	if err != nil {
+		b.Fatal(err)
+	}
+	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
 	c, err := NewHTTPClient(context.Background(), &o)
@@ -78,7 +90,11 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 }
 
 func BenchmarkRequestWitBody(b *testing.B) {
-	h := httpServerB(b, randomString(10000))
+	r, err := randomString(10000)
+	if err != nil {
+		b.Fatal(err)
+	}
+	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
 	c, err := NewHTTPClient(context.Background(), &o)
@@ -94,7 +110,11 @@ func BenchmarkRequestWitBody(b *testing.B) {
 }
 
 func BenchmarkNewHTTPClient(b *testing.B) {
-	h := httpServerB(b, randomString(500))
+	r, err := randomString(500)
+	if err != nil {
+		b.Fatal(err)
+	}
+	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
 	for x := 0; x < b.N; x++ {

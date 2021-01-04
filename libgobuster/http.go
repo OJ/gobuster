@@ -29,6 +29,7 @@ type HTTPClient struct {
 	headers          []HTTPHeader
 	cookies          string
 	method           string
+	host             string
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -87,6 +88,13 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	if client.method == "" {
 		client.method = http.MethodGet
 	}
+	// Host header needs to be set separately
+	for _, h := range opt.Headers {
+		if h.Name == "Host" {
+			client.host = h.Value
+			break
+		}
+	}
 	return &client, nil
 }
 
@@ -136,8 +144,11 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 		req.Header.Set("Cookie", client.cookies)
 	}
 
+	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
 	if host != "" {
 		req.Host = host
+	} else if client.host != "" {
+		req.Host = client.host
 	}
 
 	if client.userAgent != "" {

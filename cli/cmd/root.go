@@ -47,7 +47,7 @@ func Execute() {
 		// Once before and once after the help output. Not sure if
 		// this is going to be needed to output other errors that
 		// aren't automatically outputted.
-		//fmt.Println(err)
+		// fmt.Println(err)
 		os.Exit(1)
 	}
 }

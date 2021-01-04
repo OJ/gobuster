@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -25,8 +26,9 @@ func runDir(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		if goberr, ok := err.(*gobusterdir.ErrWildcard); ok {
-			return fmt.Errorf("%s. To continue please exclude the status code, the length or use the --wildcard switch", goberr.Error())
+		var wErr *gobusterdir.ErrWildcard
+		if errors.As(err, &wErr) {
+			return fmt.Errorf("%w. To continue please exclude the status code, the length or use the --wildcard switch", wErr)
 		}
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}

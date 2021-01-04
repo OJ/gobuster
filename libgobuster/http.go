@@ -168,7 +168,8 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 
 	resp, err := client.client.Do(req)
 	if err != nil {
-		if ue, ok := err.(*url.Error); ok {
+		var ue *url.Error
+		if errors.As(err, &ue) {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
 				return nil, fmt.Errorf("invalid certificate: %w", ue.Err)
 			}

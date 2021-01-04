@@ -43,6 +43,7 @@ func randomString(length int) (string, error) {
 }
 
 func TestRequest(t *testing.T) {
+	t.Parallel()
 	ret, err := randomString(100)
 	if err != nil {
 		t.Fatal(err)

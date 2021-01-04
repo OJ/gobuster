@@ -52,6 +52,11 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
+	plugin.AppendDomain, err = cmdDNS.Flags().GetBool("append-domain")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for append-domain: %w", err)
+	}
+
 	return globalopts, &plugin, nil
 }
 
@@ -64,6 +69,7 @@ func init() {
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {
 		log.Fatalf("%v", err)
 	}
+	cmdVhost.Flags().BoolP("append-domain", "", false, "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

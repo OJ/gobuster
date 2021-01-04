@@ -105,7 +105,13 @@ func (v *GobusterVhost) PreRun() error {
 
 // Run is the process implementation of gobusterdir
 func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) error {
-	subdomain := fmt.Sprintf("%s.%s", word, v.domain)
+	var subdomain string
+	if v.options.AppendDomain {
+		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
+	} else {
+		// wordlist needs to include full domains
+		subdomain = word
+	}
 	status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return err

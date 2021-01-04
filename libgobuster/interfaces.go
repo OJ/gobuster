@@ -9,6 +9,7 @@ type GobusterPlugin interface {
 	GetConfigString() (string, error)
 }
 
+// Result is an interface for the Result object
 type Result interface {
 	ResultToString() (string, error)
 }

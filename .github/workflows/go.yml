@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.13.10", "1.14.2"]
+        go: ["1.14.13", "1.15.6"]
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v1

@@ -14,6 +14,9 @@ linters:
     - goerr113
     - gofumpt
     - exhaustivestruct
+    - forbidigo
+    - nlreturn
+    - wrapcheck
 
 issues:
   exclude-rules:
@@ -22,6 +25,10 @@ issues:
         - gosec
 
     - text: ifElseChain
+      linters:
+        - gocritic
+
+    - text: exitAfterDefer
       linters:
         - gocritic
 

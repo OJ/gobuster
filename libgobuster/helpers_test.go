@@ -161,7 +161,9 @@ func TestLineCounter(t *testing.T) {
 		{"Empty", "", 1},
 	}
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
 			r := strings.NewReader(x.s)
 			l, err := lineCounter(r)
 			if err != nil {

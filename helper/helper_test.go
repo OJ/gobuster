@@ -9,7 +9,6 @@ import (
 
 func TestParseExtensions(t *testing.T) {
 	t.Parallel()
-
 	var tt = []struct {
 		testName           string
 		extensions         string
@@ -41,7 +40,6 @@ func TestParseExtensions(t *testing.T) {
 
 func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
-
 	var tt = []struct {
 		testName      string
 		stringCodes   string

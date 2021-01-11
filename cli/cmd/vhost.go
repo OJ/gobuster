@@ -52,7 +52,7 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
-	plugin.AppendDomain, err = cmdDNS.Flags().GetBool("append-domain")
+	plugin.AppendDomain, err = cmdVhost.Flags().GetBool("append-domain")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for append-domain: %w", err)
 	}

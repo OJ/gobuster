@@ -47,7 +47,7 @@ test:
 
 lint:
 	@if [ ! -f "$$(go env GOPATH)/bin/golangci-lint" ]; then \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.34.1; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin; \
 	fi
 	"$$(go env GOPATH)/bin/golangci-lint" run ./...
 	go mod tidy

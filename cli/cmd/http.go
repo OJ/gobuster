@@ -19,6 +19,7 @@ func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
 	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
+	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 }
 
 func addCommonHTTPOptions(cmd *cobra.Command) error {
@@ -28,7 +29,6 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringP("username", "U", "", "Username for Basic Auth")
 	cmd.Flags().StringP("password", "P", "", "Password for Basic Auth")
 	cmd.Flags().BoolP("follow-redirect", "r", false, "Follow redirects")
-	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
@@ -68,6 +68,11 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	if err != nil {
 		return options, fmt.Errorf("invalid value for timeout: %w", err)
 	}
+
+	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
+	}
 	return options, nil
 }
 
@@ -82,6 +87,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.Proxy = basic.Proxy
 	options.Timeout = basic.Timeout
 	options.UserAgent = basic.UserAgent
+	options.NoTLSValidation = basic.NoTLSValidation
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {
@@ -126,11 +132,6 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.FollowRedirect, err = cmd.Flags().GetBool("follow-redirect")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for follow-redirect: %w", err)
-	}
-
-	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
-	if err != nil {
-		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
 	}
 
 	options.Method, err = cmd.Flags().GetString("method")

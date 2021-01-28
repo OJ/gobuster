@@ -39,15 +39,15 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:     opts.Proxy,
-		Timeout:   opts.Timeout,
-		UserAgent: opts.UserAgent,
+		Proxy:           opts.Proxy,
+		Timeout:         opts.Timeout,
+		UserAgent:       opts.UserAgent,
+		NoTLSValidation: opts.NoTLSValidation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
 		BasicHTTPOptions: basicOptions,
 		FollowRedirect:   opts.FollowRedirect,
-		NoTLSValidation:  opts.NoTLSValidation,
 		Username:         opts.Username,
 		Password:         opts.Password,
 		Headers:          opts.Headers,

@@ -38,9 +38,10 @@ func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:     opts.Proxy,
-		Timeout:   opts.Timeout,
-		UserAgent: opts.UserAgent,
+		Proxy:           opts.Proxy,
+		Timeout:         opts.Timeout,
+		UserAgent:       opts.UserAgent,
+		NoTLSValidation: opts.NoTLSValidation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

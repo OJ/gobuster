@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdVhost *cobra.Command
 
 func runVhost(cmd *cobra.Command, args []string) error {
@@ -18,7 +19,7 @@ func runVhost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobustervhost.NewGobusterVhost(mainContext, globalopts, pluginopts)
+	plugin, err := gobustervhost.NewGobusterVhost(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustervhost: %w", err)
 	}
@@ -60,6 +61,7 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	return globalopts, &plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdVhost = &cobra.Command{
 		Use:   "vhost",

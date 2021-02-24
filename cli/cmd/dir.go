@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdDir *cobra.Command
 
 func runDir(cmd *cobra.Command, args []string) error {
@@ -20,7 +21,7 @@ func runDir(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusterdir.NewGobusterDir(mainContext, globalopts, pluginopts)
+	plugin, err := gobusterdir.NewGobusterDir(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}
@@ -135,6 +136,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	return globalopts, plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdDir = &cobra.Command{
 		Use:   "dir",

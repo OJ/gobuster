@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdS3 *cobra.Command
 
 func runS3(cmd *cobra.Command, args []string) error {
@@ -17,7 +18,7 @@ func runS3(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusters3.NewGobusterS3(mainContext, globalopts, pluginopts)
+	plugin, err := gobusters3.NewGobusterS3(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusters3: %w", err)
 	}
@@ -54,6 +55,7 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	return globalopts, plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdS3 = &cobra.Command{
 		Use:   "s3",

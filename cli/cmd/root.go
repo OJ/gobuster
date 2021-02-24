@@ -12,11 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var rootCmd = &cobra.Command{
 	Use:          "gobuster",
 	SilenceUsage: true,
 }
 
+// nolint:gochecknoglobals
 var mainContext context.Context
 
 // Execute is the main cobra method
@@ -147,6 +149,7 @@ func configureGlobalOptions() {
 	}
 }
 
+// nolint:gochecknoinits
 func init() {
 	rootCmd.PersistentFlags().DurationP("delay", "", 0, "Time each thread waits between requests (e.g. 1500ms)")
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")

@@ -40,7 +40,7 @@ type GobusterDir struct {
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
-func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
+func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -71,7 +71,7 @@ func NewGobusterDir(cont context.Context, globalopts *libgobuster.Options, opts 
 		Method:           opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -106,13 +106,13 @@ func (d *GobusterDir) RequestsPerRun() int {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (d *GobusterDir) PreRun() error {
+func (d *GobusterDir) PreRun(ctx context.Context) error {
 	// add trailing slash
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}
 
-	_, _, _, _, err := d.http.Request(d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
@@ -123,7 +123,7 @@ func (d *GobusterDir) PreRun() error {
 		url = fmt.Sprintf("%s/", url)
 	}
 
-	wildcardResp, wildcardLength, _, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, _, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func getBackupFilenames(word string) []string {
 }
 
 // Run is the process implementation of gobusterdir
-func (d *GobusterDir) Run(word string, resChannel chan<- libgobuster.Result) error {
+func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
@@ -197,7 +197,7 @@ func (d *GobusterDir) Run(word string, resChannel chan<- libgobuster.Result) err
 	}
 
 	for entity, url := range urlsToCheck {
-		statusCode, size, header, _, err := d.http.Request(url, libgobuster.RequestOptions{})
+		statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 		if err != nil {
 			return err
 		}

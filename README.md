@@ -2,10 +2,10 @@
 
 Gobuster is a tool used to brute-force:
 
-* URIs (directories and files) in web sites.
-* DNS subdomains (with wildcard support).
-* Virtual Host names on target web servers.
-* Open Amazon S3 buckets
+- URIs (directories and files) in web sites.
+- DNS subdomains (with wildcard support).
+- Virtual Host names on target web servers.
+- Open Amazon S3 buckets
 
 ## Tags, Statuses, etc
 
@@ -29,8 +29,8 @@ Because I wanted:
 
 Yes, you're probably correct. Feel free to:
 
-* Not use it.
-* Show me how to do it better.
+- Not use it.
+- Show me how to do it better.
 
 ## Love this tool? Back it!
 
@@ -40,34 +40,39 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
+## Changes in 3.1-dev
+
+- Use go 1.16
+- use contexts in the correct way
+
 ## Changes in 3.1
 
-* enumerate public AWS S3 buckets
-* fuzzing mode
-* specify HTTP method
-* added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
-* The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
+- enumerate public AWS S3 buckets
+- fuzzing mode
+- specify HTTP method
+- added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
+- The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
 
 ## Changes in 3.0
 
-* New CLI options so modes are strictly separated (`-m` is now gone!)
-* Performance Optimizations and better connection handling
-* Ability to enumerate vhost names
-* Option to supply custom HTTP headers
+- New CLI options so modes are strictly separated (`-m` is now gone!)
+- Performance Optimizations and better connection handling
+- Ability to enumerate vhost names
+- Option to supply custom HTTP headers
 
 ## Available Modes
 
-* dir - the classic directory brute-forcing mode
-* dns - DNS subdomain brute-forcing mode
-* s3 - Enumerate open S3 buckets and look for existence and bucket listings
-* vhost - virtual host brute-forcing mode (not the same as DNS!)
+- dir - the classic directory brute-forcing mode
+- dns - DNS subdomain brute-forcing mode
+- s3 - Enumerate open S3 buckets and look for existence and bucket listings
+- vhost - virtual host brute-forcing mode (not the same as DNS!)
 
 ## Built-in Help
 
 Help is built-in!
 
-* `gobuster help` - outputs the top-level help.
-* `gobuster help <mode>` - outputs the help specific to that mode.
+- `gobuster help` - outputs the top-level help.
+- `gobuster help <mode>` - outputs the help specific to that mode.
 
 ## `dns` Mode Help
 
@@ -177,9 +182,11 @@ If you have a [Go](https://golang.org/) environment ready to go, it's as easy as
 go get github.com/OJ/gobuster
 ```
 
+PS: You need at least go 1.16.0 to compile gobuster.
+
 ## Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.16.0 to compile gobuster.
 
 ### Compiling
 
@@ -197,13 +204,13 @@ go install
 
 If you have all the dependencies already, you can make use of the build scripts:
 
-* `make` - builds for the current Go configuration (ie. runs `go build`).
-* `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` folder.
-* `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` folder.
-* `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` folder.
-* `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` folder.
-* `make clean` - clears out the `build` folder.
-* `make test` - runs the tests.
+- `make` - builds for the current Go configuration (ie. runs `go build`).
+- `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` folder.
+- `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` folder.
+- `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` folder.
+- `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` folder.
+- `make clean` - clears out the `build` folder.
+- `make test` - runs the tests.
 
 ## Wordlists via STDIN
 
@@ -577,14 +584,14 @@ gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
 
 #### Use case in combination with patterns
 
-* Create a custom wordlist for the target containing company names and so on
-* Create a pattern file to use for common bucket names.
+- Create a custom wordlist for the target containing company names and so on
+- Create a pattern file to use for common bucket names.
 
 ```bash
 curl -s --output - https://raw.githubusercontent.com/eth0izzle/bucket-stream/master/permutations/extended.txt | sed -s 's/%s/{GOBUSTER}/' > patterns.txt
 ```
 
-* Run gobuster with the custom input. Be sure to turn verbose mode on to see the bucket details
+- Run gobuster with the custom input. Be sure to turn verbose mode on to see the bucket details
 
 ```bash
 gobuster s3 --wordlist my.custom.wordlist -p patterns.txt -v

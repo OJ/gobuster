@@ -51,11 +51,11 @@ func TestRequest(t *testing.T) {
 	h := httpServerT(t, ret)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(context.Background(), &o)
+	c, err := NewHTTPClient(&o)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	status, length, _, body, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
+	status, length, _, body, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -78,12 +78,12 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(context.Background(), &o)
+	c, err := NewHTTPClient(&o)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
 	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: false})
+		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: false})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -98,12 +98,12 @@ func BenchmarkRequestWitBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(context.Background(), &o)
+	c, err := NewHTTPClient(&o)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
 	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(h.URL, RequestOptions{ReturnBody: true})
+		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -119,7 +119,7 @@ func BenchmarkNewHTTPClient(b *testing.B) {
 	defer h.Close()
 	var o HTTPOptions
 	for x := 0; x < b.N; x++ {
-		_, err := NewHTTPClient(context.Background(), &o)
+		_, err := NewHTTPClient(&o)
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}

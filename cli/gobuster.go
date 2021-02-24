@@ -92,7 +92,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType
 
 // progressWorker outputs the progress every tick. It will stop once cancel() is called
 // on the context
-func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
+func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
 	tick := time.NewTicker(cliProgressUpdate)
@@ -121,7 +121,7 @@ func progressWorker(c context.Context, g *libgobuster.Gobuster, wg *sync.WaitGro
 				output.Mu.Unlock()
 				g.RequestsCountMutex.RUnlock()
 			}
-		case <-c.Done():
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -136,7 +136,7 @@ func writeToFile(f *os.File, output string) error {
 }
 
 // Gobuster is the main entry point for the CLI
-func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin) error {
+func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin) error {
 	// Sanity checks
 	if opts == nil {
 		return fmt.Errorf("please provide valid options")
@@ -146,10 +146,10 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 		return fmt.Errorf("please provide a valid plugin")
 	}
 
-	ctx, cancel := context.WithCancel(prevCtx)
+	ctxCancel, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	gobuster, err := libgobuster.NewGobuster(ctx, opts, plugin)
+	gobuster, err := libgobuster.NewGobuster(opts, plugin)
 	if err != nil {
 		return err
 	}
@@ -188,10 +188,10 @@ func Gobuster(prevCtx context.Context, opts *libgobuster.Options, plugin libgobu
 	if !opts.Quiet && !opts.NoProgress {
 		// if not quiet add a new workgroup entry and start the goroutine
 		wg.Add(1)
-		go progressWorker(ctx, gobuster, &wg, o)
+		go progressWorker(ctxCancel, gobuster, &wg, o)
 	}
 
-	err = gobuster.Start()
+	err = gobuster.Run(ctxCancel)
 
 	// call cancel func so progressWorker will exit (the only goroutine in this
 	// file using the context) and to free resources

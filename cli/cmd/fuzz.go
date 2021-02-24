@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdFuzz *cobra.Command
 
 func runFuzz(cmd *cobra.Command, args []string) error {
@@ -20,7 +21,7 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusterfuzz.NewGobusterFuzz(mainContext, globalopts, pluginopts)
+	plugin, err := gobusterfuzz.NewGobusterFuzz(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}
@@ -86,6 +87,7 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	return globalopts, plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdFuzz = &cobra.Command{
 		Use:   "fuzz",

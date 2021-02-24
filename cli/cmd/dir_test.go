@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -47,7 +47,7 @@ func BenchmarkDirMode(b *testing.B) {
 	}
 	pluginopts.StatusCodesParsed = tmpStat
 
-	wordlist, err := ioutil.TempFile("", "")
+	wordlist, err := os.CreateTemp("", "")
 	if err != nil {
 		b.Fatalf("could not create tempfile: %v", err)
 	}
@@ -73,13 +73,13 @@ func BenchmarkDirMode(b *testing.B) {
 	}
 	defer devnull.Close()
 	log.SetFlags(0)
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	// Run the real benchmark
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobusterdir.NewGobusterDir(ctx, &globalopts, pluginopts)
+		plugin, err := gobusterdir.NewGobusterDir(&globalopts, pluginopts)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

@@ -23,7 +23,7 @@ type GobusterS3 struct {
 }
 
 // NewGobusterS3 creates a new initialized GobusterS3
-func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
+func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -50,7 +50,7 @@ func NewGobusterS3(cont context.Context, globalopts *libgobuster.Options, opts *
 		FollowRedirect: true,
 	}
 
-	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -71,19 +71,19 @@ func (s *GobusterS3) RequestsPerRun() int {
 }
 
 // PreRun is the pre run implementation of GobusterS3
-func (s *GobusterS3) PreRun() error {
+func (s *GobusterS3) PreRun(ctx context.Context) error {
 	return nil
 }
 
 // Run is the process implementation of GobusterS3
-func (s *GobusterS3) Run(word string, resChannel chan<- libgobuster.Result) error {
+func (s *GobusterS3) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
 		return nil
 	}
 
 	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
-	status, _, _, body, err := s.http.Request(bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+	status, _, _, body, err := s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return err
 	}

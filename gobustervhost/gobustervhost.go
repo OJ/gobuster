@@ -24,7 +24,7 @@ type GobusterVhost struct {
 }
 
 // NewGobusterVhost creates a new initialized GobusterDir
-func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
+func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -55,7 +55,7 @@ func NewGobusterVhost(cont context.Context, globalopts *libgobuster.Options, opt
 		Method:           opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (v *GobusterVhost) RequestsPerRun() int {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (v *GobusterVhost) PreRun() error {
+func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL, "/") {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
@@ -87,7 +87,7 @@ func (v *GobusterVhost) PreRun() error {
 	v.domain = urlParsed.Host
 
 	// request default vhost for baseline1
-	_, _, _, tmp, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	_, _, _, tmp, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -95,7 +95,7 @@ func (v *GobusterVhost) PreRun() error {
 
 	// request non existent vhost for baseline2
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, _, tmp, err = v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, tmp, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -104,7 +104,7 @@ func (v *GobusterVhost) PreRun() error {
 }
 
 // Run is the process implementation of gobusterdir
-func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) error {
+func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
@@ -112,7 +112,7 @@ func (v *GobusterVhost) Run(word string, resChannel chan<- libgobuster.Result) e
 		// wordlist needs to include full domains
 		subdomain = word
 	}
-	status, size, header, body, err := v.http.Request(v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	status, size, header, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return err
 	}

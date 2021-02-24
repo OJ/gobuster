@@ -26,7 +26,6 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts               *Options
-	context            context.Context
 	RequestsExpected   int
 	RequestsIssued     int
 	RequestsCountMutex *sync.RWMutex
@@ -38,12 +37,11 @@ type Gobuster struct {
 }
 
 // NewGobuster returns a new Gobuster object
-func NewGobuster(c context.Context, opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
+func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
 	g.RequestsCountMutex = new(sync.RWMutex)
-	g.context = c
 	g.resultChan = make(chan Result)
 	g.errorChan = make(chan error)
 	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
@@ -68,11 +66,11 @@ func (g *Gobuster) incrementRequests() {
 	g.RequestsCountMutex.Unlock()
 }
 
-func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
+func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {
-		case <-g.context.Done():
+		case <-ctx.Done():
 			return
 		case word, ok := <-wordChan:
 			// worker finished
@@ -88,7 +86,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			}
 
 			// Mode-specific processing
-			err := g.plugin.Run(wordCleaned, g.resultChan)
+			err := g.plugin.Run(ctx, wordCleaned, g.resultChan)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err
@@ -96,7 +94,7 @@ func (g *Gobuster) worker(wordChan <-chan string, wg *sync.WaitGroup) {
 			}
 
 			select {
-			case <-g.context.Done():
+			case <-ctx.Done():
 			case <-time.After(g.Opts.Delay):
 			}
 		}
@@ -137,13 +135,13 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	return bufio.NewScanner(wordlist), nil
 }
 
-// Start the busting of the website with the given
+// Run the busting of the website with the given
 // set of settings from the command line.
-func (g *Gobuster) Start() error {
+func (g *Gobuster) Run(ctx context.Context) error {
 	defer close(g.resultChan)
 	defer close(g.errorChan)
 
-	if err := g.plugin.PreRun(); err != nil {
+	if err := g.plugin.PreRun(ctx); err != nil {
 		return err
 	}
 
@@ -155,7 +153,7 @@ func (g *Gobuster) Start() error {
 	// Create goroutines for each of the number of threads
 	// specified.
 	for i := 0; i < g.Opts.Threads; i++ {
-		go g.worker(wordChan, &workerGroup)
+		go g.worker(ctx, wordChan, &workerGroup)
 	}
 
 	scanner, err := g.getWordlist()
@@ -166,7 +164,7 @@ func (g *Gobuster) Start() error {
 Scan:
 	for scanner.Scan() {
 		select {
-		case <-g.context.Done():
+		case <-ctx.Done():
 			break Scan
 		default:
 			word := scanner.Text()
@@ -177,7 +175,7 @@ Scan:
 			for _, w := range perms {
 				select {
 				// need to check here too otherwise wordChan will block
-				case <-g.context.Done():
+				case <-ctx.Done():
 					break Scan
 				case wordChan <- w:
 				}

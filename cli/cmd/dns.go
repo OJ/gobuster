@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdDNS *cobra.Command
 
 func runDNS(cmd *cobra.Command, args []string) error {
@@ -80,6 +81,7 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 	return globalopts, plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdDNS = &cobra.Command{
 		Use:   "dns",

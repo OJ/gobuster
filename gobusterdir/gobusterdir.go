@@ -119,6 +119,7 @@ func (d *GobusterDir) PreRun() error {
 		// client tried to access.
 		finalURL := resp.Request.URL.String()
 		d.options.URL = finalURL
+		fmt.Println(d.options.URL)
 	}
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)

@@ -86,7 +86,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		if strings.HasSuffix(plugin.URL, "/") {
 			plugin.URL = plugin.URL + "?" + plugin.QueryString
 		} else {
-			plugin.URL = plugin.URL + "/?" + plugin.QueryString
+			plugin.URL = plugin.URL + "?" + plugin.QueryString
 		}
 	}
 

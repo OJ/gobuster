@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"strings"
 	"text/tabwriter"
 
@@ -108,6 +110,17 @@ func (d *GobusterDir) RequestsPerRun() int {
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun() error {
 	// add trailing slash
+	if strings.Contains(d.options.URL, "?") {
+		resp, err := http.Get(d.options.URL)
+		if err != nil {
+			log.Fatalf("http.Get => %v", err.Error())
+		}
+
+		// Your magic function. The Request in the Response is the last URL the
+		// client tried to access.
+		finalURL := resp.Request.URL.String()
+		d.options.URL = finalURL
+	}
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
@@ -75,6 +76,18 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.StatusCodesBlacklist, err = cmdDir.Flags().GetString("status-codes-blacklist")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
+	}
+
+	plugin.QueryString, err = cmdDir.Flags().GetString("query")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid query string")
+	}
+	if plugin.QueryString != "" {
+		if strings.HasSuffix(plugin.URL, "/") {
+			plugin.URL = plugin.URL + "?" + plugin.QueryString
+		} else {
+			plugin.URL = plugin.URL + "/?" + plugin.QueryString
+		}
 	}
 
 	// blacklist will override the normal status codes
@@ -155,7 +168,7 @@ func init() {
 	cmdDir.Flags().Bool("wildcard", false, "Force continued operation when wildcard found")
 	cmdDir.Flags().BoolP("discover-backup", "d", false, "Upon finding a file search for backup files")
 	cmdDir.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
-
+	cmdDir.Flags().StringP("query", "Q", "", "Specify a query string to be added to the end of each request")
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()
 	}

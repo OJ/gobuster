@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"text/tabwriter"
@@ -113,7 +112,7 @@ func (d *GobusterDir) PreRun() error {
 	if strings.Contains(d.options.URL, "?") {
 		resp, err := http.Get(d.options.URL)
 		if err != nil {
-			log.Fatalf("http.Get => %v", err.Error())
+			fmt.Printf(err.Error())
 		}
 
 		// Your magic function. The Request in the Response is the last URL the

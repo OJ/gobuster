@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"text/tabwriter"
 
@@ -108,6 +109,14 @@ func (d *GobusterDir) RequestsPerRun() int {
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun(ctx context.Context) error {
 	// add trailing slash
+	if strings.Contains(d.options.URL, "?") {
+		resp, err := http.Get(d.options.URL)
+		if err != nil {
+			fmt.Printf(err.Error())
+		}
+		finalURL := resp.Request.URL.String()
+		d.options.URL = finalURL
+	}
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
 	}

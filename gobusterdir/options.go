@@ -12,6 +12,7 @@ type OptionsDir struct {
 	StatusCodes                string
 	StatusCodesParsed          libgobuster.IntSet
 	StatusCodesBlacklist       string
+	QueryString                string
 	StatusCodesBlacklistParsed libgobuster.IntSet
 	UseSlash                   bool
 	HideLength                 bool

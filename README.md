@@ -44,6 +44,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 - Use go 1.16
 - use contexts in the correct way
+- get rid of the wildcard flag (except in DNS mode)
 
 ## Changes in 3.1
 

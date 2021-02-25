@@ -134,11 +134,11 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 	}
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
+		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) {
 			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
-		if d.options.StatusCodesParsed.Contains(*wildcardResp) && !d.options.WildcardForced {
+		if d.options.StatusCodesParsed.Contains(*wildcardResp) {
 			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
 		}
 	} else {

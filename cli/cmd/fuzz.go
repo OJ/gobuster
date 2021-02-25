@@ -29,7 +29,7 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		var wErr *gobusterfuzz.ErrWildcard
 		if errors.As(err, &wErr) {
-			return fmt.Errorf("%w. To force processing of Wildcard responses, specify the '--wildcard' switch", wErr)
+			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
@@ -74,11 +74,6 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 		plugin.ExcludedStatusCodesParsed = ret
 	}
 
-	plugin.WildcardForced, err = cmdFuzz.Flags().GetBool("wildcard")
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for wildcard: %w", err)
-	}
-
 	plugin.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
@@ -100,7 +95,6 @@ func init() {
 	}
 	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Negative status codes (will override statuscodes if set)")
 	cmdFuzz.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
-	cmdFuzz.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
 
 	cmdFuzz.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

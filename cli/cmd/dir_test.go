@@ -31,7 +31,6 @@ func BenchmarkDirMode(b *testing.B) {
 	pluginopts := gobusterdir.NewOptionsDir()
 	pluginopts.URL = h.URL
 	pluginopts.Timeout = 10 * time.Second
-	pluginopts.WildcardForced = true
 
 	pluginopts.Extensions = ".php,.csv"
 	tmpExt, err := helper.ParseExtensions(pluginopts.Extensions)

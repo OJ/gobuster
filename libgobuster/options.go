@@ -13,7 +13,6 @@ type Options struct {
 	NoProgress     bool
 	NoError        bool
 	Quiet          bool
-	WildcardForced bool
 	Verbose        bool
 	Delay          time.Duration
 }

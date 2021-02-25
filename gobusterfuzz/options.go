@@ -9,7 +9,6 @@ type OptionsFuzz struct {
 	libgobuster.HTTPOptions
 	ExcludedStatusCodes       string
 	ExcludedStatusCodesParsed libgobuster.IntSet
-	WildcardForced            bool
 	ExcludeLength             []int
 }
 

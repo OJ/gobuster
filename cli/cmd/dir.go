@@ -29,7 +29,7 @@ func runDir(cmd *cobra.Command, args []string) error {
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
 		var wErr *gobusterdir.ErrWildcard
 		if errors.As(err, &wErr) {
-			return fmt.Errorf("%w. To continue please exclude the status code, the length or use the --wildcard switch", wErr)
+			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
@@ -118,11 +118,6 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for hide-length: %w", err)
 	}
 
-	plugin.WildcardForced, err = cmdDir.Flags().GetBool("wildcard")
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for wildcard: %w", err)
-	}
-
 	plugin.DiscoverBackup, err = cmdDir.Flags().GetBool("discover-backup")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for discover-backup: %w", err)
@@ -154,7 +149,6 @@ func init() {
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")
 	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")
-	cmdDir.Flags().Bool("wildcard", false, "Force continued operation when wildcard found")
 	cmdDir.Flags().BoolP("discover-backup", "d", false, "Upon finding a file search for backup files")
 	cmdDir.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 

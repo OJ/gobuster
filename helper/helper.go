@@ -11,7 +11,7 @@ import (
 // ParseExtensions parses the extensions provided as a comma separated list
 func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 	if extensions == "" {
-		return libgobuster.StringSet{}, fmt.Errorf("invalid extension string provided")
+		return libgobuster.StringSet{}, nil
 	}
 
 	ret := libgobuster.NewStringSet()
@@ -26,7 +26,7 @@ func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 // ParseCommaSeparatedInt parses the status codes provided as a comma separated list
 func ParseCommaSeparatedInt(inputString string) (libgobuster.IntSet, error) {
 	if inputString == "" {
-		return libgobuster.IntSet{}, fmt.Errorf("invalid string provided")
+		return libgobuster.IntSet{}, nil
 	}
 
 	ret := libgobuster.NewIntSet()

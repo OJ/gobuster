@@ -60,19 +60,16 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
+	// blacklist will override the normal status codes
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
-
-	// blacklist will override the normal status codes
-	if plugin.ExcludedStatusCodes != "" {
-		ret, err := helper.ParseCommaSeparatedInt(plugin.ExcludedStatusCodes)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
-		}
-		plugin.ExcludedStatusCodesParsed = ret
+	ret, err := helper.ParseCommaSeparatedInt(plugin.ExcludedStatusCodes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
+	plugin.ExcludedStatusCodesParsed = ret
 
 	plugin.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
 	if err != nil {

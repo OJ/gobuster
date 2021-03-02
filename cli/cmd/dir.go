@@ -64,38 +64,40 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
-
-	if plugin.Extensions != "" {
-		ret, err := helper.ParseExtensions(plugin.Extensions)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
-		}
-		plugin.ExtensionsParsed = ret
+	ret, err := helper.ParseExtensions(plugin.Extensions)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
+	plugin.ExtensionsParsed = ret
 
+	// parse normal status codes
+	plugin.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
+	}
+	ret2, err := helper.ParseCommaSeparatedInt(plugin.StatusCodes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
+	}
+	plugin.StatusCodesParsed = ret2
+
+	// blacklist will override the normal status codes
 	plugin.StatusCodesBlacklist, err = cmdDir.Flags().GetString("status-codes-blacklist")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
+	ret3, err := helper.ParseCommaSeparatedInt(plugin.StatusCodesBlacklist)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
+	}
+	plugin.StatusCodesBlacklistParsed = ret3
 
-	// blacklist will override the normal status codes
-	if plugin.StatusCodesBlacklist != "" {
-		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodesBlacklist)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
-		}
-		plugin.StatusCodesBlacklistParsed = ret
-	} else {
-		// parse normal status codes
-		plugin.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
-		}
-		ret, err := helper.ParseCommaSeparatedInt(plugin.StatusCodes)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
-		}
-		plugin.StatusCodesParsed = ret
+	if plugin.StatusCodes != "" && plugin.StatusCodesBlacklist != "" {
+		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both set, pleaes set only one")
+	}
+
+	if plugin.StatusCodes == "" && plugin.StatusCodesBlacklist == "" {
+		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both not set, pleaes set one")
 	}
 
 	plugin.UseSlash, err = cmdDir.Flags().GetBool("add-slash")

@@ -175,12 +175,12 @@ We are now shipping binaries for each of the releases so that you don't even hav
 
 If you're stupid enough to trust binaries that I've put together, you can download them from the [releases](https://github.com/OJ/gobuster/releases) page.
 
-### Using `go get`
+### Using `go install`
 
-If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
+If you have a [Go](https://golang.org/) environment ready to go (at least go 1.16), it's as easy as:
 
 ```bash
-go get github.com/OJ/gobuster
+go install github.com/OJ/gobuster/v3@latest
 ```
 
 PS: You need at least go 1.16.0 to compile gobuster.
@@ -191,7 +191,7 @@ Since this tool is written in [Go](https://golang.org/) you need to install the 
 
 ### Compiling
 
-`gobuster` now has external dependencies, and so they need to be pulled in first:
+`gobuster` has external dependencies, and so they need to be pulled in first:
 
 ```bash
 go get && go build

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -120,9 +121,9 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
-	if found || v.globalopts.Verbose {
+	if found || !helper.SliceContains(v.options.ExcludeLength, int(size)) || v.globalopts.Verbose {
 		resultStatus := false
-		if found {
+		if found || !helper.SliceContains(v.options.ExcludeLength, int(size)) {
 			resultStatus = true
 		}
 		resChannel <- Result{
@@ -206,6 +207,16 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if _, err := fmt.Fprintf(tw, "[+] Timeout:\t%s\n", o.Timeout.String()); err != nil {
 		return "", err
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Append Domain:\t%t\n", v.options.AppendDomain); err != nil {
+		return "", err
+	}
+
+	if len(o.ExcludeLength) > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(v.options.ExcludeLength)); err != nil {
+			return "", err
+		}
 	}
 
 	if err := tw.Flush(); err != nil {

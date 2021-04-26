@@ -121,9 +121,9 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
-	if found || v.globalopts.Verbose {
+	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
 		resultStatus := false
-		if found && !helper.SliceContains(v.options.ExcludeLength, int(size)) {
+		if found {
 			resultStatus = true
 		}
 		resChannel <- Result{

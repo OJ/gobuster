@@ -70,7 +70,7 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 func init() {
 	cmdVhost = &cobra.Command{
 		Use:   "vhost",
-		Short: "Uses VHOST enumeration mode",
+		Short: "Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter",
 		RunE:  runVhost,
 	}
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {

@@ -106,12 +106,10 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 				var charsWritten int
 				if g.Opts.Wordlist == "-" {
 					s := fmt.Sprintf("\rProgress: %d", g.RequestsIssued)
-					s = rightPad(s, " ", output.MaxCharsWritten)
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 					// only print status if we already read in the wordlist
 				} else if g.RequestsExpected > 0 {
 					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", g.RequestsIssued, g.RequestsExpected, float32(g.RequestsIssued)*100.0/float32(g.RequestsExpected))
-					s = rightPad(s, " ", output.MaxCharsWritten)
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 				}
 				if charsWritten > output.MaxCharsWritten {

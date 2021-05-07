@@ -115,6 +115,11 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for no-status: %w", err)
 	}
 
+	plugin.Colors, err = cmdDir.Flags().GetBool("colors")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for colors: %w", err)
+	}
+
 	plugin.HideLength, err = cmdDir.Flags().GetBool("hide-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for hide-length: %w", err)
@@ -148,6 +153,7 @@ func init() {
 	cmdDir.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
+	cmdDir.Flags().Bool("colors", false, "Colored output")
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")
 	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")

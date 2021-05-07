@@ -5,6 +5,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	golang.org/x/sys v0.0.0-20210426080607-c94f62235c83 // indirect
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed
+	github.com/gookit/color v1.4.2
 )
 
 go 1.16

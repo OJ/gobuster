@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"github.com/gookit/color"
 )
 
 // Result represents a single result
@@ -15,6 +16,7 @@ type Result struct {
 	NoStatus   bool
 	HideLength bool
 	Found      bool
+	Colors     bool
 	Header     http.Header
 	StatusCode int
 	Size       int64
@@ -23,48 +25,71 @@ type Result struct {
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
+	colorize := fmt.Sprint
+
+	// Apply coloring if flag set
+	if r.Colors {
+		green := color.FgGreen.Render
+		yellow := color.FgYellow.Render
+		red := color.FgRed.Render
+
+		if !r.NoStatus {
+			if r.StatusCode >= 200 && r.StatusCode < 300 {
+				colorize = green
+			} else if r.StatusCode >= 300 && r.StatusCode < 500 {
+				colorize = yellow
+			} else if r.StatusCode >= 500 && r.StatusCode <= 599 {
+				colorize = red
+			}
+		}
+	}
 
 	// Prefix if we're in verbose mode
 	if r.Verbose {
 		if r.Found {
-			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
+			if _, err := fmt.Fprintf(buf, colorize("Found: ")); err != nil {
 				return "", err
 			}
 		} else {
-			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
+			if _, err := fmt.Fprintf(buf, colorize("Missed: ")); err != nil {
 				return "", err
 			}
 		}
 	}
 
 	if r.Expanded {
-		if _, err := fmt.Fprintf(buf, "%s", r.URL); err != nil {
+		s := colorize(fmt.Sprintf("%s", r.URL))
+		if _, err := fmt.Fprintf(buf, s); err != nil {
 			return "", err
 		}
 	} else {
-		if _, err := fmt.Fprintf(buf, "/"); err != nil {
+		if _, err := fmt.Fprintf(buf, colorize("/")); err != nil {
 			return "", err
 		}
 	}
-	if _, err := fmt.Fprintf(buf, "%-20s", r.Path); err != nil {
+	s := colorize(fmt.Sprintf("%-20s", r.Path))
+	if _, err := fmt.Fprintf(buf, s); err != nil {
 		return "", err
 	}
 
 	if !r.NoStatus {
-		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
+		s = colorize(fmt.Sprintf(" (Status: %d)", r.StatusCode))
+		if _, err := fmt.Fprintf(buf, s); err != nil {
 			return "", err
 		}
 	}
 
 	if !r.HideLength {
-		if _, err := fmt.Fprintf(buf, " [Size: %d]", r.Size); err != nil {
+		s = colorize(fmt.Sprintf(" [Size: %d]", r.Size))
+		if _, err := fmt.Fprintf(buf, s); err != nil {
 			return "", err
 		}
 	}
 
 	location := r.Header.Get("Location")
 	if location != "" {
-		if _, err := fmt.Fprintf(buf, " [--> %s]", location); err != nil {
+		s = colorize(fmt.Sprintf(" [--> %s]", location))
+		if _, err := fmt.Fprintf(buf, s); err != nil {
 			return "", err
 		}
 	}
@@ -73,7 +98,7 @@ func (r Result) ResultToString() (string, error) {
 		return "", err
 	}
 
-	s := buf.String()
+	s = buf.String()
 
 	return s, nil
 }

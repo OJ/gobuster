@@ -2,6 +2,7 @@ package libgobuster
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -116,7 +117,7 @@ func lineCounter(r io.Reader) (int, error) {
 		count += bytes.Count(buf[:c], lineSep)
 
 		switch {
-		case err == io.EOF:
+		case errors.Is(err, io.EOF):
 			return count, nil
 
 		case err != nil:

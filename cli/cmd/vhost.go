@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdVhost *cobra.Command
 
 func runVhost(cmd *cobra.Command, args []string) error {
@@ -18,7 +19,7 @@ func runVhost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobustervhost.NewGobusterVhost(mainContext, globalopts, pluginopts)
+	plugin, err := gobustervhost.NewGobusterVhost(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustervhost: %w", err)
 	}
@@ -52,18 +53,31 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
 
+	plugin.AppendDomain, err = cmdVhost.Flags().GetBool("append-domain")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for append-domain: %w", err)
+	}
+
+	plugin.ExcludeLength, err = cmdVhost.Flags().GetIntSlice("exclude-length")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
+	}
+
 	return globalopts, &plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdVhost = &cobra.Command{
 		Use:   "vhost",
-		Short: "Uses VHOST enumeration mode",
+		Short: "Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter",
 		RunE:  runVhost,
 	}
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {
 		log.Fatalf("%v", err)
 	}
+	cmdVhost.Flags().BoolP("append-domain", "", false, "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.")
+	cmdVhost.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

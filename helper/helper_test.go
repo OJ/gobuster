@@ -9,7 +9,6 @@ import (
 
 func TestParseExtensions(t *testing.T) {
 	t.Parallel()
-
 	var tt = []struct {
 		testName           string
 		extensions         string
@@ -24,7 +23,9 @@ func TestParseExtensions(t *testing.T) {
 	}
 
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
 			ret, err := ParseExtensions(x.extensions)
 			if x.expectedError != "" {
 				if err != nil && err.Error() != x.expectedError {
@@ -39,7 +40,6 @@ func TestParseExtensions(t *testing.T) {
 
 func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
-
 	var tt = []struct {
 		testName      string
 		stringCodes   string
@@ -55,7 +55,9 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 	}
 
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
 			ret, err := ParseCommaSeparatedInt(x.stringCodes)
 			if x.expectedError != "" {
 				if err != nil && err.Error() != x.expectedError {
@@ -83,6 +85,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 	}
 
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
 				_, _ = ParseExtensions(x.extensions)
@@ -107,6 +110,7 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	}
 
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
 				_, _ = ParseCommaSeparatedInt(x.stringCodes)

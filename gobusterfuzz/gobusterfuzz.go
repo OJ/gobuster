@@ -31,7 +31,7 @@ type GobusterFuzz struct {
 }
 
 // NewGobusterFuzz creates a new initialized GobusterFuzz
-func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
+func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -46,15 +46,15 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:     opts.Proxy,
-		Timeout:   opts.Timeout,
-		UserAgent: opts.UserAgent,
+		Proxy:           opts.Proxy,
+		Timeout:         opts.Timeout,
+		UserAgent:       opts.UserAgent,
+		NoTLSValidation: opts.NoTLSValidation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
 		BasicHTTPOptions: basicOptions,
 		FollowRedirect:   opts.FollowRedirect,
-		NoTLSValidation:  opts.NoTLSValidation,
 		Username:         opts.Username,
 		Password:         opts.Password,
 		Headers:          opts.Headers,
@@ -62,7 +62,7 @@ func NewGobusterFuzz(cont context.Context, globalopts *libgobuster.Options, opts
 		Method:           opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(cont, &httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +81,14 @@ func (d *GobusterFuzz) RequestsPerRun() int {
 }
 
 // PreRun is the pre run implementation of gobusterfuzz
-func (d *GobusterFuzz) PreRun() error {
+func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 	return nil
 }
 
 // Run is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) Run(word string, resChannel chan<- libgobuster.Result) error {
+func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
-	statusCode, size, _, _, err := d.http.Request(workingURL, libgobuster.RequestOptions{})
+	statusCode, size, _, _, err := d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
 	if err != nil {
 		return err
 	}

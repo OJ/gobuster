@@ -1,10 +1,11 @@
 package helper
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"math/big"
 )
 
+// molint:gochecknoglobals
 var userAgents = [...]string{
 	"Mozilla/5.0 (X11; Linux i686; rv:64.0) Gecko/20100101 Firefox/64.0",
 	"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0",
@@ -4666,7 +4667,10 @@ var userAgents = [...]string{
 }
 
 // GetRandomUserAgent picks a random user agent from a predefined list
-func GetRandomUserAgent() string {
-	rand.Seed(time.Now().Unix())
-	return userAgents[rand.Intn(len(userAgents))]
+func GetRandomUserAgent() (string, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(userAgents))))
+	if err != nil {
+		return "", err
+	}
+	return userAgents[n.Int64()], err
 }

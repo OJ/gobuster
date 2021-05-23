@@ -9,15 +9,16 @@ import (
 	"os/signal"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
-
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var rootCmd = &cobra.Command{
 	Use:          "gobuster",
 	SilenceUsage: true,
 }
 
+// nolint:gochecknoglobals
 var mainContext context.Context
 
 // Execute is the main cobra method
@@ -47,7 +48,7 @@ func Execute() {
 		// Once before and once after the help output. Not sure if
 		// this is going to be needed to output other errors that
 		// aren't automatically outputted.
-		//fmt.Println(err)
+		// fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -148,6 +149,7 @@ func configureGlobalOptions() {
 	}
 }
 
+// nolint:gochecknoinits
 func init() {
 	rootCmd.PersistentFlags().DurationP("delay", "", 0, "Time each thread waits between requests (e.g. 1500ms)")
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")

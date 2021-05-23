@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdVersion *cobra.Command
 
 func runVersion(cmd *cobra.Command, args []string) error {
@@ -14,6 +15,7 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdVersion = &cobra.Command{
 		Use:   "version",

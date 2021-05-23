@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,7 +20,6 @@ type HTTPHeader struct {
 // HTTPClient represents a http object
 type HTTPClient struct {
 	client           *http.Client
-	context          context.Context
 	userAgent        string
 	defaultUserAgent string
 	username         string
@@ -29,6 +27,7 @@ type HTTPClient struct {
 	headers          []HTTPHeader
 	cookies          string
 	method           string
+	host             string
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -39,7 +38,7 @@ type RequestOptions struct {
 }
 
 // NewHTTPClient returns a new HTTPClient
-func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
+func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 	var proxyURLFunc func(*http.Request) (*url.URL, error)
 	var client HTTPClient
 	proxyURLFunc = http.ProxyFromEnvironment
@@ -76,7 +75,6 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 				InsecureSkipVerify: opt.NoTLSValidation,
 			},
 		}}
-	client.context = c
 	client.username = opt.Username
 	client.password = opt.Password
 	client.userAgent = opt.UserAgent
@@ -87,16 +85,23 @@ func NewHTTPClient(c context.Context, opt *HTTPOptions) (*HTTPClient, error) {
 	if client.method == "" {
 		client.method = http.MethodGet
 	}
+	// Host header needs to be set separately
+	for _, h := range opt.Headers {
+		if h.Name == "Host" {
+			client.host = h.Value
+			break
+		}
+	}
 	return &client, nil
 }
 
 // Request makes an http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
-func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, int64, http.Header, []byte, error) {
-	resp, err := client.makeRequest(fullURL, opts.Host, opts.Body)
+func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (*int, int64, http.Header, []byte, error) {
+	resp, err := client.makeRequest(ctx, fullURL, opts.Host, opts.Body)
 	if err != nil {
 		// ignore context canceled errors
-		if errors.Is(client.context.Err(), context.Canceled) {
+		if errors.Is(ctx.Err(), context.Canceled) {
 			return nil, 0, nil, nil, nil
 		}
 		return nil, 0, nil, nil, err
@@ -106,7 +111,7 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	var body []byte
 	var length int64
 	if opts.ReturnBody {
-		body, err = ioutil.ReadAll(resp.Body)
+		body, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, 0, nil, nil, fmt.Errorf("could not read body %w", err)
 		}
@@ -114,7 +119,7 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	} else {
 		// DO NOT REMOVE!
 		// absolutely needed so golang will reuse connections!
-		length, err = io.Copy(ioutil.Discard, resp.Body)
+		length, err = io.Copy(io.Discard, resp.Body)
 		if err != nil {
 			return nil, 0, nil, nil, err
 		}
@@ -123,21 +128,24 @@ func (client *HTTPClient) Request(fullURL string, opts RequestOptions) (*int, in
 	return &resp.StatusCode, length, resp.Header, body, nil
 }
 
-func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*http.Response, error) {
+func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string, data io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(client.method, fullURL, data)
 	if err != nil {
 		return nil, err
 	}
 
 	// add the context so we can easily cancel out
-	req = req.WithContext(client.context)
+	req = req.WithContext(ctx)
 
 	if client.cookies != "" {
 		req.Header.Set("Cookie", client.cookies)
 	}
 
+	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
 	if host != "" {
 		req.Host = host
+	} else if client.host != "" {
+		req.Host = client.host
 	}
 
 	if client.userAgent != "" {
@@ -157,7 +165,8 @@ func (client *HTTPClient) makeRequest(fullURL, host string, data io.Reader) (*ht
 
 	resp, err := client.client.Do(req)
 	if err != nil {
-		if ue, ok := err.(*url.Error); ok {
+		var ue *url.Error
+		if errors.As(err, &ue) {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
 				return nil, fmt.Errorf("invalid certificate: %w", ue.Err)
 			}

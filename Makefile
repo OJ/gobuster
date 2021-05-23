@@ -2,19 +2,23 @@ TARGET=./build
 ARCHS=amd64 386
 LDFLAGS="-s -w"
 
+.PHONY: current
 current:
 	@go build -o ./gobuster; \
 	echo "Done."
 
+.PHONY: fmt
 fmt:
 	@go fmt ./...; \
 	echo "Done."
 
+.PHONY: update
 update:
 	@go get -u; \
 	go mod tidy -v; \
 	echo "Done."
 
+.PHONY: windows
 windows:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for windows $${GOARCH} ..." ; \
@@ -23,6 +27,7 @@ windows:
 	done; \
 	echo "Done."
 
+.PHONY: linux
 linux:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for linux $${GOARCH} ..." ; \
@@ -31,6 +36,7 @@ linux:
 	done; \
 	echo "Done."
 
+.PHONY: darwin
 darwin:
 	@for GOARCH in ${ARCHS}; do \
 		echo "Building for darwin $${GOARCH} ..." ; \
@@ -39,19 +45,30 @@ darwin:
 	done; \
 	echo "Done."
 
+.PHONY: all
 all: clean fmt update test lint darwin linux windows
 
+.PHONY: test
 test:
 	@go test -v -race ./... ; \
 	echo "Done."
 
+.PHONY: lint
 lint:
-	@if [ ! -f "$$(go env GOPATH)/bin/golangci-lint" ]; then \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.29.0; \
-	fi
 	"$$(go env GOPATH)/bin/golangci-lint" run ./...
 	go mod tidy
 
+.PHONY: lint-update
+lint-update:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin
+	$$(go env GOPATH)/bin/golangci-lint --version
+
+.PHONY: lint-docker
+lint-docker:
+	docker pull golangci/golangci-lint:latest
+	docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:latest golangci-lint run
+
+.PHONY: clean
 clean:
 	@rm -rf ${TARGET}/* ; \
 	go clean ./... ; \

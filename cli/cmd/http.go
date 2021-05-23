@@ -11,7 +11,7 @@ import (
 	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func addBasicHTTPOptions(cmd *cobra.Command) {
@@ -19,6 +19,7 @@ func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
 	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
+	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 }
 
 func addCommonHTTPOptions(cmd *cobra.Command) error {
@@ -28,7 +29,6 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringP("username", "U", "", "Username for Basic Auth")
 	cmd.Flags().StringP("password", "P", "", "Password for Basic Auth")
 	cmd.Flags().BoolP("follow-redirect", "r", false, "Follow redirects")
-	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
@@ -52,7 +52,11 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 		return options, fmt.Errorf("invalid value for random-agent: %w", err)
 	}
 	if randomUA {
-		options.UserAgent = helper.GetRandomUserAgent()
+		ua, err := helper.GetRandomUserAgent()
+		if err != nil {
+			return options, err
+		}
+		options.UserAgent = ua
 	}
 
 	options.Proxy, err = cmd.Flags().GetString("proxy")
@@ -63,6 +67,11 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	options.Timeout, err = cmd.Flags().GetDuration("timeout")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for timeout: %w", err)
+	}
+
+	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
 	}
 	return options, nil
 }
@@ -78,6 +87,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.Proxy = basic.Proxy
 	options.Timeout = basic.Timeout
 	options.UserAgent = basic.UserAgent
+	options.NoTLSValidation = basic.NoTLSValidation
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {
@@ -124,11 +134,6 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 		return options, fmt.Errorf("invalid value for follow-redirect: %w", err)
 	}
 
-	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
-	if err != nil {
-		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
-	}
-
 	options.Method, err = cmd.Flags().GetString("method")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for method: %w", err)
@@ -157,7 +162,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	if options.Username != "" && options.Password == "" {
 		fmt.Printf("[?] Auth Password: ")
 		// please don't remove the int cast here as it is sadly needed on windows :/
-		passBytes, err := terminal.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
+		passBytes, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
 		fmt.Println("")

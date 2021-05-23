@@ -12,7 +12,7 @@ type Result struct {
 	Status     string
 }
 
-// ToString converts the Result to it's textual representation
+// ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"runtime"
@@ -12,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint:gochecknoglobals
 var cmdDNS *cobra.Command
 
 func runDNS(cmd *cobra.Command, args []string) error {
@@ -26,8 +28,9 @@ func runDNS(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		if goberr, ok := err.(*gobusterdns.ErrWildcard); ok {
-			return fmt.Errorf("%s. To force processing of Wildcard DNS, specify the '--wildcard' switch", goberr.Error())
+		var wErr *gobusterdns.ErrWildcard
+		if errors.As(err, &wErr) {
+			return fmt.Errorf("%w. To force processing of Wildcard DNS, specify the '--wildcard' switch", wErr)
 		}
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
@@ -78,6 +81,7 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 	return globalopts, plugin, nil
 }
 
+// nolint:gochecknoinits
 func init() {
 	cmdDNS = &cobra.Command{
 		Use:   "dns",

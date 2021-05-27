@@ -85,7 +85,11 @@ func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
 	}
-	v.domain = urlParsed.Host
+	if v.options.Domain != "" {
+		v.domain = v.options.Domain
+	} else {
+		v.domain = urlParsed.Host
+	}
 
 	// request default vhost for baseline1
 	_, _, _, tmp, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})

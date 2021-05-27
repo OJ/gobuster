@@ -9,4 +9,5 @@ type OptionsVhost struct {
 	libgobuster.HTTPOptions
 	AppendDomain  bool
 	ExcludeLength []int
+	Domain        string
 }

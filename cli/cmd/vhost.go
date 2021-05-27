@@ -83,7 +83,7 @@ func init() {
 	}
 	cmdVhost.Flags().BoolP("append-domain", "", false, "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.")
 	cmdVhost.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
-	cmdVhost.Flags().String("domain", "", "the domain to append")
+	cmdVhost.Flags().String("domain", "", "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

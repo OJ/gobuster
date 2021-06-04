@@ -198,6 +198,15 @@ func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- li
 
 	for entity, url := range urlsToCheck {
 		statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+
+		for i := 0; d.options.RetryOnTimeout &&
+			// should try again
+			(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
+			// timeout error
+			err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+			statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		}
+
 		if err != nil {
 			return err
 		}

@@ -59,6 +59,8 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
+	plugin.RetryAttempts = httpOpts.RetryAttempts
 
 	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {

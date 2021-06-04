@@ -50,6 +50,8 @@ func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*Gobus
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -89,6 +91,15 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
 	statusCode, size, _, _, err := d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
+
+	for i := 0; d.options.RetryOnTimeout &&
+		// should try again
+		(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
+		// timeout error
+		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+		statusCode, size, _, _, err = d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
+	}
+
 	if err != nil {
 		return err
 	}

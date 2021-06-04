@@ -118,6 +118,15 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 		subdomain = word
 	}
 	status, size, header, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+
+	for i := 0; v.options.RetryOnTimeout &&
+		// should try again
+		(i < v.options.RetryAttempts || v.options.RetryAttempts == -1) &&
+		// timeout error
+		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+		status, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	}
+
 	if err != nil {
 		return err
 	}

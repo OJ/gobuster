@@ -224,6 +224,7 @@ func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- li
 					Expanded:   d.options.Expanded,
 					NoStatus:   d.options.NoStatus,
 					HideLength: d.options.HideLength,
+					Colors:     d.options.Colors,
 					Found:      resultStatus,
 					Header:     header,
 					StatusCode: *statusCode,
@@ -346,6 +347,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
+			return "", err
+		}
+	}
+
+	if o.Colors {
+		if _, err := fmt.Fprintf(tw, "[+] Colors:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

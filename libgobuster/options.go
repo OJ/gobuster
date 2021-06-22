@@ -14,6 +14,7 @@ type Options struct {
 	NoError        bool
 	Quiet          bool
 	Verbose        bool
+	Colors         bool
 	Delay          time.Duration
 }
 

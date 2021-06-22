@@ -18,6 +18,7 @@ type OptionsDir struct {
 	Expanded                   bool
 	NoStatus                   bool
 	DiscoverBackup             bool
+	Colors                     bool
 	ExcludeLength              []int
 }
 

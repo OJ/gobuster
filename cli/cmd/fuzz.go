@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterfuzz"
@@ -59,6 +60,10 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+
+	if !strings.Contains(plugin.URL, "FUZZ") {
+		return nil, nil, fmt.Errorf("please provide the FUZZ keyword")
+	}
 
 	// blacklist will override the normal status codes
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")

@@ -117,6 +117,9 @@ func (s *GobusterS3) Run(ctx context.Context, word string, resChannel chan<- lib
 	if s.globalopts.Verbose {
 		// get status
 		if bytes.Contains(body, []byte("<Error>")) {
+			if s.options.OpenOnly {
+				return nil
+			}
 			awsError := AWSError{}
 			err := xml.Unmarshal(body, &awsError)
 			if err != nil {
@@ -203,6 +206,12 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 
 	if _, err := fmt.Fprintf(tw, "[+] Maximum files to list:\t%d\n", o.MaxFilesToList); err != nil {
 		return "", err
+	}
+
+	if o.OpenOnly {
+		if _, err := fmt.Fprintf(tw, "[+] Show open buckets:\ttrue\n"); err != nil {
+			return "", err
+		}
 	}
 
 	if err := tw.Flush(); err != nil {

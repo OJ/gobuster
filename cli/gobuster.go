@@ -84,7 +84,15 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType
 	for e := range g.Errors() {
 		if !g.Opts.Quiet && !g.Opts.NoError {
 			output.Mu.Lock()
-			g.LogError.Printf("[!] %v", e)
+			s := fmt.Sprintf("[!] %s\n", e.Error())
+			s = rightPad(s, " ", output.MaxCharsWritten)
+
+			charsWritten := len(s) - 1
+			if charsWritten > output.MaxCharsWritten {
+				output.MaxCharsWritten = charsWritten
+			}
+
+			g.LogError.Print(s)
 			output.Mu.Unlock()
 		}
 	}

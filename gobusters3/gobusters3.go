@@ -42,6 +42,8 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -84,6 +86,15 @@ func (s *GobusterS3) Run(ctx context.Context, word string, resChannel chan<- lib
 
 	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
 	status, _, _, body, err := s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+
+	for i := 0; s.options.RetryOnTimeout &&
+		// should try again
+		(i < s.options.RetryAttempts || s.options.RetryAttempts == -1) &&
+		// timeout error
+		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+		status, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+	}
+
 	if err != nil {
 		return err
 	}

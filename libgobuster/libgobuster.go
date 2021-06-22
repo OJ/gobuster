@@ -45,7 +45,7 @@ func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
 	g.resultChan = make(chan Result)
 	g.errorChan = make(chan error)
 	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
-	g.LogError = log.New(os.Stderr, "[ERROR] ", log.LstdFlags)
+	g.LogError = log.New(os.Stderr, "\r[ERROR] ", log.LstdFlags)
 
 	return &g, nil
 }

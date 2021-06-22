@@ -46,6 +46,8 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	plugin.Proxy = httpOpts.Proxy
 	plugin.Timeout = httpOpts.Timeout
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
+	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
+	plugin.RetryAttempts = httpOpts.RetryAttempts
 
 	plugin.MaxFilesToList, err = cmdS3.Flags().GetInt("maxfiles")
 	if err != nil {

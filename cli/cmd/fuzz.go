@@ -59,6 +59,8 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
+	plugin.RetryAttempts = httpOpts.RetryAttempts
 
 	// blacklist will override the normal status codes
 	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")

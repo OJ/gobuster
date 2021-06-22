@@ -10,6 +10,8 @@ type BasicHTTPOptions struct {
 	Proxy           string
 	NoTLSValidation bool
 	Timeout         time.Duration
+	RetryOnTimeout  bool
+	RetryAttempts   int
 }
 
 // HTTPOptions is the struct to pass in all http options to Gobuster

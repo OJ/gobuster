@@ -52,6 +52,8 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	plugin.NoTLSValidation = httpOpts.NoTLSValidation
 	plugin.Headers = httpOpts.Headers
 	plugin.Method = httpOpts.Method
+	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
+	plugin.RetryAttempts = httpOpts.RetryAttempts
 
 	plugin.AppendDomain, err = cmdVhost.Flags().GetBool("append-domain")
 	if err != nil {

@@ -15,8 +15,8 @@ import (
 
 // nolint:gochecknoglobals
 var (
-	backupExtensions    = []string{"~", ".bak", ".bak2", ".old", ".1"}
-	backupDotExtensions = []string{".swp"}
+	backupExtensions    = []string{"~", ".bak", ".old", ".1", ".tgz", ".zip", ".tar.gz", ".rar"}
+	backupDotExtensions = []string{".swp", ".swo"}
 )
 
 // ErrWildcard is returned if a wildcard response is found

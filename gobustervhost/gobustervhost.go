@@ -121,23 +121,37 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 	if err != nil {
 		return err
 	}
-
-	// subdomain must not match default vhost and non existent vhost
-	// or verbose mode is enabled
-	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
-	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
-		resultStatus := false
-		if found {
-			resultStatus = true
+	if status != nil {
+		found := false
+		if v.options.StatusCodesBlacklistParsed.Length() > 0 {
+			if !v.options.StatusCodesBlacklistParsed.Contains(*status) {
+				found = !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
+			}
+		} else if v.options.StatusCodesParsed.Length() > 0 {
+			if v.options.StatusCodesParsed.Contains(*status) {
+				found = !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
+			}
+		} else {
+			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
-		resChannel <- Result{
-			Found:      resultStatus,
-			Vhost:      subdomain,
-			StatusCode: *status,
-			Size:       size,
-			Header:     header,
+
+		// subdomain must not match default vhost and non existent vhost
+		// or verbose mode is enabled
+		if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
+			resultStatus := false
+			if found {
+				resultStatus = true
+			}
+			resChannel <- Result{
+				Found:      resultStatus,
+				Vhost:      subdomain,
+				StatusCode: *status,
+				Size:       size,
+				Header:     header,
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -171,6 +185,16 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 	if _, err := fmt.Fprintf(tw, "[+] Wordlist:\t%s\n", wordlist); err != nil {
 		return "", err
+	}
+
+	if o.StatusCodesBlacklistParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", v.options.StatusCodesBlacklistParsed.Stringify()); err != nil {
+			return "", err
+		}
+	} else if o.StatusCodesParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
+			return "", err
+		}
 	}
 
 	if v.globalopts.PatternFile != "" {

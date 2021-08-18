@@ -4,54 +4,43 @@ LDFLAGS="-s -w"
 
 .PHONY: current
 current:
-	@go build -o ./gobuster; \
-	echo "Done."
+	go build -o ./gobuster
 
 .PHONY: fmt
 fmt:
-	@go fmt ./...; \
-	echo "Done."
+	go fmt ./...
 
 .PHONY: update
 update:
-	@go get -u; \
-	go mod tidy -v; \
-	echo "Done."
+	go get -u
+	go mod tidy -v
 
 .PHONY: windows
 windows:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for windows $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-windows-$${GOARCH} ; \
-		GOOS=windows GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-windows-$${GOARCH}/gobuster.exe ; \
-	done; \
-	echo "Done."
+	mkdir -p ${TARGET}
+	GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-windows-386.exe
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-windows-amd64.exe
 
 .PHONY: linux
 linux:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for linux $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-linux-$${GOARCH} ; \
-		GOOS=linux GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-linux-$${GOARCH}/gobuster ; \
-	done; \
-	echo "Done."
+	mkdir -p ${TARGET}
+	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-linux-386
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-linux-amd64
+	GOOS=linux GOARCH=arm CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-linux-arm
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-linux-arm64
 
 .PHONY: darwin
 darwin:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for darwin $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-darwin-$${GOARCH} ; \
-		GOOS=darwin GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-darwin-$${GOARCH}/gobuster ; \
-	done; \
-	echo "Done."
+	mkdir -p ${TARGET}
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-darwin-arm64
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -trimpath -o ${TARGET}/gobuster-darwin-amd64
 
 .PHONY: all
 all: clean fmt update test lint darwin linux windows
 
 .PHONY: test
 test:
-	@go test -v -race ./... ; \
-	echo "Done."
+	go test -v -race ./...
 
 .PHONY: lint
 lint:
@@ -70,6 +59,5 @@ lint-docker:
 
 .PHONY: clean
 clean:
-	@rm -rf ${TARGET}/* ; \
-	go clean ./... ; \
-	echo "Done."
+	rm -rf ${TARGET}/*
+	go clean ./...

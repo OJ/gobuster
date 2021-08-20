@@ -103,8 +103,8 @@ func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of gobusterdir
-func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+// ProcessWord is the process implementation of gobusterdir
+func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)

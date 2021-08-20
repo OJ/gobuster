@@ -101,8 +101,8 @@ func (d *GobusterDNS) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of gobusterdns
-func (d *GobusterDNS) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+// ProcessWord is the process implementation of gobusterdns
+func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err == nil {

@@ -86,7 +86,7 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.
 			}
 
 			// Mode-specific processing
-			err := g.plugin.Run(ctx, wordCleaned, g.resultChan)
+			err := g.plugin.ProcessWord(ctx, wordCleaned, g.resultChan)
 			if err != nil {
 				// do not exit and continue
 				g.errorChan <- err

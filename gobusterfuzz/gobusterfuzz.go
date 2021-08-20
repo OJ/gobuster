@@ -82,8 +82,8 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+// ProcessWord is the process implementation of gobusterfuzz
+func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
 	statusCode, size, _, _, err := d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
 

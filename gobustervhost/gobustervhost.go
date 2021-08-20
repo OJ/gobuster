@@ -69,11 +69,6 @@ func (v *GobusterVhost) Name() string {
 	return "VHOST enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (v *GobusterVhost) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	// add trailing slash
@@ -148,6 +143,10 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 		}
 	}
 	return nil
+}
+
+func (v *GobusterVhost) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

@@ -77,11 +77,6 @@ func (d *GobusterFuzz) Name() string {
 	return "fuzzing"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (d *GobusterFuzz) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of gobusterfuzz
 func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 	return nil
@@ -127,6 +122,10 @@ func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- l
 		}
 	}
 	return nil
+}
+
+func (d *GobusterFuzz) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

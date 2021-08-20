@@ -33,10 +33,9 @@ func (e *ErrWildcard) Error() string {
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
-	options        *OptionsDir
-	globalopts     *libgobuster.Options
-	http           *libgobuster.HTTPClient
-	requestsPerRun *int // helper variable so we do not recalculate this over and over
+	options    *OptionsDir
+	globalopts *libgobuster.Options
+	http       *libgobuster.HTTPClient
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -83,26 +82,6 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 // Name should return the name of the plugin
 func (d *GobusterDir) Name() string {
 	return "directory enumeration"
-}
-
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (d *GobusterDir) RequestsPerRun() int {
-	if d.requestsPerRun != nil {
-		return *d.requestsPerRun
-	}
-
-	num := 1 + len(d.options.ExtensionsParsed.Set)
-	if d.options.DiscoverBackup {
-		// default word
-		num += len(backupExtensions)
-		num += len(backupDotExtensions)
-		// backups of filenames
-		num += len(d.options.ExtensionsParsed.Set) * len(backupExtensions)
-		num += len(d.options.ExtensionsParsed.Set) * len(backupDotExtensions)
-	}
-	d.requestsPerRun = &num
-
-	return *d.requestsPerRun
 }
 
 // PreRun is the pre run implementation of gobusterdir
@@ -163,81 +142,74 @@ func getBackupFilenames(word string) []string {
 	return ret
 }
 
+func (d *GobusterDir) AdditionalWords(word string) []string {
+	var words []string
+	// build list of urls to check
+	//   1: No extension
+	//   2: With extension
+	//   3: backupextension
+	if d.options.DiscoverBackup {
+		words = append(words, getBackupFilenames(word)...)
+	}
+	for ext := range d.options.ExtensionsParsed.Set {
+		filename := fmt.Sprintf("%s.%s", word, ext)
+		words = append(words, filename)
+		if d.options.DiscoverBackup {
+			words = append(words, getBackupFilenames(filename)...)
+		}
+	}
+	return words
+}
+
 // Run is the process implementation of gobusterdir
 func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
 	}
-
-	// build list of urls to check
-	//   1: No extension
-	//   2: With extension
-	//   3: backupextension
-	urlsToCheck := make(map[string]string)
 	entity := fmt.Sprintf("%s%s", word, suffix)
-	dirURL := fmt.Sprintf("%s%s", d.options.URL, entity)
-	urlsToCheck[entity] = dirURL
-	if d.options.DiscoverBackup {
-		for _, u := range getBackupFilenames(word) {
-			url := fmt.Sprintf("%s%s", d.options.URL, u)
-			urlsToCheck[u] = url
-		}
-	}
-	for ext := range d.options.ExtensionsParsed.Set {
-		filename := fmt.Sprintf("%s.%s", word, ext)
-		url := fmt.Sprintf("%s%s", d.options.URL, filename)
-		urlsToCheck[filename] = url
-		if d.options.DiscoverBackup {
-			for _, u := range getBackupFilenames(filename) {
-				url2 := fmt.Sprintf("%s%s", d.options.URL, u)
-				urlsToCheck[u] = url2
-			}
-		}
+	url := fmt.Sprintf("%s%s", d.options.URL, entity)
+
+	statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+
+	for i := 0; d.options.RetryOnTimeout &&
+		// should try again
+		(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
+		// timeout error
+		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	}
 
-	for entity, url := range urlsToCheck {
-		statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	if err != nil {
+		return err
+	}
+	if statusCode != nil {
+		resultStatus := false
 
-		for i := 0; d.options.RetryOnTimeout &&
-			// should try again
-			(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
-			// timeout error
-			err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
-			statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
-		}
-
-		if err != nil {
-			return err
-		}
-		if statusCode != nil {
-			resultStatus := false
-
-			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-				if !d.options.StatusCodesBlacklistParsed.Contains(*statusCode) {
-					resultStatus = true
-				}
-			} else if d.options.StatusCodesParsed.Length() > 0 {
-				if d.options.StatusCodesParsed.Contains(*statusCode) {
-					resultStatus = true
-				}
-			} else {
-				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+			if !d.options.StatusCodesBlacklistParsed.Contains(*statusCode) {
+				resultStatus = true
 			}
+		} else if d.options.StatusCodesParsed.Length() > 0 {
+			if d.options.StatusCodesParsed.Contains(*statusCode) {
+				resultStatus = true
+			}
+		} else {
+			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		}
 
-			if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
-				resChannel <- Result{
-					URL:        d.options.URL,
-					Path:       entity,
-					Verbose:    d.globalopts.Verbose,
-					Expanded:   d.options.Expanded,
-					NoStatus:   d.options.NoStatus,
-					HideLength: d.options.HideLength,
-					Found:      resultStatus,
-					Header:     header,
-					StatusCode: *statusCode,
-					Size:       size,
-				}
+		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+			resChannel <- Result{
+				URL:        d.options.URL,
+				Path:       entity,
+				Verbose:    d.globalopts.Verbose,
+				Expanded:   d.options.Expanded,
+				NoStatus:   d.options.NoStatus,
+				HideLength: d.options.HideLength,
+				Found:      resultStatus,
+				Header:     header,
+				StatusCode: *statusCode,
+				Size:       size,
 			}
 		}
 	}

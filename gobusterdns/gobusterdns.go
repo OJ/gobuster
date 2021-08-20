@@ -76,11 +76,6 @@ func (d *GobusterDNS) Name() string {
 	return "DNS enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (d *GobusterDNS) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of gobusterdns
 func (d *GobusterDNS) PreRun(ctx context.Context) error {
 	// Resolve a subdomain that probably shouldn't exist
@@ -137,6 +132,10 @@ func (d *GobusterDNS) Run(ctx context.Context, word string, resChannel chan<- li
 		}
 	}
 	return nil
+}
+
+func (d *GobusterDNS) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

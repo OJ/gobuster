@@ -62,7 +62,7 @@ func (g *Gobuster) Errors() <-chan error {
 
 func (g *Gobuster) incrementRequests() {
 	g.RequestsCountMutex.Lock()
-	g.RequestsIssued += g.plugin.RequestsPerRun()
+	g.RequestsIssued++
 	g.RequestsCountMutex.Unlock()
 }
 
@@ -121,11 +121,14 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 
 	// calcutate expected requests
 	g.RequestsExpected = lines
-	if g.Opts.PatternFile != "" {
-		g.RequestsExpected += lines * len(g.Opts.Patterns)
-	}
 
-	g.RequestsExpected *= g.plugin.RequestsPerRun()
+	// call the function once with a dummy entry to receive the number
+	// of custom words per wordlist word
+	customWordsLen := len(g.plugin.AdditionalWords("dummy"))
+	if customWordsLen > 0 {
+		// + 1 for the initial word
+		g.RequestsExpected *= (customWordsLen + 1)
+	}
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
@@ -173,6 +176,15 @@ Scan:
 			wordChan <- word
 			// now create perms
 			for _, w := range perms {
+				select {
+				// need to check here too otherwise wordChan will block
+				case <-ctx.Done():
+					break Scan
+				case wordChan <- w:
+				}
+			}
+
+			for _, w := range g.plugin.AdditionalWords(word) {
 				select {
 				// need to check here too otherwise wordChan will block
 				case <-ctx.Done():

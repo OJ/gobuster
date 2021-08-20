@@ -67,11 +67,6 @@ func (s *GobusterS3) Name() string {
 	return "S3 bucket enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (s *GobusterS3) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of GobusterS3
 func (s *GobusterS3) PreRun(ctx context.Context) error {
 	return nil
@@ -157,6 +152,10 @@ func (s *GobusterS3) Run(ctx context.Context, word string, resChannel chan<- lib
 	}
 
 	return nil
+}
+
+func (d *GobusterS3) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

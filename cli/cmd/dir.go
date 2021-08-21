@@ -153,7 +153,7 @@ func init() {
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")
 	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")
-	cmdDir.Flags().BoolP("discover-backup", "d", false, "Upon finding a file search for backup files")
+	cmdDir.Flags().BoolP("discover-backup", "d", false, "Also search for backup files by appending multiple backup extensions")
 	cmdDir.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {

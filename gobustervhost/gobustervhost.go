@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
 	"strings"
 	"text/tabwriter"
@@ -112,18 +114,30 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, resChannel
 		// wordlist needs to include full domains
 		subdomain = word
 	}
-	status, size, header, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 
-	for i := 0; v.options.RetryOnTimeout &&
-		// should try again
-		(i < v.options.RetryAttempts || v.options.RetryAttempts == -1) &&
-		// timeout error
-		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
-		status, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	tries := 1
+	if v.options.RetryOnTimeout && v.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += v.options.RetryAttempts
 	}
 
-	if err != nil {
-		return err
+	var statusCode *int
+	var size int64
+	var header http.Header
+	var body []byte
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if nerr, ok := err.(net.Error); ok && nerr.Timeout() && i != tries {
+				continue
+			} else {
+				return err
+			}
+		}
+		break
 	}
 
 	// subdomain must not match default vhost and non existent vhost
@@ -137,7 +151,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, resChannel
 		resChannel <- Result{
 			Found:      resultStatus,
 			Vhost:      subdomain,
-			StatusCode: *status,
+			StatusCode: *statusCode,
 			Size:       size,
 			Header:     header,
 		}

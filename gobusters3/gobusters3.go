@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -80,27 +81,37 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, resChannel ch
 	}
 
 	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
-	status, _, _, body, err := s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
 
-	for i := 0; s.options.RetryOnTimeout &&
-		// should try again
-		(i < s.options.RetryAttempts || s.options.RetryAttempts == -1) &&
-		// timeout error
-		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
-		status, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+	tries := 1
+	if s.options.RetryOnTimeout && s.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += s.options.RetryAttempts
 	}
 
-	if err != nil {
-		return err
+	var statusCode *int
+	var body []byte
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if nerr, ok := err.(net.Error); ok && nerr.Timeout() && i != tries {
+				continue
+			} else {
+				return err
+			}
+		}
+		break
 	}
 
-	if status == nil || body == nil {
+	if statusCode == nil || body == nil {
 		return nil
 	}
 
 	// looks like 404 and 400 are the only negative status codes
 	found := false
-	switch *status {
+	switch *statusCode {
 	case http.StatusBadRequest:
 	case http.StatusNotFound:
 		found = false

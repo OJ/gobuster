@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"text/tabwriter"
 
@@ -84,20 +85,31 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 
 // ProcessWord is the process implementation of gobusterfuzz
 func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
-	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
-	statusCode, size, _, _, err := d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
+	url := strings.ReplaceAll(d.options.URL, "FUZZ", word)
 
-	for i := 0; d.options.RetryOnTimeout &&
-		// should try again
-		(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
-		// timeout error
-		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
-		statusCode, size, _, _, err = d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
+	tries := 1
+	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += d.options.RetryAttempts
 	}
 
-	if err != nil {
-		return err
+	var statusCode *int
+	var size int64
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, size, _, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if nerr, ok := err.(net.Error); ok && nerr.Timeout() && i != tries {
+				continue
+			} else {
+				return err
+			}
+		}
+		break
 	}
+
 	if statusCode != nil {
 		resultStatus := true
 
@@ -115,7 +127,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, resChannel 
 			resChannel <- Result{
 				Verbose:    d.globalopts.Verbose,
 				Found:      resultStatus,
-				Path:       workingURL,
+				Path:       url,
 				StatusCode: *statusCode,
 				Size:       size,
 			}

@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"strings"
 	"text/tabwriter"
 
@@ -170,19 +172,30 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, resChannel c
 	entity := fmt.Sprintf("%s%s", word, suffix)
 	url := fmt.Sprintf("%s%s", d.options.URL, entity)
 
-	statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	tries := 1
+	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += d.options.RetryAttempts
+	}
 
-	for i := 0; d.options.RetryOnTimeout &&
-		// should try again
-		(i < d.options.RetryAttempts || d.options.RetryAttempts == -1) &&
-		// timeout error
-		err != nil && strings.HasSuffix(err.Error(), "(Client.Timeout exceeded while awaiting headers)"); i++ {
+	var statusCode *int
+	var size int64
+	var header http.Header
+	for i := 1; i <= tries; i++ {
+		var err error
 		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if nerr, ok := err.(net.Error); ok && nerr.Timeout() && i != tries {
+				continue
+			} else {
+				return err
+			}
+		}
+		break
 	}
 
-	if err != nil {
-		return err
-	}
 	if statusCode != nil {
 		resultStatus := false
 

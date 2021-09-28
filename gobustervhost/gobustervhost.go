@@ -106,7 +106,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
@@ -148,7 +148,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, resChannel
 		if found {
 			resultStatus = true
 		}
-		resChannel <- Result{
+		progress.ResultChan <- Result{
 			Found:      resultStatus,
 			Vhost:      subdomain,
 			StatusCode: *statusCode,

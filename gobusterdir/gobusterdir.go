@@ -164,7 +164,7 @@ func (d *GobusterDir) AdditionalWords(word string) []string {
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (d *GobusterDir) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
@@ -212,7 +212,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, resChannel c
 		}
 
 		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
-			resChannel <- Result{
+			progress.ResultChan <- Result{
 				URL:        d.options.URL,
 				Path:       entity,
 				Verbose:    d.globalopts.Verbose,

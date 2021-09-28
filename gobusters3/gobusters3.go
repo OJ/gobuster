@@ -74,7 +74,7 @@ func (s *GobusterS3) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of GobusterS3
-func (s *GobusterS3) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
 		return nil
@@ -156,7 +156,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, resChannel ch
 		}
 	}
 
-	resChannel <- Result{
+	progress.ResultChan <- Result{
 		Found:      found,
 		BucketName: word,
 		Status:     extraStr,

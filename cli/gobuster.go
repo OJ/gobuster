@@ -52,7 +52,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 		defer f.Close()
 	}
 
-	for r := range g.Results() {
+	for r := range g.Progress.ResultChan {
 		s, err := r.ResultToString()
 		if err != nil {
 			g.LogError.Fatal(err)
@@ -81,7 +81,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
-	for e := range g.Errors() {
+	for e := range g.Progress.ErrorChan {
 		if !g.Opts.Quiet && !g.Opts.NoError {
 			output.Mu.Lock()
 			s := fmt.Sprintf("[!] %s\n", e.Error())
@@ -109,16 +109,17 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 		select {
 		case <-tick.C:
 			if !g.Opts.Quiet && !g.Opts.NoProgress {
-				g.RequestsCountMutex.RLock()
+				requestsIssued := g.Progress.RequestsIssued()
+				requestsExpected := g.Progress.RequestsExpected()
 				output.Mu.Lock()
 				var charsWritten int
 				if g.Opts.Wordlist == "-" {
-					s := fmt.Sprintf("\rProgress: %d", g.RequestsIssued)
+					s := fmt.Sprintf("\rProgress: %d", requestsIssued)
 					s = rightPad(s, " ", output.MaxCharsWritten)
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 					// only print status if we already read in the wordlist
-				} else if g.RequestsExpected > 0 {
-					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", g.RequestsIssued, g.RequestsExpected, float32(g.RequestsIssued)*100.0/float32(g.RequestsExpected))
+				} else if requestsExpected > 0 {
+					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
 					s = rightPad(s, " ", output.MaxCharsWritten)
 					charsWritten, _ = fmt.Fprint(os.Stderr, s)
 				}
@@ -127,7 +128,6 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 				}
 
 				output.Mu.Unlock()
-				g.RequestsCountMutex.RUnlock()
 			}
 		case <-ctx.Done():
 			return

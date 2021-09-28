@@ -84,7 +84,7 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	url := strings.ReplaceAll(d.options.URL, "FUZZ", word)
 
 	tries := 1
@@ -124,7 +124,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, resChannel 
 		}
 
 		if resultStatus || d.globalopts.Verbose {
-			resChannel <- Result{
+			progress.ResultChan <- Result{
 				Verbose:    d.globalopts.Verbose,
 				Found:      resultStatus,
 				Path:       url,

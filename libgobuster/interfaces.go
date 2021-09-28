@@ -6,7 +6,7 @@ import "context"
 type GobusterPlugin interface {
 	Name() string
 	PreRun(context.Context) error
-	ProcessWord(context.Context, string, chan<- Result) error
+	ProcessWord(context.Context, string, *Progress) error
 	AdditionalWords(string) []string
 	GetConfigString() (string, error)
 }

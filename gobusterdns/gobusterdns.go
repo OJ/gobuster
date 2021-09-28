@@ -102,7 +102,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of gobusterdns
-func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err == nil {
@@ -121,10 +121,10 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, resChannel c
 					result.CNAME = cname
 				}
 			}
-			resChannel <- result
+			progress.ResultChan <- result
 		}
 	} else if d.globalopts.Verbose {
-		resChannel <- Result{
+		progress.ResultChan <- Result{
 			Subdomain: subdomain,
 			Found:     false,
 			ShowIPs:   d.options.ShowIPs,

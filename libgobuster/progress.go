@@ -35,12 +35,12 @@ func (p *Progress) RequestsIssued() int {
 
 func (p *Progress) incrementRequests() {
 	p.requestsCountMutex.Lock()
+	defer p.requestsCountMutex.Unlock()
 	p.requestsIssued++
-	p.requestsCountMutex.Unlock()
 }
 
 func (p *Progress) IncrementTotalRequests(by int) {
 	p.requestsCountMutex.Lock()
+	defer p.requestsCountMutex.Unlock()
 	p.requestsExpected += by
-	p.requestsCountMutex.Unlock()
 }

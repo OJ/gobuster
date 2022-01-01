@@ -30,7 +30,11 @@ type ErrWildcard struct {
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d (Length: %d)", e.url, e.statusCode, e.length)
+	return fmt.Sprintf(
+		"the server returns a status code that matches the provided options for non existing urls. %s => %d (Length: %d)",
+		e.url,
+		e.statusCode,
+		e.length)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -241,121 +245,83 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	bw := bufio.NewWriter(&buffer)
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
 	o := d.options
-	if _, err := fmt.Fprintf(tw, "[+] Url:\t%s\n", o.URL); err != nil {
-		return "", err
-	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Method:\t%s\n", o.Method); err != nil {
-		return "", err
-	}
+	var output string
 
-	if _, err := fmt.Fprintf(tw, "[+] Threads:\t%d\n", d.globalopts.Threads); err != nil {
-		return "", err
-	}
+	output = fmt.Sprintf("[+] Url:\t%s\n[+] Method:\t%s\n[+] Threads:\t%d\n", o.URL, o.Method, d.globalopts.Threads)
 
 	if d.globalopts.Delay > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Delay:\t%s\n", d.globalopts.Delay)
 	}
 
 	wordlist := "stdin (pipe)"
 	if d.globalopts.Wordlist != "-" {
 		wordlist = d.globalopts.Wordlist
 	}
-	if _, err := fmt.Fprintf(tw, "[+] Wordlist:\t%s\n", wordlist); err != nil {
-		return "", err
-	}
+	output += fmt.Sprintf("[+] Wordlist:\t%s\n", wordlist)
 
 	if d.globalopts.PatternFile != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns))
 	}
 
 	if o.StatusCodesBlacklistParsed.Length() > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify())
+
 	} else if o.StatusCodesParsed.Length() > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify())
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength))
 	}
 
 	if o.Proxy != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Proxy:\t%s\n", o.Proxy); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Proxy:\t%s\n", o.Proxy)
 	}
 
 	if o.Cookies != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Cookies:\t%s\n", o.Cookies); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Cookies:\t%s\n", o.Cookies)
 	}
 
 	if o.UserAgent != "" {
-		if _, err := fmt.Fprintf(tw, "[+] User Agent:\t%s\n", o.UserAgent); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] User Agent:\t%s\n", o.UserAgent)
 	}
 
 	if o.HideLength {
-		if _, err := fmt.Fprintf(tw, "[+] Show length:\tfalse\n"); err != nil {
-			return "", err
-		}
+		output += "[+] Show length:\tfalse\n"
 	}
 
 	if o.Username != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Auth User:\t%s\n", o.Username)
 	}
 
 	if o.Extensions != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify()); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf("[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify())
 	}
 
 	if o.UseSlash {
-		if _, err := fmt.Fprintf(tw, "[+] Add Slash:\ttrue\n"); err != nil {
-			return "", err
-		}
+		output += "[+] Add Slash:\ttrue\n"
 	}
 
 	if o.FollowRedirect {
-		if _, err := fmt.Fprintf(tw, "[+] Follow Redirect:\ttrue\n"); err != nil {
-			return "", err
-		}
+		output += "[+] Follow Redirect:\ttrue\n"
 	}
 
 	if o.Expanded {
-		if _, err := fmt.Fprintf(tw, "[+] Expanded:\ttrue\n"); err != nil {
-			return "", err
-		}
+		output += "[+] Expanded:\ttrue\n"
 	}
 
 	if o.NoStatus {
-		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
-			return "", err
-		}
+		output += "[+] No status:\ttrue\n"
 	}
 
 	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
-			return "", err
-		}
+		output += "[+] Verbose:\ttrue\n"
 	}
 
-	if _, err := fmt.Fprintf(tw, "[+] Timeout:\t%s\n", o.Timeout.String()); err != nil {
+	output += fmt.Sprintf("[+] Timeout:\t%s\n", o.Timeout.String())
+
+	if _, err := fmt.Fprint(tw, output); err != nil {
 		return "", err
 	}
 

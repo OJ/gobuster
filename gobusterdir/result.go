@@ -1,7 +1,6 @@
 package gobusterdir
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 )
@@ -22,58 +21,40 @@ type Result struct {
 
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
-	buf := &bytes.Buffer{}
+
+	var output string
 
 	// Prefix if we're in verbose mode
 	if r.Verbose {
 		if r.Found {
-			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-				return "", err
-			}
+			output = "Found: "
 		} else {
-			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-				return "", err
-			}
+			output = "Missed: "
 		}
 	}
 
 	if r.Expanded {
-		if _, err := fmt.Fprintf(buf, "%s", r.URL); err != nil {
-			return "", err
-		}
+		output += r.URL
 	} else {
-		if _, err := fmt.Fprintf(buf, "/"); err != nil {
-			return "", err
-		}
-	}
-	if _, err := fmt.Fprintf(buf, "%-20s", r.Path); err != nil {
-		return "", err
+		output += "/"
 	}
 
+	output += fmt.Sprintf("%-20s", r.Path)
+
 	if !r.NoStatus {
-		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf(" (Status: %d)", r.StatusCode)
 	}
 
 	if !r.HideLength {
-		if _, err := fmt.Fprintf(buf, " [Size: %d]", r.Size); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf(" [Size: %d]", r.Size)
 	}
 
 	location := r.Header.Get("Location")
 	if location != "" {
-		if _, err := fmt.Fprintf(buf, " [--> %s]", location); err != nil {
-			return "", err
-		}
+		output += fmt.Sprintf(" [--> %s]", location)
 	}
 
-	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
-		return "", err
-	}
+	output += "\n"
 
-	s := buf.String()
-
-	return s, nil
+	return output, nil
 }

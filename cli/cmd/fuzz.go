@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterfuzz"
+	"github.com/OJ/gobuster/v3/fuzz"
 	"github.com/OJ/gobuster/v3/helper"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -21,13 +21,13 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusterfuzz.NewGobusterFuzz(globalopts, pluginopts)
+	plugin, err := fuzz.NewGobusterFuzz(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		var wErr *gobusterfuzz.ErrWildcard
+		var wErr *fuzz.ErrWildcard
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
@@ -36,13 +36,13 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error) {
+func parseFuzzOptions() (*lib.Options, *fuzz.OptionsFuzz, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	plugin := gobusterfuzz.NewOptionsFuzz()
+	plugin := fuzz.NewOptionsFuzz()
 
 	httpOpts, err := parseCommonHTTPOptions(cmdFuzz)
 	if err != nil {

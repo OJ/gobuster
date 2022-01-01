@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobustervhost"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
+	"github.com/OJ/gobuster/v3/vhost"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ func runVhost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobustervhost.NewGobusterVhost(globalopts, pluginopts)
+	plugin, err := vhost.NewGobusterVhost(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustervhost: %w", err)
 	}
@@ -30,12 +30,12 @@ func runVhost(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, error) {
+func parseVhostOptions() (*lib.Options, *vhost.OptionsVhost, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err
 	}
-	var plugin gobustervhost.OptionsVhost
+	var plugin vhost.OptionsVhost
 
 	httpOpts, err := parseCommonHTTPOptions(cmdVhost)
 	if err != nil {

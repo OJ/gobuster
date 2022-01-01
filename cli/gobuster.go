@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 )
 
 const ruler = "==============================================================="
 const cliProgressUpdate = 500 * time.Millisecond
 
 func banner() {
-	fmt.Printf("Gobuster v%s\n", libgobuster.VERSION)
+	fmt.Printf("Gobuster v%s\n", lib.VERSION)
 	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)")
 }
 
@@ -39,7 +39,7 @@ func rightPad(s string, padStr string, overallLen int) string {
 
 // resultWorker outputs the results as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.
-func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, output *outputType) {
+func resultWorker(g *lib.Gobuster, filename string, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
 	var f *os.File
@@ -78,7 +78,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 
 // errorWorker outputs the errors as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.
-func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
+func errorWorker(g *lib.Gobuster, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
 	for e := range g.Progress.ErrorChan {
@@ -100,7 +100,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType
 
 // progressWorker outputs the progress every tick. It will stop once cancel() is called
 // on the context
-func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
+func progressWorker(ctx context.Context, g *lib.Gobuster, wg *sync.WaitGroup, output *outputType) {
 	defer wg.Done()
 
 	tick := time.NewTicker(cliProgressUpdate)
@@ -144,7 +144,7 @@ func writeToFile(f *os.File, output string) error {
 }
 
 // Gobuster is the main entry point for the CLI
-func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin) error {
+func Gobuster(ctx context.Context, opts *lib.Options, plugin lib.GobusterPlugin) error {
 	// Sanity checks
 	if opts == nil {
 		return fmt.Errorf("please provide valid options")
@@ -157,7 +157,7 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	ctxCancel, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	gobuster, err := libgobuster.NewGobuster(opts, plugin)
+	gobuster, err := lib.NewGobuster(opts, plugin)
 	if err != nil {
 		return err
 	}

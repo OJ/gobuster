@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterdir"
+	"github.com/OJ/gobuster/v3/dir"
 	"github.com/OJ/gobuster/v3/helper"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 )
 
 func httpServer(b *testing.B, content string) *httptest.Server {
@@ -28,7 +28,7 @@ func BenchmarkDirMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
-	pluginopts := gobusterdir.NewOptionsDir()
+	pluginopts := dir.NewOptionsDir()
 	pluginopts.URL = h.URL
 	pluginopts.Timeout = 10 * time.Second
 
@@ -56,7 +56,7 @@ func BenchmarkDirMode(b *testing.B) {
 	}
 	wordlist.Close()
 
-	globalopts := libgobuster.Options{
+	globalopts := lib.Options{
 		Threads:    10,
 		Wordlist:   wordlist.Name(),
 		NoProgress: true,
@@ -78,7 +78,7 @@ func BenchmarkDirMode(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobusterdir.NewGobusterDir(&globalopts, pluginopts)
+		plugin, err := dir.NewGobusterDir(&globalopts, pluginopts)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

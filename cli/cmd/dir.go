@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterdir"
+	"github.com/OJ/gobuster/v3/dir"
 	"github.com/OJ/gobuster/v3/helper"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -21,13 +21,13 @@ func runDir(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusterdir.NewGobusterDir(globalopts, pluginopts)
+	plugin, err := dir.NewGobusterDir(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		var wErr *gobusterdir.ErrWildcard
+		var wErr *dir.ErrWildcard
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
@@ -36,13 +36,13 @@ func runDir(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
+func parseDirOptions() (*lib.Options, *dir.OptionsDir, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	plugin := gobusterdir.NewOptionsDir()
+	plugin := dir.NewOptionsDir()
 
 	httpOpts, err := parseCommonHTTPOptions(cmdDir)
 	if err != nil {

@@ -10,15 +10,15 @@ import (
 	"time"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobustervhost"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
+	"github.com/OJ/gobuster/v3/vhost"
 )
 
 func BenchmarkVhostMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
-	pluginopts := gobustervhost.OptionsVhost{}
+	pluginopts := vhost.OptionsVhost{}
 	pluginopts.URL = h.URL
 	pluginopts.Timeout = 10 * time.Second
 
@@ -32,7 +32,7 @@ func BenchmarkVhostMode(b *testing.B) {
 	}
 	wordlist.Close()
 
-	globalopts := libgobuster.Options{
+	globalopts := lib.Options{
 		Threads:    10,
 		Wordlist:   wordlist.Name(),
 		NoProgress: true,
@@ -54,7 +54,7 @@ func BenchmarkVhostMode(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobustervhost.NewGobusterVhost(&globalopts, &pluginopts)
+		plugin, err := vhost.NewGobusterVhost(&globalopts, &pluginopts)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

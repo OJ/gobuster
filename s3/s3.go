@@ -1,4 +1,4 @@
-package gobusters3
+package s3
 
 import (
 	"bufio"

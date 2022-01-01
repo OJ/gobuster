@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +11,7 @@ import (
 var cmdVersion *cobra.Command
 
 func runVersion(cmd *cobra.Command, args []string) error {
-	fmt.Println(libgobuster.VERSION)
+	fmt.Println(lib.VERSION)
 	return nil
 }
 

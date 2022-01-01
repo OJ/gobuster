@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusters3"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
+	"github.com/OJ/gobuster/v3/s3"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ func runS3(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusters3.NewGobusterS3(globalopts, pluginopts)
+	plugin, err := s3.NewGobusterS3(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusters3: %w", err)
 	}
@@ -29,13 +29,13 @@ func runS3(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
+func parseS3Options() (*lib.Options, *s3.OptionsS3, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	plugin := gobusters3.NewOptionsS3()
+	plugin := s3.NewOptionsS3()
 
 	httpOpts, err := parseBasicHTTPOptions(cmdS3)
 	if err != nil {

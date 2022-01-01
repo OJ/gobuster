@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/OJ/gobuster/v3/cli"
-	"github.com/OJ/gobuster/v3/gobusterdns"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/dns"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -22,13 +22,13 @@ func runDNS(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	plugin, err := gobusterdns.NewGobusterDNS(globalopts, pluginopts)
+	plugin, err := dns.NewGobusterDNS(globalopts, pluginopts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdns: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
-		var wErr *gobusterdns.ErrWildcard
+		var wErr *dns.ErrWildcard
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To force processing of Wildcard DNS, specify the '--wildcard' switch", wErr)
 		}
@@ -37,12 +37,12 @@ func runDNS(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
+func parseDNSOptions() (*lib.Options, *dns.OptionsDNS, error) {
 	globalopts, err := parseGlobalOptions()
 	if err != nil {
 		return nil, nil, err
 	}
-	plugin := gobusterdns.NewOptionsDNS()
+	plugin := dns.NewOptionsDNS()
 
 	plugin.Domain, err = cmdDNS.Flags().GetString("domain")
 	if err != nil {

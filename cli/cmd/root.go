@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -53,8 +53,8 @@ func Execute() {
 	}
 }
 
-func parseGlobalOptions() (*libgobuster.Options, error) {
-	globalopts := libgobuster.NewOptions()
+func parseGlobalOptions() (*lib.Options, error) {
+	globalopts := lib.NewOptions()
 
 	threads, err := rootCmd.Flags().GetInt("threads")
 	if err != nil {

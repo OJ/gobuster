@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/OJ/gobuster/v3/helper"
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
 func addBasicHTTPOptions(cmd *cobra.Command) {
-	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
+	cmd.Flags().StringP("useragent", "a", lib.DefaultUserAgent(), "Set the User-Agent string")
 	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
 	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
@@ -41,8 +41,8 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	return nil
 }
 
-func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, error) {
-	options := libgobuster.BasicHTTPOptions{}
+func parseBasicHTTPOptions(cmd *cobra.Command) (lib.BasicHTTPOptions, error) {
+	options := lib.BasicHTTPOptions{}
 	var err error
 
 	options.UserAgent, err = cmd.Flags().GetString("useragent")
@@ -88,8 +88,8 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	return options, nil
 }
 
-func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error) {
-	options := libgobuster.HTTPOptions{}
+func parseCommonHTTPOptions(cmd *cobra.Command) (lib.HTTPOptions, error) {
+	options := lib.HTTPOptions{}
 	var err error
 
 	basic, err := parseBasicHTTPOptions(cmd)
@@ -168,7 +168,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 		if len(key) == 0 {
 			return options, fmt.Errorf("invalid header format for header %q - name is empty", h)
 		}
-		header := libgobuster.HTTPHeader{Name: key, Value: value}
+		header := lib.HTTPHeader{Name: key, Value: value}
 		options.Headers = append(options.Headers, header)
 	}
 

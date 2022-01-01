@@ -21,10 +21,9 @@ func TestGobusterDir_GetConfigString(t *testing.T) {
 		wantErr bool
 	}{
 		{"ok", &GobusterDir{
-			options:        &OptionsDir{},
-			globalopts:     &libgobuster.Options{},
-			http:           &libgobuster.HTTPClient{},
-			requestsPerRun: new(int),
+			options:    &OptionsDir{},
+			globalopts: &libgobuster.Options{},
+			http:       &libgobuster.HTTPClient{},
 		}, nothing, false},
 	}
 	for _, tt := range tests {

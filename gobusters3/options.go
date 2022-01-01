@@ -1,12 +1,10 @@
 package gobusters3
 
-import (
-	"github.com/OJ/gobuster/v3/libgobuster"
-)
+import "github.com/OJ/gobuster/v3/lib"
 
 // OptionsS3 is the struct to hold all options for this plugin
 type OptionsS3 struct {
-	libgobuster.BasicHTTPOptions
+	lib.BasicHTTPOptions
 	MaxFilesToList int
 }
 

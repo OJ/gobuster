@@ -1,4 +1,4 @@
-package gobusterdns
+package dns
 
 import (
 	"bufio"
@@ -11,27 +11,13 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 	"github.com/google/uuid"
 )
-
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
-	wildcardIps libgobuster.StringSet
-}
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
 	return fmt.Sprintf("the DNS Server returned the same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
-}
-
-// GobusterDNS is the main type to implement the interface
-type GobusterDNS struct {
-	resolver    *net.Resolver
-	globalopts  *libgobuster.Options
-	options     *OptionsDNS
-	isWildcard  bool
-	wildcardIps libgobuster.StringSet
 }
 
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -45,7 +31,7 @@ func newCustomDialer(server string) func(ctx context.Context, network, address s
 }
 
 // NewGobusterDNS creates a new initialized GobusterDNS
-func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
+func NewGobusterDNS(globalopts *lib.Options, opts *OptionsDNS) (*GobusterDNS, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -65,7 +51,7 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	g := GobusterDNS{
 		options:     opts,
 		globalopts:  globalopts,
-		wildcardIps: libgobuster.NewStringSet(),
+		wildcardIps: lib.NewStringSet(),
 		resolver:    resolver,
 	}
 	return &g, nil
@@ -102,7 +88,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of gobusterdns
-func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *lib.Progress) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err == nil {

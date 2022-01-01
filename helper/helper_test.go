@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 )
 
 func TestParseExtensions(t *testing.T) {
@@ -12,14 +12,14 @@ func TestParseExtensions(t *testing.T) {
 	var tt = []struct {
 		testName           string
 		extensions         string
-		expectedExtensions libgobuster.StringSet
+		expectedExtensions lib.StringSet
 		expectedError      string
 	}{
-		{"Valid extensions", "php,asp,txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Spaces", "php, asp , txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Double extensions", "php,asp,txt,php,asp,txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Leading dot", ".php,asp,.txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Empty string", "", libgobuster.NewStringSet(), "invalid extension string provided"},
+		{"Valid extensions", "php,asp,txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Spaces", "php, asp , txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Double extensions", "php,asp,txt,php,asp,txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Leading dot", ".php,asp,.txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Empty string", "", lib.NewStringSet(), "invalid extension string provided"},
 	}
 
 	for _, x := range tt {
@@ -43,15 +43,15 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 	var tt = []struct {
 		testName      string
 		stringCodes   string
-		expectedCodes libgobuster.IntSet
+		expectedCodes lib.IntSet
 		expectedError string
 	}{
-		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid string provided"},
+		{"Valid codes", "200,100,202", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Spaces", "200, 100 , 202", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Double codes", "200, 100, 202, 100", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Invalid code", "200,AAA", lib.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", lib.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", lib.NewIntSet(), "invalid string provided"},
 	}
 
 	for _, x := range tt {
@@ -74,14 +74,14 @@ func BenchmarkParseExtensions(b *testing.B) {
 	var tt = []struct {
 		testName           string
 		extensions         string
-		expectedExtensions libgobuster.StringSet
+		expectedExtensions lib.StringSet
 		expectedError      string
 	}{
-		{"Valid extensions", "php,asp,txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Spaces", "php, asp , txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Double extensions", "php,asp,txt,php,asp,txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Leading dot", ".php,asp,.txt", libgobuster.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
-		{"Empty string", "", libgobuster.NewStringSet(), "invalid extension string provided"},
+		{"Valid extensions", "php,asp,txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Spaces", "php, asp , txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Double extensions", "php,asp,txt,php,asp,txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Leading dot", ".php,asp,.txt", lib.StringSet{Set: map[string]bool{"php": true, "asp": true, "txt": true}}, ""},
+		{"Empty string", "", lib.NewStringSet(), "invalid extension string provided"},
 	}
 
 	for _, x := range tt {
@@ -98,15 +98,15 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	var tt = []struct {
 		testName      string
 		stringCodes   string
-		expectedCodes libgobuster.IntSet
+		expectedCodes lib.IntSet
 		expectedError string
 	}{
-		{"Valid codes", "200,100,202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Spaces", "200, 100 , 202", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Double codes", "200, 100, 202, 100", libgobuster.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
-		{"Invalid code", "200,AAA", libgobuster.NewIntSet(), "invalid string given: AAA"},
-		{"Invalid integer", "2000000000000000000000000000000", libgobuster.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
-		{"Empty string", "", libgobuster.NewIntSet(), "invalid string string provided"},
+		{"Valid codes", "200,100,202", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Spaces", "200, 100 , 202", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Double codes", "200, 100, 202, 100", lib.IntSet{Set: map[int]bool{100: true, 200: true, 202: true}}, ""},
+		{"Invalid code", "200,AAA", lib.NewIntSet(), "invalid string given: AAA"},
+		{"Invalid integer", "2000000000000000000000000000000", lib.NewIntSet(), "invalid string given: 2000000000000000000000000000000"},
+		{"Empty string", "", lib.NewIntSet(), "invalid string string provided"},
 	}
 
 	for _, x := range tt {

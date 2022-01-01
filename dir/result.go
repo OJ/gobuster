@@ -1,23 +1,8 @@
-package gobusterdir
+package dir
 
 import (
 	"fmt"
-	"net/http"
 )
-
-// Result represents a single result
-type Result struct {
-	URL        string
-	Path       string
-	Verbose    bool
-	Expanded   bool
-	NoStatus   bool
-	HideLength bool
-	Found      bool
-	Header     http.Header
-	StatusCode int
-	Size       int64
-}
 
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {

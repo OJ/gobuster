@@ -22,3 +22,10 @@ type AWSListing struct {
 		Size         int    `xml:"Size"`
 	} `xml:"Contents"`
 }
+
+// Result represents a single result
+type Result struct {
+	Found      bool
+	BucketName string
+	Status     string
+}

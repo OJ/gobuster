@@ -5,13 +5,6 @@ import (
 	"fmt"
 )
 
-// Result represents a single result
-type Result struct {
-	Found      bool
-	BucketName string
-	Status     string
-}
-
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}

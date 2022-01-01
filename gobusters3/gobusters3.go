@@ -12,19 +12,19 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/OJ/gobuster/v3/lib"
 )
 
 // GobusterS3 is the main type to implement the interface
 type GobusterS3 struct {
 	options     *OptionsS3
-	globalopts  *libgobuster.Options
-	http        *libgobuster.HTTPClient
+	globalopts  *lib.Options
+	http        *lib.HTTPClient
 	bucketRegex *regexp.Regexp
 }
 
 // NewGobusterS3 creates a new initialized GobusterS3
-func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
+func NewGobusterS3(globalopts *lib.Options, opts *OptionsS3) (*GobusterS3, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -38,7 +38,7 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		globalopts: globalopts,
 	}
 
-	basicOptions := libgobuster.BasicHTTPOptions{
+	basicOptions := lib.BasicHTTPOptions{
 		Proxy:           opts.Proxy,
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
@@ -47,13 +47,13 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		RetryAttempts:   opts.RetryAttempts,
 	}
 
-	httpOpts := libgobuster.HTTPOptions{
+	httpOpts := lib.HTTPOptions{
 		BasicHTTPOptions: basicOptions,
 		// needed so we can list bucket contents
 		FollowRedirect: true,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := lib.NewHTTPClient(&httpOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (s *GobusterS3) PreRun(ctx context.Context) error {
 }
 
 // ProcessWord is the process implementation of GobusterS3
-func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib.Progress) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
 		return nil
@@ -92,7 +92,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+		statusCode, _, _, body, err = s.http.Request(ctx, bucketURL, lib.RequestOptions{ReturnBody: true})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised

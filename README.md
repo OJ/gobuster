@@ -220,14 +220,14 @@ Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` 
 ```bash
 hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
 ```
-##### TIP 
+Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
+#### TIP 
 You can get an intimation to your telegram mobile application once the fuzzing is done using the python [intimations](https://github.com/AbhijithAJ/intimations) module.
 
 ```
 gobuster dir -u https://mysite.com -w ; python3 -m intimations telegram --title 'FUZZING' --message 'Fuzzing on the target is complete.' 
 ``` 
-
-Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
 
 ## Patterns
 

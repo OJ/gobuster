@@ -1,8 +1,13 @@
 module github.com/OJ/gobuster/v3
 
 require (
+<<<<<<< HEAD
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v0.0.5
+=======
+	github.com/google/uuid v1.2.0
+	github.com/spf13/cobra v0.0.7
+>>>>>>> master
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 )
 

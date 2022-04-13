@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o gobuster -ldflags="-s -w" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src"
 
-FROM alpine:latest
+FROM alpine:3.15.4
 
 RUN apk add --no-cache ca-certificates \
     && rm -rf /var/cache/*

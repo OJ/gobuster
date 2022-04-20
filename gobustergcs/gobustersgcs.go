@@ -76,8 +76,8 @@ func (s *GobusterGCS) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of GobusterS3
-func (s *GobusterGCS) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+// ProcessWord is the process implementation of GobusterS3
+func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
 		return nil
@@ -89,13 +89,13 @@ func (s *GobusterGCS) Run(ctx context.Context, word string, resChannel chan<- li
 		return err
 	}
 
-	if status == nil || body == nil {
+	if status == 0 || body == nil {
 		return nil
 	}
 
 	// looks like 401, 403, and 404 are the only negative status codes
 	found := false
-	switch *status {
+	switch status {
 	case http.StatusUnauthorized,
 		http.StatusForbidden,
 		http.StatusNotFound:
@@ -148,13 +148,17 @@ func (s *GobusterGCS) Run(ctx context.Context, word string, resChannel chan<- li
 		}
 	}
 
-	resChannel <- Result{
+	progress.ResultChan <- Result{
 		Found:      found,
 		BucketName: word,
 		Status:     extraStr,
 	}
 
 	return nil
+}
+
+func (s *GobusterGCS) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

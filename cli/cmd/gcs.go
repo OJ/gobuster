@@ -20,7 +20,7 @@ func runGCS(cmd *cobra.Command, args []string) error {
 
 	plugin, err := gobustergcs.NewGobusterGCS(globalopts, pluginopts)
 	if err != nil {
-		return fmt.Errorf("error on creating gobusters3: %w", err)
+		return fmt.Errorf("error on creating gobustergcs: %w", err)
 	}
 
 	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {

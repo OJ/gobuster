@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+
+	"github.com/fatih/color"
+)
+
+var (
+	yellow = color.New(color.FgYellow).FprintfFunc()
+	green  = color.New(color.FgGreen).FprintfFunc()
+	blue   = color.New(color.FgBlue).FprintfFunc()
+	red    = color.New(color.FgRed).FprintfFunc()
 )
 
 // Result represents a single result
@@ -51,9 +60,14 @@ func (r Result) ResultToString() (string, error) {
 	}
 
 	if !r.NoStatus {
-		if _, err := fmt.Fprintf(buf, " (Status: %d)", r.StatusCode); err != nil {
-			return "", err
+		color := yellow
+		if r.StatusCode == 200 {
+			color = green
+		} else if r.StatusCode >= 500 && r.StatusCode < 600 {
+			color = red
 		}
+
+		color(buf, " (Status: %d)", r.StatusCode)
 	}
 
 	if !r.HideLength {
@@ -64,9 +78,7 @@ func (r Result) ResultToString() (string, error) {
 
 	location := r.Header.Get("Location")
 	if location != "" {
-		if _, err := fmt.Fprintf(buf, " [--> %s]", location); err != nil {
-			return "", err
-		}
+		blue(buf, " [--> %s]", location)
 	}
 
 	if _, err := fmt.Fprintf(buf, "\n"); err != nil {

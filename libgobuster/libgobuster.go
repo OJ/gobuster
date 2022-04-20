@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 // PATTERN is the pattern for wordlist replacements in pattern file
@@ -38,7 +40,7 @@ func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
 	g.Opts = opts
 	g.plugin = plugin
 	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
-	g.LogError = log.New(os.Stderr, "\r[ERROR] ", log.LstdFlags)
+	g.LogError = log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags)
 	g.Progress = NewProgress()
 
 	return &g, nil

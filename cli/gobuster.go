@@ -19,27 +19,9 @@ func banner() {
 	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)")
 }
 
-type outputType struct {
-	Mu              *sync.RWMutex
-	MaxCharsWritten int
-}
-
-// right pad a string
-// nolint:unparam
-func rightPad(s string, padStr string, overallLen int) string {
-	strLen := len(s)
-	if overallLen <= strLen {
-		return s
-	}
-
-	toPad := overallLen - strLen - 1
-	pad := strings.Repeat(padStr, toPad)
-	return fmt.Sprintf("%s%s", s, pad)
-}
-
 // resultWorker outputs the results as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.
-func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, output *outputType) {
+func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var f *os.File
@@ -59,13 +41,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 		}
 		if s != "" {
 			s = strings.TrimSpace(s)
-			output.Mu.Lock()
-			w, _ := fmt.Printf("\r%s\n", rightPad(s, " ", output.MaxCharsWritten))
-			// -1 to remove the newline, otherwise it's always bigger
-			if (w - 1) > output.MaxCharsWritten {
-				output.MaxCharsWritten = w - 1
-			}
-			output.Mu.Unlock()
+			_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
 			if f != nil {
 				err = writeToFile(f, s)
 				if err != nil {
@@ -78,29 +54,19 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup, 
 
 // errorWorker outputs the errors as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.
-func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
+func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for e := range g.Progress.ErrorChan {
 		if !g.Opts.Quiet && !g.Opts.NoError {
-			output.Mu.Lock()
-			s := fmt.Sprintf("[!] %s\n", e.Error())
-			s = rightPad(s, " ", output.MaxCharsWritten)
-
-			charsWritten := len(s) - 1
-			if charsWritten > output.MaxCharsWritten {
-				output.MaxCharsWritten = charsWritten
-			}
-
-			g.LogError.Print(s)
-			output.Mu.Unlock()
+			g.LogError.Printf("[!] %s\n", e.Error())
 		}
 	}
 }
 
 // progressWorker outputs the progress every tick. It will stop once cancel() is called
 // on the context
-func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup, output *outputType) {
+func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	tick := time.NewTicker(cliProgressUpdate)
@@ -111,23 +77,14 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 			if !g.Opts.Quiet && !g.Opts.NoProgress {
 				requestsIssued := g.Progress.RequestsIssued()
 				requestsExpected := g.Progress.RequestsExpected()
-				output.Mu.Lock()
-				var charsWritten int
 				if g.Opts.Wordlist == "-" {
-					s := fmt.Sprintf("\rProgress: %d", requestsIssued)
-					s = rightPad(s, " ", output.MaxCharsWritten)
-					charsWritten, _ = fmt.Fprint(os.Stderr, s)
+					s := fmt.Sprintf("%sProgress: %d", TERMINAL_CLEAR_LINE, requestsIssued)
+					_, _ = fmt.Fprint(os.Stderr, s)
 					// only print status if we already read in the wordlist
 				} else if requestsExpected > 0 {
-					s := fmt.Sprintf("\rProgress: %d / %d (%3.2f%%)", requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
-					s = rightPad(s, " ", output.MaxCharsWritten)
-					charsWritten, _ = fmt.Fprint(os.Stderr, s)
+					s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
+					_, _ = fmt.Fprint(os.Stderr, s)
 				}
-				if charsWritten > output.MaxCharsWritten {
-					output.MaxCharsWritten = charsWritten
-				}
-
-				output.Mu.Unlock()
 			}
 		case <-ctx.Done():
 			return
@@ -181,22 +138,16 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	// when we call wg.Wait()
 	var wg sync.WaitGroup
 
-	outputMutex := new(sync.RWMutex)
-	o := &outputType{
-		Mu:              outputMutex,
-		MaxCharsWritten: 0,
-	}
+	wg.Add(1)
+	go resultWorker(gobuster, opts.OutputFilename, &wg)
 
 	wg.Add(1)
-	go resultWorker(gobuster, opts.OutputFilename, &wg, o)
-
-	wg.Add(1)
-	go errorWorker(gobuster, &wg, o)
+	go errorWorker(gobuster, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
 		// if not quiet add a new workgroup entry and start the goroutine
 		wg.Add(1)
-		go progressWorker(ctxCancel, gobuster, &wg, o)
+		go progressWorker(ctxCancel, gobuster, &wg)
 	}
 
 	err = gobuster.Run(ctxCancel)
@@ -213,8 +164,6 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	}
 
 	if !opts.Quiet {
-		// clear stderr progress
-		fmt.Fprintf(os.Stderr, "\r%s\n", rightPad("", " ", o.MaxCharsWritten))
 		fmt.Println(ruler)
 		gobuster.LogInfo.Println("Finished")
 		fmt.Println(ruler)

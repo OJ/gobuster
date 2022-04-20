@@ -42,9 +42,13 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## Changes in 3.1-dev
 
-- Use go 1.17
+- Use go 1.18
 - use contexts in the correct way
 - get rid of the wildcard flag (except in DNS mode)
+- color output
+- retry on timeout
+- google cloud bucket enumeration
+- fix nil reference errors
 
 ## Changes in 3.1
 
@@ -66,7 +70,9 @@ All funds that are donated to this project will be donated to charity. A full lo
 - dir - the classic directory brute-forcing mode
 - dns - DNS subdomain brute-forcing mode
 - s3 - Enumerate open S3 buckets and look for existence and bucket listings
+- gcs - Enumerate open google cloud buckets
 - vhost - virtual host brute-forcing mode (not the same as DNS!)
+- fuzz - some basic fuzzing, replaces the `FUZZ` keyword
 
 ## Built-in Help
 
@@ -78,6 +84,8 @@ Help is built-in!
 ## `dns` Mode Help
 
 ```text
+Uses DNS subdomain enumeration mode
+
 Usage:
   gobuster dns [flags]
 
@@ -91,11 +99,14 @@ Flags:
       --wildcard           Force continued operation when wildcard found
 
 Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
   -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -103,37 +114,46 @@ Global Flags:
 ## `dir` Mode Options
 
 ```text
+Uses directory/file enumeration mode
+
 Usage:
   gobuster dir [flags]
 
 Flags:
-  -f, --add-slash                     Append / to each request
-  -c, --cookies string                Cookies to use for the requests
-  -e, --expanded                      Expanded mode, print full URLs
-  -x, --extensions string             File extension(s) to search for
-  -r, --follow-redirect               Follow redirects
-  -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                          help for dir
-  -l, --include-length                Include the length of the body in the output
-  -k, --no-tls-validation             Skip TLS certificate verification
-  -n, --no-status                     Don't print status codes
-  -P, --password string               Password for Basic Auth
-  -p, --proxy string                  Proxy to use for requests [http(s)://host:port]
-  -s, --status-codes string           Positive status codes (will be overwritten with status-codes-blacklist if set) (default "200,204,301,302,307,401,403")
-  -b, --status-codes-blacklist string Negative status codes (will override status-codes if set)
-      --timeout duration              HTTP Timeout (default 10s)
-  -u, --url string                    The target URL
-  -a, --useragent string              Set the User-Agent string (default "gobuster/3.1.0")
-  -U, --username string               Username for Basic Auth
-  -d, --discover-backup               Upon finding a file search for backup files
-      --wildcard                      Force continued operation when wildcard found
+  -f, --add-slash                       Append / to each request
+  -c, --cookies string                  Cookies to use for the requests
+  -d, --discover-backup                 Also search for backup files by appending multiple backup extensions
+      --exclude-length ints             exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -e, --expanded                        Expanded mode, print full URLs
+  -x, --extensions string               File extension(s) to search for
+  -r, --follow-redirect                 Follow redirects
+  -H, --headers stringArray             Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                            help for dir
+      --hide-length                     Hide the length of the body in the output
+  -m, --method string                   Use the following HTTP method (default "GET")
+  -n, --no-status                       Don't print status codes
+  -k, --no-tls-validation               Skip TLS certificate verification
+  -P, --password string                 Password for Basic Auth
+      --proxy string                    Proxy to use for requests [http(s)://host:port]
+      --random-agent                    Use a random User-Agent string
+      --retry                           Should retry on request timeout
+      --retry-attempts int              Times to retry on request timeout (default 3)
+  -s, --status-codes string             Positive status codes (will be overwritten with status-codes-blacklist if set)
+  -b, --status-codes-blacklist string   Negative status codes (will override status-codes if set) (default "404")
+      --timeout duration                HTTP Timeout (default 10s)
+  -u, --url string                      The target URL
+  -a, --useragent string                Set the User-Agent string (default "gobuster/3.1.0")
+  -U, --username string                 Username for Basic Auth
 
 Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
   -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```
@@ -141,28 +161,144 @@ Global Flags:
 ## `vhost` Mode Options
 
 ```text
+Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter
+
 Usage:
   gobuster vhost [flags]
 
 Flags:
+      --append-domain         Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.
   -c, --cookies string        Cookies to use for the requests
+      --domain string         the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
+      --exclude-length ints   exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
   -r, --follow-redirect       Follow redirects
   -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
   -h, --help                  help for vhost
+  -m, --method string         Use the following HTTP method (default "GET")
   -k, --no-tls-validation     Skip TLS certificate verification
   -P, --password string       Password for Basic Auth
-  -p, --proxy string          Proxy to use for requests [http(s)://host:port]
+      --proxy string          Proxy to use for requests [http(s)://host:port]
+      --random-agent          Use a random User-Agent string
+      --retry                 Should retry on request timeout
+      --retry-attempts int    Times to retry on request timeout (default 3)
       --timeout duration      HTTP Timeout (default 10s)
   -u, --url string            The target URL
   -a, --useragent string      Set the User-Agent string (default "gobuster/3.1.0")
   -U, --username string       Username for Basic Auth
 
 Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
   -z, --no-progress       Don't display progress
   -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
   -q, --quiet             Don't print the banner and other noise
   -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+## `fuzz` Mode Options
+
+```text
+Uses fuzzing mode
+
+Usage:
+  gobuster fuzz [flags]
+
+Flags:
+  -c, --cookies string              Cookies to use for the requests
+      --exclude-length ints         exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -b, --excludestatuscodes string   Negative status codes (will override statuscodes if set)
+  -r, --follow-redirect             Follow redirects
+  -H, --headers stringArray         Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                        help for fuzz
+  -m, --method string               Use the following HTTP method (default "GET")
+  -k, --no-tls-validation           Skip TLS certificate verification
+  -P, --password string             Password for Basic Auth
+      --proxy string                Proxy to use for requests [http(s)://host:port]
+      --random-agent                Use a random User-Agent string
+      --retry                       Should retry on request timeout
+      --retry-attempts int          Times to retry on request timeout (default 3)
+      --timeout duration            HTTP Timeout (default 10s)
+  -u, --url string                  The target URL
+  -a, --useragent string            Set the User-Agent string (default "gobuster/3.1.0")
+  -U, --username string             Username for Basic Auth
+
+Global Flags:
       --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+## `s3` Mode Options
+
+```text
+Uses aws bucket enumeration mode
+
+Usage:
+  gobuster s3 [flags]
+
+Flags:
+  -h, --help                 help for s3
+  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
+  -k, --no-tls-validation    Skip TLS certificate verification
+      --proxy string         Proxy to use for requests [http(s)://host:port]
+      --random-agent         Use a random User-Agent string
+      --retry                Should retry on request timeout
+      --retry-attempts int   Times to retry on request timeout (default 3)
+      --timeout duration     HTTP Timeout (default 10s)
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.1.0")
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+## `gcs` Mode Options
+
+```text
+Uses gcs bucket enumeration mode
+
+Usage:
+  gobuster gcs [flags]
+
+Flags:
+  -h, --help                 help for gcs
+  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
+  -k, --no-tls-validation    Skip TLS certificate verification
+      --proxy string         Proxy to use for requests [http(s)://host:port]
+      --random-agent         Use a random User-Agent string
+      --retry                Should retry on request timeout
+      --retry-attempts int   Times to retry on request timeout (default 3)
+      --timeout duration     HTTP Timeout (default 10s)
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.1.0")
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
   -v, --verbose           Verbose output (errors)
   -w, --wordlist string   Path to the wordlist
 ```

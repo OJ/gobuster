@@ -28,8 +28,11 @@ jobs:
         run: |
           go get -v -t -d ./...
 
-      - name: Build
-        run: go build -v .
+      - name: Build linux
+        run: make linux
+
+      - name: Build windows
+        run: make windows
 
       - name: Test
         run: make test

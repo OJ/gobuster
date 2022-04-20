@@ -5,7 +5,7 @@ type GCSError struct {
 	Error struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
-		Errors []struct {
+		Errors  []struct {
 			Message      string `json:"message"`
 			Reason       string `json:"reason"`
 			LocationType string `json:"locationType"`

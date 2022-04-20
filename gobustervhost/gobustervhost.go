@@ -121,7 +121,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		tries += v.options.RetryAttempts
 	}
 
-	var statusCode *int
+	var statusCode int
 	var size int64
 	var header http.Header
 	var body []byte
@@ -142,7 +142,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
+	found := body != nil && !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
 	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {
@@ -151,7 +151,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		progress.ResultChan <- Result{
 			Found:      resultStatus,
 			Vhost:      subdomain,
-			StatusCode: *statusCode,
+			StatusCode: statusCode,
 			Size:       size,
 			Header:     header,
 		}

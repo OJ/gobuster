@@ -59,7 +59,7 @@ func TestRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	if *status != 200 {
+	if status != 200 {
 		t.Fatalf("Invalid status returned: %d", status)
 	}
 	if length != int64(len(ret)) {

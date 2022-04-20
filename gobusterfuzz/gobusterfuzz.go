@@ -93,7 +93,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		tries += d.options.RetryAttempts
 	}
 
-	var statusCode *int
+	var statusCode int
 	var size int64
 	for i := 1; i <= tries; i++ {
 		var err error
@@ -110,7 +110,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		break
 	}
 
-	if statusCode != nil {
+	if statusCode != 0 {
 		resultStatus := true
 
 		if helper.SliceContains(d.options.ExcludeLength, int(size)) {
@@ -118,7 +118,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		}
 
 		if d.options.ExcludedStatusCodesParsed.Length() > 0 {
-			if d.options.ExcludedStatusCodesParsed.Contains(*statusCode) {
+			if d.options.ExcludedStatusCodesParsed.Contains(statusCode) {
 				resultStatus = false
 			}
 		}
@@ -128,7 +128,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				Verbose:    d.globalopts.Verbose,
 				Found:      resultStatus,
 				Path:       url,
-				StatusCode: *statusCode,
+				StatusCode: statusCode,
 				Size:       size,
 			}
 		}

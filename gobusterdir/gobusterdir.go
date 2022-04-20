@@ -115,12 +115,12 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 	}
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
+		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
-		if d.options.StatusCodesParsed.Contains(*wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
+		if d.options.StatusCodesParsed.Contains(wildcardResp) {
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
 		}
 	} else {
 		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -178,7 +178,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		tries += d.options.RetryAttempts
 	}
 
-	var statusCode *int
+	var statusCode int
 	var size int64
 	var header http.Header
 	for i := 1; i <= tries; i++ {
@@ -201,15 +201,15 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		break
 	}
 
-	if statusCode != nil {
+	if statusCode != 0 {
 		resultStatus := false
 
 		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-			if !d.options.StatusCodesBlacklistParsed.Contains(*statusCode) {
+			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
 				resultStatus = true
 			}
 		} else if d.options.StatusCodesParsed.Length() > 0 {
-			if d.options.StatusCodesParsed.Contains(*statusCode) {
+			if d.options.StatusCodesParsed.Contains(statusCode) {
 				resultStatus = true
 			}
 		} else {
@@ -226,7 +226,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				HideLength: d.options.HideLength,
 				Found:      resultStatus,
 				Header:     header,
-				StatusCode: *statusCode,
+				StatusCode: statusCode,
 				Size:       size,
 			}
 		}

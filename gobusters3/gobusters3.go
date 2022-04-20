@@ -88,7 +88,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		tries += s.options.RetryAttempts
 	}
 
-	var statusCode *int
+	var statusCode int
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
@@ -105,13 +105,13 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		break
 	}
 
-	if statusCode == nil || body == nil {
+	if statusCode == 0 || body == nil {
 		return nil
 	}
 
 	// looks like 404 and 400 are the only negative status codes
 	found := false
-	switch *statusCode {
+	switch statusCode {
 	case http.StatusBadRequest:
 	case http.StatusNotFound:
 		found = false

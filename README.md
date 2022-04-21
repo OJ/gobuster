@@ -9,28 +9,8 @@ Gobuster is a tool used to brute-force:
 
 ## Tags, Statuses, etc
 
-[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)] [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)]
+[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
-## Oh dear God.. WHY!?
-
-Because I wanted:
-
-1. ... something that didn't have a fat Java GUI (console FTW).
-1. ... to build something that just worked on the command line.
-1. ... something that did not do recursive brute force.
-1. ... something that allowed me to brute force folders and multiple extensions at once.
-1. ... something that compiled to native on multiple platforms.
-1. ... something that was faster than an interpreted script (such as Python).
-1. ... something that didn't require a runtime.
-1. ... use something that was good with concurrency (hence Go).
-1. ... to build something in Go that wasn't totally useless.
-
-## But it's shit! And your implementation sucks!
-
-Yes, you're probably correct. Feel free to:
-
-- Not use it.
-- Show me how to do it better.
 
 ## Love this tool? Back it!
 
@@ -40,7 +20,9 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
-## Changes in 3.1-dev
+# Changes
+
+## 3.1-dev
 
 - Use go 1.18
 - use contexts in the correct way
@@ -50,7 +32,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - google cloud bucket enumeration
 - fix nil reference errors
 
-## Changes in 3.1
+## 3.1
 
 - enumerate public AWS S3 buckets
 - fuzzing mode
@@ -58,12 +40,14 @@ All funds that are donated to this project will be donated to charity. A full lo
 - added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 - The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
 
-## Changes in 3.0
+## 3.0
 
 - New CLI options so modes are strictly separated (`-m` is now gone!)
 - Performance Optimizations and better connection handling
 - Ability to enumerate vhost names
 - Option to supply custom HTTP headers
+
+# Manual
 
 ## Available Modes
 
@@ -338,16 +322,6 @@ This will create a `gobuster` binary for you. If you want to install it in the `
 ```bash
 go install
 ```
-
-If you have all the dependencies already, you can make use of the build scripts:
-
-- `make` - builds for the current Go configuration (ie. runs `go build`).
-- `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` folder.
-- `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` folder.
-- `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` folder.
-- `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` folder.
-- `make clean` - clears out the `build` folder.
-- `make test` - runs the tests.
 
 ## Wordlists via STDIN
 
@@ -711,6 +685,14 @@ Command line might look like this:
 gobuster s3 -w bucket-names.txt
 ```
 
+### `gcs` Mode
+
+Command line might look like this:
+
+```bash
+gobuster gcs -w bucket-names.txt
+```
+
 ### `fuzzing` Mode
 
 Command line might look like this:
@@ -826,7 +808,3 @@ http://localhost.s3.amazonaws.com/
 ## License
 
 See the LICENSE file.
-
-## Thanks
-
-See the THANKS file for people who helped out.

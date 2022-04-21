@@ -1,4 +1,4 @@
-# Gobuster v3.1.0
+# Gobuster v3.2.0
 
 Gobuster is a tool used to brute-force:
 
@@ -22,7 +22,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
-## 3.1-dev
+## 3.2-dev
 
 - Use go 1.18
 - use contexts in the correct way
@@ -150,7 +150,7 @@ Normal sample run goes like this:
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -189,7 +189,7 @@ Show IP sample run goes like this:
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -228,7 +228,7 @@ Base domain validation warning when the base domain fails to resolve. This is a 
 gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -251,7 +251,7 @@ Wildcard DNS is also detected properly:
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -274,7 +274,7 @@ If the user wants to force processing of a domain that has wildcard entries, use
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -325,7 +325,7 @@ Flags:
   -b, --status-codes-blacklist string   Negative status codes (will override status-codes if set) (default "404")
       --timeout duration                HTTP Timeout (default 10s)
   -u, --url string                      The target URL
-  -a, --useragent string                Set the User-Agent string (default "gobuster/3.1.0")
+  -a, --useragent string                Set the User-Agent string (default "gobuster/3.2.0")
   -U, --username string                 Username for Basic Auth
 
 Global Flags:
@@ -353,7 +353,7 @@ Default options looks like this:
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
@@ -361,7 +361,7 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
 [+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
+[+] User Agent   : gobuster/3.2.0
 [+] Timeout      : 10s
 ===============================================================
 2019/06/21 11:49:43 Starting gobuster
@@ -381,7 +381,7 @@ Default options with status codes disabled looks like this:
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
@@ -389,7 +389,7 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
 [+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
+[+] User Agent   : gobuster/3.2.0
 [+] No status    : true
 [+] Timeout      : 10s
 ===============================================================
@@ -410,7 +410,7 @@ Verbose output looks like this:
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
@@ -418,7 +418,7 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
 [+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
+[+] User Agent   : gobuster/3.2.0
 [+] Verbose      : true
 [+] Timeout      : 10s
 ===============================================================
@@ -441,7 +441,7 @@ Example showing content length:
 gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dir
@@ -449,7 +449,7 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 [+] Threads      : 10
 [+] Wordlist     : /home/oj/wordlists/shortlist.txt
 [+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
+[+] User Agent   : gobuster/3.2.0
 [+] Show length  : true
 [+] Timeout      : 10s
 ===============================================================
@@ -501,7 +501,7 @@ Flags:
       --retry-attempts int    Times to retry on request timeout (default 3)
       --timeout duration      HTTP Timeout (default 10s)
   -u, --url string            The target URL
-  -a, --useragent string      Set the User-Agent string (default "gobuster/3.1.0")
+  -a, --useragent string      Set the User-Agent string (default "gobuster/3.2.0")
   -U, --username string       Username for Basic Auth
 
 Global Flags:
@@ -530,13 +530,13 @@ Normal sample run goes like this:
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Url:          https://mysite.com
 [+] Threads:      10
 [+] Wordlist:     common-vhosts.txt
-[+] User Agent:   gobuster/3.1.0
+[+] User Agent:   gobuster/3.2.0
 [+] Timeout:      10s
 ===============================================================
 2019/06/21 08:36:00 Starting gobuster
@@ -575,7 +575,7 @@ Flags:
       --retry-attempts int          Times to retry on request timeout (default 3)
       --timeout duration            HTTP Timeout (default 10s)
   -u, --url string                  The target URL
-  -a, --useragent string            Set the User-Agent string (default "gobuster/3.1.0")
+  -a, --useragent string            Set the User-Agent string (default "gobuster/3.2.0")
   -U, --username string             Username for Basic Auth
 
 Global Flags:
@@ -616,7 +616,7 @@ Flags:
       --retry                Should retry on request timeout
       --retry-attempts int   Times to retry on request timeout (default 3)
       --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.1.0")
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
 
 Global Flags:
       --delay duration    Time each thread waits between requests (e.g. 1500ms)
@@ -656,7 +656,7 @@ Flags:
       --retry                Should retry on request timeout
       --retry-attempts int   Times to retry on request timeout (default 3)
       --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.1.0")
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
 
 Global Flags:
       --delay duration    Time each thread waits between requests (e.g. 1500ms)
@@ -725,12 +725,12 @@ Normal sample run goes like this:
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Timeout:                 10s
 [+] Maximum files to list:   5
 ===============================================================
@@ -754,12 +754,12 @@ Verbose and sample run
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -v
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Verbose:                 true
 [+] Timeout:                 10s
 [+] Maximum files to list:   5
@@ -784,12 +784,12 @@ Extended sample run
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -e
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Timeout:                 10s
 [+] Expanded:                true
 [+] Maximum files to list:   5

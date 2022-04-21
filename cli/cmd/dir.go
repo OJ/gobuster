@@ -93,6 +93,16 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
 	plugin.StatusCodesBlacklistParsed = ret3
+	
+	plugin.StringBlacklist, err = cmdDir.Flags().GetString("string-blacklist")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for string blacklist: %w", err)
+	}
+	ret4, err := helper.ParseStringBlacklist(plugin.StringBlacklist)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for string blacklist: %w", err)
+	}
+	plugin.StringBlacklistParsed = ret4
 
 	if plugin.StatusCodes != "" && plugin.StatusCodesBlacklist != "" {
 		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both set, please set only one")
@@ -148,6 +158,7 @@ func init() {
 	}
 	cmdDir.Flags().StringP("status-codes", "s", "", "Positive status codes (will be overwritten with status-codes-blacklist if set)")
 	cmdDir.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set)")
+	cmdDir.Flags().StringP("string-blacklist", "y", "", "Negative strings to search for (Gobuster will ignore replies containing these strings)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")

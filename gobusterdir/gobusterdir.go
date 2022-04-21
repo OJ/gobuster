@@ -183,7 +183,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var header http.Header
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, header, body, err = d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -216,7 +216,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) && !helper.StringSliceContains(d.options.StringBlacklistParsed, string(body)) || d.globalopts.Verbose {
 			progress.ResultChan <- Result{
 				URL:        d.options.URL,
 				Path:       entity,

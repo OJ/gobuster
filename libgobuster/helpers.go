@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"strconv"
 )
 
 // IntSet is a set of Ints
@@ -100,6 +101,17 @@ func (set *IntSet) Stringify() string {
 
 	delim := ","
 	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(values)), delim), "[]")
+}
+
+// Stringify the set qith quotes and space
+func (set *StringSet) StringifyQuoted() string {
+	values := make([]string, len(set.Set))
+	i := 0
+	for s := range set.Set {
+		values[i] = strconv.Quote(s)
+		i++
+	}
+	return strings.Join(values, ", ")
 }
 
 // Length returns the length of the Set

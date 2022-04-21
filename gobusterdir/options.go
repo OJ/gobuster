@@ -13,6 +13,8 @@ type OptionsDir struct {
 	StatusCodesParsed          libgobuster.IntSet
 	StatusCodesBlacklist       string
 	StatusCodesBlacklistParsed libgobuster.IntSet
+	StringBlacklist            string
+	StringBlacklistParsed      libgobuster.StringSet
 	UseSlash                   bool
 	HideLength                 bool
 	Expanded                   bool
@@ -27,5 +29,6 @@ func NewOptionsDir() *OptionsDir {
 		StatusCodesParsed:          libgobuster.NewIntSet(),
 		StatusCodesBlacklistParsed: libgobuster.NewIntSet(),
 		ExtensionsParsed:           libgobuster.NewStringSet(),
+		StringBlacklistParsed:      libgobuster.NewStringSet(),
 	}
 }

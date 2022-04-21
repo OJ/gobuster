@@ -41,10 +41,37 @@ func ParseCommaSeparatedInt(inputString string) (libgobuster.IntSet, error) {
 	return ret, nil
 }
 
+// ParseBlackListString parses the extensions provided as a comma separated list
+func ParseStringBlacklist(inputString string) (libgobuster.StringSet, error) {
+	if inputString == "" {
+		return libgobuster.StringSet{}, nil
+	}	
+		ret := libgobuster.NewStringSet()
+		for _, e := range strings.Split(inputString, ",") {
+			e = strings.TrimSpace(e)
+			ret.Add(e)
+		}
+		return ret, nil
+	}
+
 // SliceContains checks if an integer slice contains a specific value
 func SliceContains(s []int, e int) bool {
 	for _, a := range s {
 		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+// StringSliceContains checks if a string slice contains a specific value
+func StringSliceContains(s libgobuster.StringSet, str string) bool {
+	keys := make([]string, 0, len(s.Set))
+	for k := range s.Set {
+		keys = append(keys, k)
+		}
+	for _, v := range keys {
+		if strings.Contains(str, v) {
 			return true
 		}
 	}

@@ -8,10 +8,12 @@ import (
 )
 
 var (
+	white  = color.New(color.FgWhite).SprintFunc()
 	yellow = color.New(color.FgYellow).SprintFunc()
 	green  = color.New(color.FgGreen).SprintFunc()
 	blue   = color.New(color.FgBlue).SprintFunc()
 	red    = color.New(color.FgRed).SprintFunc()
+	cyan   = color.New(color.FgCyan).SprintFunc()
 )
 
 // Result represents a single result
@@ -30,12 +32,18 @@ func (r Result) ResultToString() (string, error) {
 		statusText = green("Found")
 	}
 
-	statusCode := yellow(fmt.Sprintf("Status: %d", r.StatusCode))
+	statusCodeColor := white
 	if r.StatusCode == 200 {
-		statusCode = green(fmt.Sprintf("Status: %d", r.StatusCode))
+		statusCodeColor = green
+	} else if r.StatusCode >= 300 && r.StatusCode < 400 {
+		statusCodeColor = cyan
+	} else if r.StatusCode >= 400 && r.StatusCode < 500 {
+		statusCodeColor = yellow
 	} else if r.StatusCode >= 500 && r.StatusCode < 600 {
-		statusCode = red(fmt.Sprintf("Status: %d", r.StatusCode))
+		statusCodeColor = red
 	}
+
+	statusCode := statusCodeColor(fmt.Sprintf("Status: %d", r.StatusCode))
 
 	location := r.Header.Get("Location")
 	locationString := ""

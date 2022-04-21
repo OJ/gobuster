@@ -9,10 +9,12 @@ import (
 )
 
 var (
+	white  = color.New(color.FgWhite).FprintfFunc()
 	yellow = color.New(color.FgYellow).FprintfFunc()
 	green  = color.New(color.FgGreen).FprintfFunc()
 	blue   = color.New(color.FgBlue).FprintfFunc()
 	red    = color.New(color.FgRed).FprintfFunc()
+	cyan   = color.New(color.FgCyan).FprintfFunc()
 )
 
 // Result represents a single result
@@ -60,9 +62,13 @@ func (r Result) ResultToString() (string, error) {
 	}
 
 	if !r.NoStatus {
-		color := yellow
+		color := white
 		if r.StatusCode == 200 {
 			color = green
+		} else if r.StatusCode >= 300 && r.StatusCode < 400 {
+			color = cyan
+		} else if r.StatusCode >= 400 && r.StatusCode < 500 {
+			color = yellow
 		} else if r.StatusCode >= 500 && r.StatusCode < 600 {
 			color = red
 		}

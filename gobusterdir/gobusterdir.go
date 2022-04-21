@@ -181,6 +181,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var statusCode int
 	var size int64
 	var header http.Header
+	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
 		statusCode, size, header, body, err = d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})

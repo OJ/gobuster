@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/netip"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -17,7 +18,7 @@ import (
 
 // ErrWildcard is returned if a wildcard response is found
 type ErrWildcard struct {
-	wildcardIps libgobuster.Set[string]
+	wildcardIps libgobuster.Set[netip.Addr]
 }
 
 // Error is the implementation of the error interface
@@ -31,7 +32,7 @@ type GobusterDNS struct {
 	globalopts  *libgobuster.Options
 	options     *OptionsDNS
 	isWildcard  bool
-	wildcardIps libgobuster.Set[string]
+	wildcardIps libgobuster.Set[netip.Addr]
 }
 
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -65,7 +66,7 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	g := GobusterDNS{
 		options:     opts,
 		globalopts:  globalopts,
-		wildcardIps: libgobuster.NewSet[string](),
+		wildcardIps: libgobuster.NewSet[netip.Addr](),
 		resolver:    resolver,
 	}
 	return &g, nil
@@ -218,10 +219,10 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 	return strings.TrimSpace(buffer.String()), nil
 }
 
-func (d *GobusterDNS) dnsLookup(ctx context.Context, domain string) ([]string, error) {
+func (d *GobusterDNS) dnsLookup(ctx context.Context, domain string) ([]netip.Addr, error) {
 	ctx2, cancel := context.WithTimeout(ctx, d.options.Timeout)
 	defer cancel()
-	return d.resolver.LookupHost(ctx2, domain)
+	return d.resolver.LookupNetIP(ctx2, "ip", domain)
 }
 
 func (d *GobusterDNS) dnsLookupCname(ctx context.Context, domain string) (string, error) {

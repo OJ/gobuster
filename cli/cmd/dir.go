@@ -95,7 +95,8 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	plugin.StatusCodesBlacklistParsed = ret3
 
 	if plugin.StatusCodes != "" && plugin.StatusCodesBlacklist != "" {
-		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both set, please set only one")
+		return nil, nil, fmt.Errorf("status-codes (%q) and status-codes-blacklist (%q) are both set - please set only one. status-codes-blacklist is set by default so you might want to disable it by supplying an empty string.",
+			plugin.StatusCodes, plugin.StatusCodesBlacklist)
 	}
 
 	if plugin.StatusCodes == "" && plugin.StatusCodesBlacklist == "" {

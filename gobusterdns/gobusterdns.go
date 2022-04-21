@@ -17,7 +17,7 @@ import (
 
 // ErrWildcard is returned if a wildcard response is found
 type ErrWildcard struct {
-	wildcardIps libgobuster.StringSet
+	wildcardIps libgobuster.Set[string]
 }
 
 // Error is the implementation of the error interface
@@ -31,7 +31,7 @@ type GobusterDNS struct {
 	globalopts  *libgobuster.Options
 	options     *OptionsDNS
 	isWildcard  bool
-	wildcardIps libgobuster.StringSet
+	wildcardIps libgobuster.Set[string]
 }
 
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -65,7 +65,7 @@ func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*Gobuste
 	g := GobusterDNS{
 		options:     opts,
 		globalopts:  globalopts,
-		wildcardIps: libgobuster.NewStringSet(),
+		wildcardIps: libgobuster.NewSet[string](),
 		resolver:    resolver,
 	}
 	return &g, nil

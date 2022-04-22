@@ -187,7 +187,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if nerr, ok := err.(net.Error); ok && nerr.Timeout() && i != tries {
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
 				// put error in error chan so it's printed out and ignore it

@@ -40,14 +40,14 @@ func TestSetAddDouble(t *testing.T) {
 	x.Add("test")
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexpected string size. Should have 1 (dedup) Got %v", len(x.Set))
+		t.Fatalf("Unexpected string size. Should be 1 (unique) Got %v", len(x.Set))
 	}
 
 	y := NewSet[int]()
 	y.Add(1)
 	y.Add(1)
 	if len(y.Set) != 1 {
-		t.Fatalf("Unexpected int size. Should have 1 (depdup) Got %v", len(y.Set))
+		t.Fatalf("Unexpected int size. Should be 1 (unique) Got %v", len(y.Set))
 	}
 }
 
@@ -71,13 +71,13 @@ func TestSetAddRangeDouble(t *testing.T) {
 	x := NewSet[string]()
 	x.AddRange([]string{"string1", "string2", "string1", "string2"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexpected string size. Should have 2 (dedup) Got %v", len(x.Set))
+		t.Fatalf("Unexpected string size. Should be 2 (unique) Got %v", len(x.Set))
 	}
 
 	y := NewSet[int]()
 	y.AddRange([]int{1, 2, 1, 2})
 	if len(y.Set) != 2 {
-		t.Fatalf("Unexpected int size. Should have 2 (dedup) Got %v", len(y.Set))
+		t.Fatalf("Unexpected int size. Should be 2 (unique) Got %v", len(y.Set))
 	}
 }
 

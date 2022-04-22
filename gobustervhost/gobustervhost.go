@@ -142,7 +142,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
+	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
 	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {

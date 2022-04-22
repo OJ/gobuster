@@ -8,11 +8,11 @@ import (
 type OptionsDir struct {
 	libgobuster.HTTPOptions
 	Extensions                 string
-	ExtensionsParsed           libgobuster.StringSet
+	ExtensionsParsed           libgobuster.Set[string]
 	StatusCodes                string
-	StatusCodesParsed          libgobuster.IntSet
+	StatusCodesParsed          libgobuster.Set[int]
 	StatusCodesBlacklist       string
-	StatusCodesBlacklistParsed libgobuster.IntSet
+	StatusCodesBlacklistParsed libgobuster.Set[int]
 	UseSlash                   bool
 	HideLength                 bool
 	Expanded                   bool
@@ -24,8 +24,8 @@ type OptionsDir struct {
 // NewOptionsDir returns a new initialized OptionsDir
 func NewOptionsDir() *OptionsDir {
 	return &OptionsDir{
-		StatusCodesParsed:          libgobuster.NewIntSet(),
-		StatusCodesBlacklistParsed: libgobuster.NewIntSet(),
-		ExtensionsParsed:           libgobuster.NewStringSet(),
+		StatusCodesParsed:          libgobuster.NewSet[int](),
+		StatusCodesBlacklistParsed: libgobuster.NewSet[int](),
+		ExtensionsParsed:           libgobuster.NewSet[string](),
 	}
 }

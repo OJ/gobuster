@@ -1,4 +1,4 @@
-# Gobuster v3.1.0
+# Gobuster v3.2.0
 
 Gobuster is a tool used to brute-force:
 
@@ -9,28 +9,8 @@ Gobuster is a tool used to brute-force:
 
 ## Tags, Statuses, etc
 
-[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)] [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)]
+[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
-## Oh dear God.. WHY!?
-
-Because I wanted:
-
-1. ... something that didn't have a fat Java GUI (console FTW).
-1. ... to build something that just worked on the command line.
-1. ... something that did not do recursive brute force.
-1. ... something that allowed me to brute force folders and multiple extensions at once.
-1. ... something that compiled to native on multiple platforms.
-1. ... something that was faster than an interpreted script (such as Python).
-1. ... something that didn't require a runtime.
-1. ... use something that was good with concurrency (hence Go).
-1. ... to build something in Go that wasn't totally useless.
-
-## But it's shit! And your implementation sucks!
-
-Yes, you're probably correct. Feel free to:
-
-- Not use it.
-- Show me how to do it better.
 
 ## Love this tool? Back it!
 
@@ -40,13 +20,19 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
-## Changes in 3.1-dev
+# Changes
 
-- Use go 1.16
+## 3.2-dev
+
+- Use go 1.18
 - use contexts in the correct way
 - get rid of the wildcard flag (except in DNS mode)
+- color output
+- retry on timeout
+- google cloud bucket enumeration
+- fix nil reference errors
 
-## Changes in 3.1
+## 3.1
 
 - enumerate public AWS S3 buckets
 - fuzzing mode
@@ -54,118 +40,27 @@ All funds that are donated to this project will be donated to charity. A full lo
 - added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 - The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
 
-## Changes in 3.0
+## 3.0
 
 - New CLI options so modes are strictly separated (`-m` is now gone!)
 - Performance Optimizations and better connection handling
 - Ability to enumerate vhost names
 - Option to supply custom HTTP headers
 
+# License
+
+See the LICENSE file.
+
+# Manual
+
 ## Available Modes
 
 - dir - the classic directory brute-forcing mode
 - dns - DNS subdomain brute-forcing mode
 - s3 - Enumerate open S3 buckets and look for existence and bucket listings
+- gcs - Enumerate open google cloud buckets
 - vhost - virtual host brute-forcing mode (not the same as DNS!)
-
-## Built-in Help
-
-Help is built-in!
-
-- `gobuster help` - outputs the top-level help.
-- `gobuster help <mode>` - outputs the help specific to that mode.
-
-## `dns` Mode Help
-
-```text
-Usage:
-  gobuster dns [flags]
-
-Flags:
-  -d, --domain string      The target domain
-  -h, --help               help for dns
-  -r, --resolver string    Use custom DNS server (format server.com or server.com:port)
-  -c, --show-cname         Show CNAME records (cannot be used with '-i' option)
-  -i, --show-ips           Show IP addresses
-      --timeout duration   DNS resolver timeout (default 1s)
-      --wildcard           Force continued operation when wildcard found
-
-Global Flags:
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
-```
-
-## `dir` Mode Options
-
-```text
-Usage:
-  gobuster dir [flags]
-
-Flags:
-  -f, --add-slash                     Append / to each request
-  -c, --cookies string                Cookies to use for the requests
-  -e, --expanded                      Expanded mode, print full URLs
-  -x, --extensions string             File extension(s) to search for
-  -r, --follow-redirect               Follow redirects
-  -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                          help for dir
-  -l, --include-length                Include the length of the body in the output
-  -k, --no-tls-validation             Skip TLS certificate verification
-  -n, --no-status                     Don't print status codes
-  -P, --password string               Password for Basic Auth
-  -p, --proxy string                  Proxy to use for requests [http(s)://host:port]
-  -s, --status-codes string           Positive status codes (will be overwritten with status-codes-blacklist if set) (default "200,204,301,302,307,401,403")
-  -b, --status-codes-blacklist string Negative status codes (will override status-codes if set)
-      --timeout duration              HTTP Timeout (default 10s)
-  -u, --url string                    The target URL
-  -a, --useragent string              Set the User-Agent string (default "gobuster/3.1.0")
-  -U, --username string               Username for Basic Auth
-  -d, --discover-backup               Upon finding a file search for backup files
-      --wildcard                      Force continued operation when wildcard found
-
-Global Flags:
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
-```
-
-## `vhost` Mode Options
-
-```text
-Usage:
-  gobuster vhost [flags]
-
-Flags:
-  -c, --cookies string        Cookies to use for the requests
-  -r, --follow-redirect       Follow redirects
-  -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                  help for vhost
-  -k, --no-tls-validation     Skip TLS certificate verification
-  -P, --password string       Password for Basic Auth
-  -p, --proxy string          Proxy to use for requests [http(s)://host:port]
-      --timeout duration      HTTP Timeout (default 10s)
-  -u, --url string            The target URL
-  -a, --useragent string      Set the User-Agent string (default "gobuster/3.1.0")
-  -U, --username string       Username for Basic Auth
-
-Global Flags:
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
-```
+- fuzz - some basic fuzzing, replaces the `FUZZ` keyword
 
 ## Easy Installation
 
@@ -177,17 +72,17 @@ If you're stupid enough to trust binaries that I've put together, you can downlo
 
 ### Using `go install`
 
-If you have a [Go](https://golang.org/) environment ready to go (at least go 1.16), it's as easy as:
+If you have a [Go](https://golang.org/) environment ready to go (at least go 1.18), it's as easy as:
 
 ```bash
 go install github.com/OJ/gobuster/v3@latest
 ```
 
-PS: You need at least go 1.16.0 to compile gobuster.
+PS: You need at least go 1.18 to compile gobuster.
 
-## Building From Source
+### Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.16.0 to compile gobuster.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.18 to compile gobuster.
 
 ### Compiling
 
@@ -203,196 +98,59 @@ This will create a `gobuster` binary for you. If you want to install it in the `
 go install
 ```
 
-If you have all the dependencies already, you can make use of the build scripts:
+## Modes
 
-- `make` - builds for the current Go configuration (ie. runs `go build`).
-- `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` folder.
-- `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` folder.
-- `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` folder.
-- `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` folder.
-- `make clean` - clears out the `build` folder.
-- `make test` - runs the tests.
+Help is built-in!
 
-## Wordlists via STDIN
+- `gobuster help` - outputs the top-level help.
+- `gobuster help <mode>` - outputs the help specific to that mode.
 
-Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
+## `dns` Mode
 
-```bash
-hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
-```
-
-Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
-
-## Patterns
-
-You can supply pattern files that will be applied to every word from the wordlist.
-Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
-This feature is also handy in s3 mode to pre- or postfix certain patterns.
-
-**Caution:** Using a big pattern file can cause a lot of request as every pattern is applied to every word in the wordlist.
-
-### Example file
+### Options
 
 ```text
-{GOBUSTER}Partial
-{GOBUSTER}Service
-PRE{GOBUSTER}POST
-{GOBUSTER}-prod
-{GOBUSTER}-dev
+Uses DNS subdomain enumeration mode
+
+Usage:
+  gobuster dns [flags]
+
+Flags:
+  -d, --domain string      The target domain
+  -h, --help               help for dns
+  -r, --resolver string    Use custom DNS server (format server.com or server.com:port)
+  -c, --show-cname         Show CNAME records (cannot be used with '-i' option)
+  -i, --show-ips           Show IP addresses
+      --timeout duration   DNS resolver timeout (default 1s)
+      --wildcard           Force continued operation when wildcard found
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
 ```
 
-## Examples
+### Examples
 
-### `dir` Mode
 
-Command line might look like this:
-
-```bash
-gobuster dir -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
-```
-
-Default options looks like this:
-
-```bash
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
-
-===============================================================
-Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:49:43 Starting gobuster
-===============================================================
-/categories (Status: 301)
-/contact (Status: 301)
-/posts (Status: 301)
-/index (Status: 200)
-===============================================================
-2019/06/21 11:49:44 Finished
-===============================================================
-```
-
-Default options with status codes disabled looks like this:
-
-```bash
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
-
-===============================================================
-Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
-[+] No status    : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:50:18 Starting gobuster
-===============================================================
-/categories
-/contact
-/index
-/posts
-===============================================================
-2019/06/21 11:50:18 Finished
-===============================================================
-```
-
-Verbose output looks like this:
-
-```bash
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
-
-===============================================================
-Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
-[+] Verbose      : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:50:51 Starting gobuster
-===============================================================
-Missed: /alsodoesnotexist (Status: 404)
-Found: /index (Status: 200)
-Missed: /doesnotexist (Status: 404)
-Found: /categories (Status: 301)
-Found: /posts (Status: 301)
-Found: /contact (Status: 301)
-===============================================================
-2019/06/21 11:50:51 Finished
-===============================================================
-```
-
-Example showing content length:
-
-```bash
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
-
-===============================================================
-Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.1.0
-[+] Show length  : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:51:16 Starting gobuster
-===============================================================
-/categories (Status: 301) [Size: 178]
-/posts (Status: 301) [Size: 178]
-/contact (Status: 301) [Size: 178]
-/index (Status: 200) [Size: 51759]
-===============================================================
-2019/06/21 11:51:17 Finished
-===============================================================
-```
-
-Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
-
-```bash
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -q -n -e
-https://buffered.io/index
-https://buffered.io/contact
-https://buffered.io/posts
-https://buffered.io/categories
-```
-
-### `dns` Mode
-
-Command line might look like this:
-
-```bash
+```text
 gobuster dns -d mysite.com -t 50 -w common-names.txt
 ```
 
 Normal sample run goes like this:
 
-```bash
+```text
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -427,11 +185,11 @@ Found: blog.google.com
 
 Show IP sample run goes like this:
 
-```bash
+```text
 gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -466,11 +224,11 @@ Found: mail.google.com [172.217.25.37, 2404:6800:4006:802::2005]
 
 Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
 
-```bash
+```text
 gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -489,11 +247,11 @@ Found: cr.yp.to [131.193.32.108, 131.193.32.109]
 
 Wildcard DNS is also detected properly:
 
-```bash
+```text
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -512,11 +270,11 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 
 If the user wants to force processing of a domain that has wildcard entries, use `--wildcard`:
 
-```bash
+```text
 gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Mode         : dns
@@ -534,27 +292,251 @@ Found: test.127.0.0.1.xip.io
 ===============================================================
 ```
 
-### `vhost` Mode
+## `dir` Mode
 
-Command line might look like this:
+### Options
 
-```bash
+```text
+Uses directory/file enumeration mode
+
+Usage:
+  gobuster dir [flags]
+
+Flags:
+  -f, --add-slash                       Append / to each request
+  -c, --cookies string                  Cookies to use for the requests
+  -d, --discover-backup                 Also search for backup files by appending multiple backup extensions
+      --exclude-length ints             exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -e, --expanded                        Expanded mode, print full URLs
+  -x, --extensions string               File extension(s) to search for
+  -r, --follow-redirect                 Follow redirects
+  -H, --headers stringArray             Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                            help for dir
+      --hide-length                     Hide the length of the body in the output
+  -m, --method string                   Use the following HTTP method (default "GET")
+  -n, --no-status                       Don't print status codes
+  -k, --no-tls-validation               Skip TLS certificate verification
+  -P, --password string                 Password for Basic Auth
+      --proxy string                    Proxy to use for requests [http(s)://host:port]
+      --random-agent                    Use a random User-Agent string
+      --retry                           Should retry on request timeout
+      --retry-attempts int              Times to retry on request timeout (default 3)
+  -s, --status-codes string             Positive status codes (will be overwritten with status-codes-blacklist if set)
+  -b, --status-codes-blacklist string   Negative status codes (will override status-codes if set) (default "404")
+      --timeout duration                HTTP Timeout (default 10s)
+  -u, --url string                      The target URL
+  -a, --useragent string                Set the User-Agent string (default "gobuster/3.2.0")
+  -U, --username string                 Username for Basic Auth
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+```text
+gobuster dir -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
+```
+
+Default options looks like this:
+
+```text
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
+
+===============================================================
+Gobuster v3.2.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.2.0
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:49:43 Starting gobuster
+===============================================================
+/categories (Status: 301)
+/contact (Status: 301)
+/posts (Status: 301)
+/index (Status: 200)
+===============================================================
+2019/06/21 11:49:44 Finished
+===============================================================
+```
+
+Default options with status codes disabled looks like this:
+
+```text
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
+
+===============================================================
+Gobuster v3.2.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.2.0
+[+] No status    : true
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:50:18 Starting gobuster
+===============================================================
+/categories
+/contact
+/index
+/posts
+===============================================================
+2019/06/21 11:50:18 Finished
+===============================================================
+```
+
+Verbose output looks like this:
+
+```text
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
+
+===============================================================
+Gobuster v3.2.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.2.0
+[+] Verbose      : true
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:50:51 Starting gobuster
+===============================================================
+Missed: /alsodoesnotexist (Status: 404)
+Found: /index (Status: 200)
+Missed: /doesnotexist (Status: 404)
+Found: /categories (Status: 301)
+Found: /posts (Status: 301)
+Found: /contact (Status: 301)
+===============================================================
+2019/06/21 11:50:51 Finished
+===============================================================
+```
+
+Example showing content length:
+
+```text
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
+
+===============================================================
+Gobuster v3.2.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.2.0
+[+] Show length  : true
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:51:16 Starting gobuster
+===============================================================
+/categories (Status: 301) [Size: 178]
+/posts (Status: 301) [Size: 178]
+/contact (Status: 301) [Size: 178]
+/index (Status: 200) [Size: 51759]
+===============================================================
+2019/06/21 11:51:17 Finished
+===============================================================
+```
+
+Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
+
+```text
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -q -n -e
+https://buffered.io/index
+https://buffered.io/contact
+https://buffered.io/posts
+https://buffered.io/categories
+```
+
+## `vhost` Mode
+
+### Options
+
+```text
+Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter
+
+Usage:
+  gobuster vhost [flags]
+
+Flags:
+      --append-domain         Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.
+  -c, --cookies string        Cookies to use for the requests
+      --domain string         the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
+      --exclude-length ints   exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -r, --follow-redirect       Follow redirects
+  -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                  help for vhost
+  -m, --method string         Use the following HTTP method (default "GET")
+  -k, --no-tls-validation     Skip TLS certificate verification
+  -P, --password string       Password for Basic Auth
+      --proxy string          Proxy to use for requests [http(s)://host:port]
+      --random-agent          Use a random User-Agent string
+      --retry                 Should retry on request timeout
+      --retry-attempts int    Times to retry on request timeout (default 3)
+      --timeout duration      HTTP Timeout (default 10s)
+  -u, --url string            The target URL
+  -a, --useragent string      Set the User-Agent string (default "gobuster/3.2.0")
+  -U, --username string       Username for Basic Auth
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+
+```text
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 ```
 
 Normal sample run goes like this:
 
-```bash
+```text
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Url:          https://mysite.com
 [+] Threads:      10
 [+] Wordlist:     common-vhosts.txt
-[+] User Agent:   gobuster/3.1.0
+[+] User Agent:   gobuster/3.2.0
 [+] Timeout:      10s
 ===============================================================
 2019/06/21 08:36:00 Starting gobuster
@@ -567,20 +549,160 @@ Found: mail.mysite.com
 ===============================================================
 ```
 
-### `s3` Mode
+## `fuzz` Mode
 
-Command line might look like this:
+### Options
 
-```bash
+```text
+Uses fuzzing mode
+
+Usage:
+  gobuster fuzz [flags]
+
+Flags:
+  -c, --cookies string              Cookies to use for the requests
+      --exclude-length ints         exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+  -b, --excludestatuscodes string   Negative status codes (will override statuscodes if set)
+  -r, --follow-redirect             Follow redirects
+  -H, --headers stringArray         Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                        help for fuzz
+  -m, --method string               Use the following HTTP method (default "GET")
+  -k, --no-tls-validation           Skip TLS certificate verification
+  -P, --password string             Password for Basic Auth
+      --proxy string                Proxy to use for requests [http(s)://host:port]
+      --random-agent                Use a random User-Agent string
+      --retry                       Should retry on request timeout
+      --retry-attempts int          Times to retry on request timeout (default 3)
+      --timeout duration            HTTP Timeout (default 10s)
+  -u, --url string                  The target URL
+  -a, --useragent string            Set the User-Agent string (default "gobuster/3.2.0")
+  -U, --username string             Username for Basic Auth
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+```text
+gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
+```
+
+## `s3` Mode
+
+### Options
+
+```text
+Uses aws bucket enumeration mode
+
+Usage:
+  gobuster s3 [flags]
+
+Flags:
+  -h, --help                 help for s3
+  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
+  -k, --no-tls-validation    Skip TLS certificate verification
+      --proxy string         Proxy to use for requests [http(s)://host:port]
+      --random-agent         Use a random User-Agent string
+      --retry                Should retry on request timeout
+      --retry-attempts int   Times to retry on request timeout (default 3)
+      --timeout duration     HTTP Timeout (default 10s)
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+```text
 gobuster s3 -w bucket-names.txt
 ```
 
-### `fuzzing` Mode
+## `gcs` Mode
 
-Command line might look like this:
+### Options
+
+```text
+Uses gcs bucket enumeration mode
+
+Usage:
+  gobuster gcs [flags]
+
+Flags:
+  -h, --help                 help for gcs
+  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
+  -k, --no-tls-validation    Skip TLS certificate verification
+      --proxy string         Proxy to use for requests [http(s)://host:port]
+      --random-agent         Use a random User-Agent string
+      --retry                Should retry on request timeout
+      --retry-attempts int   Times to retry on request timeout (default 3)
+      --timeout duration     HTTP Timeout (default 10s)
+  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+```text
+gobuster gcs -w bucket-names.txt
+```
+
+## Wordlists via STDIN
+
+Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
 
 ```bash
-gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
+hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
+```
+
+Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
+## Patterns
+
+You can supply pattern files that will be applied to every word from the wordlist.
+Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
+This feature is also handy in s3 mode to pre- or postfix certain patterns.
+
+**Caution:** Using a big pattern file can cause a lot of request as every pattern is applied to every word in the wordlist.
+
+### Example file
+
+```text
+{GOBUSTER}Partial
+{GOBUSTER}Service
+PRE{GOBUSTER}POST
+{GOBUSTER}-prod
+{GOBUSTER}-dev
 ```
 
 #### Use case in combination with patterns
@@ -594,7 +716,7 @@ curl -s --output - https://raw.githubusercontent.com/eth0izzle/bucket-stream/mas
 
 - Run gobuster with the custom input. Be sure to turn verbose mode on to see the bucket details
 
-```bash
+```text
 gobuster s3 --wordlist my.custom.wordlist -p patterns.txt -v
 ```
 
@@ -603,12 +725,12 @@ Normal sample run goes like this:
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Timeout:                 10s
 [+] Maximum files to list:   5
 ===============================================================
@@ -632,12 +754,12 @@ Verbose and sample run
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -v
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Verbose:                 true
 [+] Timeout:                 10s
 [+] Maximum files to list:   5
@@ -662,12 +784,12 @@ Extended sample run
 ```text
 PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -e
 ===============================================================
-Gobuster v3.1.0
+Gobuster v3.2.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Threads:                 10
 [+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.1.0
+[+] User Agent:              gobuster/3.2.0
 [+] Timeout:                 10s
 [+] Expanded:                true
 [+] Maximum files to list:   5
@@ -686,11 +808,3 @@ http://localhost.s3.amazonaws.com/
 2019/08/12 21:48:38 Finished
 ===============================================================
 ```
-
-## License
-
-See the LICENSE file.
-
-## Thanks
-
-See the THANKS file for people who helped out.

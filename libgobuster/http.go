@@ -97,14 +97,14 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 
 // Request makes an http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
-func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (*int, int64, http.Header, []byte, error) {
+func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(ctx, fullURL, opts.Host, opts.Body)
 	if err != nil {
 		// ignore context canceled errors
 		if errors.Is(ctx.Err(), context.Canceled) {
-			return nil, 0, nil, nil, nil
+			return 0, 0, nil, nil, nil
 		}
-		return nil, 0, nil, nil, err
+		return 0, 0, nil, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -113,7 +113,7 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 	if opts.ReturnBody {
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, 0, nil, nil, fmt.Errorf("could not read body %w", err)
+			return 0, 0, nil, nil, fmt.Errorf("could not read body %w", err)
 		}
 		length = int64(len(body))
 	} else {
@@ -121,11 +121,11 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 		// absolutely needed so golang will reuse connections!
 		length, err = io.Copy(io.Discard, resp.Body)
 		if err != nil {
-			return nil, 0, nil, nil, err
+			return 0, 0, nil, nil, err
 		}
 	}
 
-	return &resp.StatusCode, length, resp.Header, body, nil
+	return resp.StatusCode, length, resp.Header, body, nil
 }
 
 func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string, data io.Reader) (*http.Response, error) {

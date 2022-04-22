@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"strings"
 	"text/tabwriter"
 
@@ -33,10 +35,9 @@ func (e *ErrWildcard) Error() string {
 
 // GobusterDir is the main type to implement the interface
 type GobusterDir struct {
-	options        *OptionsDir
-	globalopts     *libgobuster.Options
-	http           *libgobuster.HTTPClient
-	requestsPerRun *int // helper variable so we do not recalculate this over and over
+	options    *OptionsDir
+	globalopts *libgobuster.Options
+	http       *libgobuster.HTTPClient
 }
 
 // NewGobusterDir creates a new initialized GobusterDir
@@ -85,26 +86,6 @@ func (d *GobusterDir) Name() string {
 	return "directory enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (d *GobusterDir) RequestsPerRun() int {
-	if d.requestsPerRun != nil {
-		return *d.requestsPerRun
-	}
-
-	num := 1 + len(d.options.ExtensionsParsed.Set)
-	if d.options.DiscoverBackup {
-		// default word
-		num += len(backupExtensions)
-		num += len(backupDotExtensions)
-		// backups of filenames
-		num += len(d.options.ExtensionsParsed.Set) * len(backupExtensions)
-		num += len(d.options.ExtensionsParsed.Set) * len(backupDotExtensions)
-	}
-	d.requestsPerRun = &num
-
-	return *d.requestsPerRun
-}
-
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun(ctx context.Context) error {
 	// add trailing slash
@@ -134,12 +115,12 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 	}
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
+		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
-		if d.options.StatusCodesParsed.Contains(*wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
+		if d.options.StatusCodesParsed.Contains(wildcardResp) {
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
 		}
 	} else {
 		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -163,72 +144,90 @@ func getBackupFilenames(word string) []string {
 	return ret
 }
 
-// Run is the process implementation of gobusterdir
-func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
-	suffix := ""
-	if d.options.UseSlash {
-		suffix = "/"
-	}
-
+func (d *GobusterDir) AdditionalWords(word string) []string {
+	var words []string
 	// build list of urls to check
 	//   1: No extension
 	//   2: With extension
 	//   3: backupextension
-	urlsToCheck := make(map[string]string)
-	entity := fmt.Sprintf("%s%s", word, suffix)
-	dirURL := fmt.Sprintf("%s%s", d.options.URL, entity)
-	urlsToCheck[entity] = dirURL
 	if d.options.DiscoverBackup {
-		for _, u := range getBackupFilenames(word) {
-			url := fmt.Sprintf("%s%s", d.options.URL, u)
-			urlsToCheck[u] = url
-		}
+		words = append(words, getBackupFilenames(word)...)
 	}
 	for ext := range d.options.ExtensionsParsed.Set {
 		filename := fmt.Sprintf("%s.%s", word, ext)
-		url := fmt.Sprintf("%s%s", d.options.URL, filename)
-		urlsToCheck[filename] = url
+		words = append(words, filename)
 		if d.options.DiscoverBackup {
-			for _, u := range getBackupFilenames(filename) {
-				url2 := fmt.Sprintf("%s%s", d.options.URL, u)
-				urlsToCheck[u] = url2
-			}
+			words = append(words, getBackupFilenames(filename)...)
 		}
 	}
+	return words
+}
 
-	for entity, url := range urlsToCheck {
-		statusCode, size, header, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+// ProcessWord is the process implementation of gobusterdir
+func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+	suffix := ""
+	if d.options.UseSlash {
+		suffix = "/"
+	}
+	entity := fmt.Sprintf("%s%s", word, suffix)
+	url := fmt.Sprintf("%s%s", d.options.URL, entity)
+
+	tries := 1
+	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += d.options.RetryAttempts
+	}
+
+	var statusCode int
+	var size int64
+	var header http.Header
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
 		if err != nil {
-			return err
-		}
-		if statusCode != nil {
-			resultStatus := false
-
-			if d.options.StatusCodesBlacklistParsed.Length() > 0 {
-				if !d.options.StatusCodesBlacklistParsed.Contains(*statusCode) {
-					resultStatus = true
-				}
-			} else if d.options.StatusCodesParsed.Length() > 0 {
-				if d.options.StatusCodesParsed.Contains(*statusCode) {
-					resultStatus = true
-				}
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+				continue
+			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+				// put error in error chan so it's printed out and ignore it
+				// so gobuster will not quit
+				progress.ErrorChan <- err
+				continue
 			} else {
-				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+				return err
 			}
+		}
+		break
+	}
 
-			if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
-				resChannel <- Result{
-					URL:        d.options.URL,
-					Path:       entity,
-					Verbose:    d.globalopts.Verbose,
-					Expanded:   d.options.Expanded,
-					NoStatus:   d.options.NoStatus,
-					HideLength: d.options.HideLength,
-					Found:      resultStatus,
-					Header:     header,
-					StatusCode: *statusCode,
-					Size:       size,
-				}
+	if statusCode != 0 {
+		resultStatus := false
+
+		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
+				resultStatus = true
+			}
+		} else if d.options.StatusCodesParsed.Length() > 0 {
+			if d.options.StatusCodesParsed.Contains(statusCode) {
+				resultStatus = true
+			}
+		} else {
+			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		}
+
+		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+			progress.ResultChan <- Result{
+				URL:        d.options.URL,
+				Path:       entity,
+				Verbose:    d.globalopts.Verbose,
+				Expanded:   d.options.Expanded,
+				NoStatus:   d.options.NoStatus,
+				HideLength: d.options.HideLength,
+				Found:      resultStatus,
+				Header:     header,
+				StatusCode: statusCode,
+				Size:       size,
 			}
 		}
 	}

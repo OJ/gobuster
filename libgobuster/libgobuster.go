@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 // PATTERN is the pattern for wordlist replacements in pattern file
@@ -25,15 +27,11 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
-	Opts               *Options
-	RequestsExpected   int
-	RequestsIssued     int
-	RequestsCountMutex *sync.RWMutex
-	plugin             GobusterPlugin
-	resultChan         chan Result
-	errorChan          chan error
-	LogInfo            *log.Logger
-	LogError           *log.Logger
+	Opts     *Options
+	plugin   GobusterPlugin
+	LogInfo  *log.Logger
+	LogError *log.Logger
+	Progress *Progress
 }
 
 // NewGobuster returns a new Gobuster object
@@ -41,29 +39,11 @@ func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
-	g.RequestsCountMutex = new(sync.RWMutex)
-	g.resultChan = make(chan Result)
-	g.errorChan = make(chan error)
 	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
-	g.LogError = log.New(os.Stderr, "[ERROR] ", log.LstdFlags)
+	g.LogError = log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags)
+	g.Progress = NewProgress()
 
 	return &g, nil
-}
-
-// Results returns a channel of Results
-func (g *Gobuster) Results() <-chan Result {
-	return g.resultChan
-}
-
-// Errors returns a channel of errors
-func (g *Gobuster) Errors() <-chan error {
-	return g.errorChan
-}
-
-func (g *Gobuster) incrementRequests() {
-	g.RequestsCountMutex.Lock()
-	g.RequestsIssued += g.plugin.RequestsPerRun()
-	g.RequestsCountMutex.Unlock()
 }
 
 func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.WaitGroup) {
@@ -77,7 +57,7 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.
 			if !ok {
 				return
 			}
-			g.incrementRequests()
+			g.Progress.incrementRequests()
 
 			wordCleaned := strings.TrimSpace(word)
 			// Skip "comment" (starts with #), as well as empty lines
@@ -86,10 +66,10 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.
 			}
 
 			// Mode-specific processing
-			err := g.plugin.Run(ctx, wordCleaned, g.resultChan)
+			err := g.plugin.ProcessWord(ctx, wordCleaned, g.Progress)
 			if err != nil {
 				// do not exit and continue
-				g.errorChan <- err
+				g.Progress.ErrorChan <- err
 				continue
 			}
 
@@ -117,15 +97,17 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %w", err)
 	}
 
-	g.RequestsIssued = 0
-
 	// calcutate expected requests
-	g.RequestsExpected = lines
-	if g.Opts.PatternFile != "" {
-		g.RequestsExpected += lines * len(g.Opts.Patterns)
-	}
+	g.Progress.IncrementTotalRequests(lines)
 
-	g.RequestsExpected *= g.plugin.RequestsPerRun()
+	// call the function once with a dummy entry to receive the number
+	// of custom words per wordlist word
+	customWordsLen := len(g.plugin.AdditionalWords("dummy"))
+	if customWordsLen > 0 {
+		origExpected := g.Progress.RequestsExpected()
+		inc := origExpected * customWordsLen
+		g.Progress.IncrementTotalRequests(inc)
+	}
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
@@ -138,8 +120,8 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 // Run the busting of the website with the given
 // set of settings from the command line.
 func (g *Gobuster) Run(ctx context.Context) error {
-	defer close(g.resultChan)
-	defer close(g.errorChan)
+	defer close(g.Progress.ResultChan)
+	defer close(g.Progress.ErrorChan)
 
 	if err := g.plugin.PreRun(ctx); err != nil {
 		return err
@@ -173,6 +155,15 @@ Scan:
 			wordChan <- word
 			// now create perms
 			for _, w := range perms {
+				select {
+				// need to check here too otherwise wordChan will block
+				case <-ctx.Done():
+					break Scan
+				case wordChan <- w:
+				}
+			}
+
+			for _, w := range g.plugin.AdditionalWords(word) {
 				select {
 				// need to check here too otherwise wordChan will block
 				case <-ctx.Done():

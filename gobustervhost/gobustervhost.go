@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
 	"strings"
 	"text/tabwriter"
@@ -69,11 +71,6 @@ func (v *GobusterVhost) Name() string {
 	return "VHOST enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (v *GobusterVhost) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	// add trailing slash
@@ -108,8 +105,8 @@ func (v *GobusterVhost) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of gobusterdir
-func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
+// ProcessWord is the process implementation of gobusterdir
+func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
@@ -117,9 +114,30 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 		// wordlist needs to include full domains
 		subdomain = word
 	}
-	status, size, header, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
-	if err != nil {
-		return err
+
+	tries := 1
+	if v.options.RetryOnTimeout && v.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += v.options.RetryAttempts
+	}
+
+	var statusCode int
+	var size int64
+	var header http.Header
+	var body []byte
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+				continue
+			} else {
+				return err
+			}
+		}
+		break
 	}
 
 	// subdomain must not match default vhost and non existent vhost
@@ -130,15 +148,19 @@ func (v *GobusterVhost) Run(ctx context.Context, word string, resChannel chan<- 
 		if found {
 			resultStatus = true
 		}
-		resChannel <- Result{
+		progress.ResultChan <- Result{
 			Found:      resultStatus,
 			Vhost:      subdomain,
-			StatusCode: *status,
+			StatusCode: statusCode,
 			Size:       size,
 			Header:     header,
 		}
 	}
 	return nil
+}
+
+func (v *GobusterVhost) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

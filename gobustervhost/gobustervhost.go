@@ -18,12 +18,12 @@ import (
 
 // GobusterVhost is the main type to implement the interface
 type GobusterVhost struct {
-	options    *OptionsVhost
-	globalopts *libgobuster.Options
-	http       *libgobuster.HTTPClient
-	domain     string
-	baseline1  []byte
-	baseline2  []byte
+	options      *OptionsVhost
+	globalopts   *libgobuster.Options
+	http         *libgobuster.HTTPClient
+	domain       string
+	normalBody   []byte
+	abnormalBody []byte
 }
 
 // NewGobusterVhost creates a new initialized GobusterDir
@@ -88,20 +88,20 @@ func (v *GobusterVhost) PreRun(ctx context.Context) error {
 		v.domain = urlParsed.Host
 	}
 
-	// request default vhost for baseline1
-	_, _, _, tmp, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	// request default vhost for normalBody
+	_, _, _, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
-	v.baseline1 = tmp
+	v.normalBody = body
 
-	// request non existent vhost for baseline2
+	// request non existent vhost for abnormalBody
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, _, tmp, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
-	v.baseline2 = tmp
+	v.abnormalBody = body
 	return nil
 }
 
@@ -142,7 +142,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
-	found := body != nil && !bytes.Equal(body, v.baseline1) && !bytes.Equal(body, v.baseline2)
+	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
 	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {

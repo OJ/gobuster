@@ -133,6 +133,20 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 		return nil
 	}
 
+	if d.options.ExcludeLengthRange > 0 {
+		if len(d.options.ExcludeLength) == 0{
+			return fmt.Errorf("ExcludeLengthRange cannot be used without ExcludeLength set. Provide base content lengths to create a range from.")
+		}
+		for _, a := range d.options.ExcludeLength {
+			min := a - d.options.ExcludeLengthRange
+			max := a + d.options.ExcludeLengthRange
+			if (int(wildcardLength) >= min && int(wildcardLength) <= max){
+				// we are done and ignore the request as the length is excluded
+				return nil
+			}
+		}
+	}
+
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
 		if !d.options.StatusCodesBlacklistParsed.Contains(*wildcardResp) {
 			return &ErrWildcard{url: url, statusCode: *wildcardResp, length: wildcardLength}
@@ -216,7 +230,23 @@ func (d *GobusterDir) Run(ctx context.Context, word string, resChannel chan<- li
 				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 
-			if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+			lengthStatus := true
+			// check for the range, otherwise check the length itself
+			if d.options.ExcludeLengthRange > 0 {
+				for _, a := range d.options.ExcludeLength {
+					min := a - d.options.ExcludeLengthRange
+					max := a + d.options.ExcludeLengthRange
+					if (int(size) >= min && int(size) <= max){
+						lengthStatus = false
+						break
+					}
+				}
+			} else {
+				// check to see if the status code blacklist has already been acted on
+				lengthStatus = !helper.SliceContains(d.options.ExcludeLength, int(size))
+			}
+
+			if (resultStatus && lengthStatus) || d.globalopts.Verbose {
 				resChannel <- Result{
 					URL:        d.options.URL,
 					Path:       entity,
@@ -288,6 +318,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
 			return "", err
 		}
+	}
+
+	if o.ExcludeLengthRange > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length Range:\t%d\n", o.ExcludeLengthRange); err != nil {
+			return "", err
+	    }
 	}
 
 	if o.Proxy != "" {

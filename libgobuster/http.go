@@ -156,7 +156,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string,
 
 	// add custom headers
 	for _, h := range client.headers {
-		req.Header.Set(h.Name, h.Value)
+		req.Header[h.Name] = []string{h.Value}
 	}
 
 	if client.username != "" {

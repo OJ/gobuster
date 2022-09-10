@@ -177,17 +177,17 @@ If you're stupid enough to trust binaries that I've put together, you can downlo
 
 ### Using `go install`
 
-If you have a [Go](https://golang.org/) environment ready to go (at least go 1.16), it's as easy as:
+If you have a [Go](https://golang.org/) environment ready to go (at least go 1.17), it's as easy as:
 
 ```bash
 go install github.com/OJ/gobuster/v3@latest
 ```
 
-PS: You need at least go 1.16.0 to compile gobuster.
+PS: You need at least go 1.17.0 to compile gobuster.
 
 ## Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.16.0 to compile gobuster.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.17.0 to compile gobuster.
 
 ### Compiling
 

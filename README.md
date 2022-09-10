@@ -180,7 +180,7 @@ If you're stupid enough to trust binaries that I've put together, you can downlo
 If you have a [Go](https://golang.org/) environment ready to go (at least go 1.16), it's as easy as:
 
 ```bash
-go install github.com/OJ/gobuster/v3@latest
+go install github.com/OJ/gobuster@latest
 ```
 
 PS: You need at least go 1.16.0 to compile gobuster.

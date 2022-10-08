@@ -66,11 +66,6 @@ func (s *GobusterGCS) Name() string {
 	return "GCS bucket enumeration"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (s *GobusterGCS) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of GobusterS3
 func (s *GobusterGCS) PreRun(ctx context.Context) error {
 	return nil

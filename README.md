@@ -22,7 +22,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
-## 3.2-dev
+## 3.2
 
 - Use go 1.19
 - use contexts in the correct way

@@ -46,6 +46,8 @@ func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*Gob
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -132,6 +134,11 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
 			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+				continue
+			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+				// put error in error chan so it's printed out and ignore it
+				// so gobuster will not quit
+				progress.ErrorChan <- err
 				continue
 			} else {
 				return err

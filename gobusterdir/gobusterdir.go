@@ -60,6 +60,8 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

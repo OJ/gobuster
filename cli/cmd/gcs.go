@@ -46,6 +46,8 @@ func parseGCSOptions() (*libgobuster.Options, *gobustergcs.OptionsGCS, error) {
 	pluginopts.Proxy = httpOpts.Proxy
 	pluginopts.Timeout = httpOpts.Timeout
 	pluginopts.NoTLSValidation = httpOpts.NoTLSValidation
+	pluginopts.RetryOnTimeout = httpOpts.RetryOnTimeout
+	pluginopts.RetryAttempts = httpOpts.RetryAttempts
 
 	pluginopts.MaxFilesToList, err = cmdGCS.Flags().GetInt("maxfiles")
 	if err != nil {

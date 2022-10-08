@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -42,6 +43,8 @@ func NewGobusterGCS(globalopts *libgobuster.Options, opts *OptionsGCS) (*Gobuste
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -79,18 +82,42 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 	}
 
 	bucketURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o?maxResults=%d", word, s.options.MaxFilesToList)
-	status, _, _, body, err := s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
-	if err != nil {
-		return err
+
+	tries := 1
+	if s.options.RetryOnTimeout && s.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += s.options.RetryAttempts
 	}
 
-	if status == 0 || body == nil {
+	var statusCode int
+	var body []byte
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+				continue
+			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+				// put error in error chan so it's printed out and ignore it
+				// so gobuster will not quit
+				progress.ErrorChan <- err
+				continue
+			} else {
+				return err
+			}
+		}
+		break
+	}
+
+	if statusCode == 0 || body == nil {
 		return nil
 	}
 
 	// looks like 401, 403, and 404 are the only negative status codes
 	found := false
-	switch status {
+	switch statusCode {
 	case http.StatusUnauthorized,
 		http.StatusForbidden,
 		http.StatusNotFound:

@@ -98,6 +98,11 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			// otherwise the timeout error is raised
 			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
 				continue
+			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+				// put error in error chan so it's printed out and ignore it
+				// so gobuster will not quit
+				progress.ErrorChan <- err
+				continue
 			} else {
 				return err
 			}

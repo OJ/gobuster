@@ -2,7 +2,12 @@ package gobusters3
 
 import (
 	"bytes"
-	"fmt"
+
+	"github.com/fatih/color"
+)
+
+var (
+	green = color.New(color.FgGreen).FprintfFunc()
 )
 
 // Result represents a single result
@@ -16,19 +21,14 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	if _, err := fmt.Fprintf(buf, "http://%s.s3.amazonaws.com/", r.BucketName); err != nil {
-		return "", err
-	}
+	c := green
+
+	c(buf, "http://%s.s3.amazonaws.com/", r.BucketName)
 
 	if r.Status != "" {
-		if _, err := fmt.Fprintf(buf, " [%s]", r.Status); err != nil {
-			return "", err
-		}
+		c(buf, " [%s]", r.Status)
 	}
-
-	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
-		return "", err
-	}
+	c(buf, "\n")
 
 	str := buf.String()
 	return str, nil

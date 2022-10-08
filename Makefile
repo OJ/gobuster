@@ -33,3 +33,9 @@ lint:
 lint-update:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin
 	$$(go env GOPATH)/bin/golangci-lint --version
+
+.PHONY: tag
+tag:
+	@[ "${TAG}" ] && echo "Tagging a new version ${TAG}" || ( echo "TAG is not set"; exit 1 )
+	git tag -a "${TAG}" -m "${TAG}"
+	git push origin "${TAG}"

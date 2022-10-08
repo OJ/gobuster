@@ -9,6 +9,7 @@ import (
 	"os/signal"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -136,6 +137,14 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		return nil, fmt.Errorf("invalid value for no-error: %w", err)
 	}
 
+	noColor, err := rootCmd.Flags().GetBool("no-color")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for no-color: %w", err)
+	}
+	if noColor {
+		color.NoColor = true
+	}
+
 	return globalopts, nil
 }
 
@@ -160,4 +169,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("no-progress", "z", false, "Don't display progress")
 	rootCmd.PersistentFlags().Bool("no-error", false, "Don't display errors")
 	rootCmd.PersistentFlags().StringP("pattern", "p", "", "File containing replacement patterns")
+	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"text/tabwriter"
 
@@ -50,6 +51,8 @@ func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*Gobus
 		Timeout:         opts.Timeout,
 		UserAgent:       opts.UserAgent,
 		NoTLSValidation: opts.NoTLSValidation,
+		RetryOnTimeout:  opts.RetryOnTimeout,
+		RetryAttempts:   opts.RetryAttempts,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -75,24 +78,44 @@ func (d *GobusterFuzz) Name() string {
 	return "fuzzing"
 }
 
-// RequestsPerRun returns the number of requests this plugin makes per single wordlist item
-func (d *GobusterFuzz) RequestsPerRun() int {
-	return 1
-}
-
 // PreRun is the pre run implementation of gobusterfuzz
 func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 	return nil
 }
 
-// Run is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- libgobuster.Result) error {
-	workingURL := strings.ReplaceAll(d.options.URL, "FUZZ", word)
-	statusCode, size, _, _, err := d.http.Request(ctx, workingURL, libgobuster.RequestOptions{})
-	if err != nil {
-		return err
+// ProcessWord is the process implementation of gobusterfuzz
+func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+	url := strings.ReplaceAll(d.options.URL, "FUZZ", word)
+
+	tries := 1
+	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
+		// add it so it will be the overall max requests
+		tries += d.options.RetryAttempts
 	}
-	if statusCode != nil {
+
+	var statusCode int
+	var size int64
+	for i := 1; i <= tries; i++ {
+		var err error
+		statusCode, size, _, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		if err != nil {
+			// check if it's a timeout and if we should try again and try again
+			// otherwise the timeout error is raised
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+				continue
+			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+				// put error in error chan so it's printed out and ignore it
+				// so gobuster will not quit
+				progress.ErrorChan <- err
+				continue
+			} else {
+				return err
+			}
+		}
+		break
+	}
+
+	if statusCode != 0 {
 		resultStatus := true
 
 		if helper.SliceContains(d.options.ExcludeLength, int(size)) {
@@ -100,22 +123,26 @@ func (d *GobusterFuzz) Run(ctx context.Context, word string, resChannel chan<- l
 		}
 
 		if d.options.ExcludedStatusCodesParsed.Length() > 0 {
-			if d.options.ExcludedStatusCodesParsed.Contains(*statusCode) {
+			if d.options.ExcludedStatusCodesParsed.Contains(statusCode) {
 				resultStatus = false
 			}
 		}
 
 		if resultStatus || d.globalopts.Verbose {
-			resChannel <- Result{
+			progress.ResultChan <- Result{
 				Verbose:    d.globalopts.Verbose,
 				Found:      resultStatus,
-				Path:       workingURL,
-				StatusCode: *statusCode,
+				Path:       url,
+				StatusCode: statusCode,
 				Size:       size,
 			}
 		}
 	}
 	return nil
+}
+
+func (d *GobusterFuzz) AdditionalWords(word string) []string {
+	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config

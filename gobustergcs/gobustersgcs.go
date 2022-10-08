@@ -1,10 +1,10 @@
-package gobusters3
+package gobustergcs
 
 import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/xml"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,16 +15,16 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
-// GobusterS3 is the main type to implement the interface
-type GobusterS3 struct {
-	options     *OptionsS3
+// GobusterGCS is the main type to implement the interface
+type GobusterGCS struct {
+	options     *OptionsGCS
 	globalopts  *libgobuster.Options
 	http        *libgobuster.HTTPClient
 	bucketRegex *regexp.Regexp
 }
 
-// NewGobusterS3 creates a new initialized GobusterS3
-func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
+// NewGobusterGCS creates a new initialized GobusterGCS
+func NewGobusterGCS(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -33,7 +33,7 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		return nil, fmt.Errorf("please provide valid plugin options")
 	}
 
-	g := GobusterS3{
+	g := GobusterGCS{
 		options:    opts,
 		globalopts: globalopts,
 	}
@@ -58,29 +58,30 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		return nil, err
 	}
 	g.http = h
-	g.bucketRegex = regexp.MustCompile(`^[a-z0-9\-.]{3,63}$`)
+	// https://cloud.google.com/storage/docs/naming-buckets
+	g.bucketRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\-_.]{1,61}[a-z0-9](\.[a-z0-9][a-z0-9\-_.]{1,61}[a-z0-9])*$`)
 
 	return &g, nil
 }
 
 // Name should return the name of the plugin
-func (s *GobusterS3) Name() string {
-	return "S3 bucket enumeration"
+func (s *GobusterGCS) Name() string {
+	return "GCS bucket enumeration"
 }
 
 // PreRun is the pre run implementation of GobusterS3
-func (s *GobusterS3) PreRun(ctx context.Context) error {
+func (s *GobusterGCS) PreRun(ctx context.Context) error {
 	return nil
 }
 
 // ProcessWord is the process implementation of GobusterS3
-func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
 		return nil
 	}
 
-	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
+	bucketURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o?maxResults=%d", word, s.options.MaxFilesToList)
 
 	tries := 1
 	if s.options.RetryOnTimeout && s.options.RetryAttempts > 0 {
@@ -114,16 +115,16 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		return nil
 	}
 
-	// looks like 404 and 400 are the only negative status codes
+	// looks like 401, 403, and 404 are the only negative status codes
 	found := false
 	switch statusCode {
-	case http.StatusBadRequest:
-	case http.StatusNotFound:
+	case http.StatusUnauthorized,
+		http.StatusForbidden,
+		http.StatusNotFound:
 		found = false
 	case http.StatusOK:
 		// listing enabled
 		found = true
-		// parse xml
 	default:
 		// default to found as we use negative status codes
 		found = true
@@ -138,24 +139,32 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	extraStr := ""
 	if s.globalopts.Verbose {
 		// get status
-		if bytes.Contains(body, []byte("<Error>")) {
-			awsError := AWSError{}
-			err := xml.Unmarshal(body, &awsError)
+		var result map[string]interface{}
+		err := json.Unmarshal(body, &result)
+
+		if err != nil {
+			return fmt.Errorf("could not parse response json: %w", err)
+		}
+
+		if _, exist := result["error"]; exist {
+			// https://cloud.google.com/storage/docs/json_api/v1/status-codes
+			gcsError := GCSError{}
+			err := json.Unmarshal(body, &gcsError)
 			if err != nil {
-				return fmt.Errorf("could not parse error xml: %w", err)
+				return fmt.Errorf("could not parse error json: %w", err)
 			}
-			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
-			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
-		} else if bytes.Contains(body, []byte("<ListBucketResult ")) {
+			extraStr = fmt.Sprintf("Error: %s (%d)", gcsError.Error.Message, gcsError.Error.Code)
+		} else if v, exist := result["kind"]; exist && v == "storage#objects" {
+			// https://cloud.google.com/storage/docs/json_api/v1/status-codes
 			// bucket listing enabled
-			awsListing := AWSListing{}
-			err := xml.Unmarshal(body, &awsListing)
+			gcsListing := GCSListing{}
+			err := json.Unmarshal(body, &gcsListing)
 			if err != nil {
-				return fmt.Errorf("could not parse result xml: %w", err)
+				return fmt.Errorf("could not parse result json: %w", err)
 			}
 			extraStr = "Bucket Listing enabled: "
-			for _, x := range awsListing.Contents {
-				extraStr += fmt.Sprintf("%s (%db), ", x.Key, x.Size)
+			for _, x := range gcsListing.Items {
+				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size)
 			}
 			extraStr = strings.TrimRight(extraStr, ", ")
 		}
@@ -170,12 +179,12 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	return nil
 }
 
-func (d *GobusterS3) AdditionalWords(word string) []string {
+func (s *GobusterGCS) AdditionalWords(word string) []string {
 	return []string{}
 }
 
 // GetConfigString returns the string representation of the current config
-func (s *GobusterS3) GetConfigString() (string, error) {
+func (s *GobusterGCS) GetConfigString() (string, error) {
 	var buffer bytes.Buffer
 	bw := bufio.NewWriter(&buffer)
 	tw := tabwriter.NewWriter(bw, 0, 5, 3, ' ', 0)
@@ -243,16 +252,13 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 }
 
 // https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
-func (s *GobusterS3) isValidBucketName(bucketName string) bool {
-	if !s.bucketRegex.MatchString(bucketName) {
+func (s *GobusterGCS) isValidBucketName(bucketName string) bool {
+	if len(bucketName) > 222 || !s.bucketRegex.MatchString(bucketName) {
 		return false
 	}
-	if strings.HasSuffix(bucketName, "-") ||
-		strings.HasPrefix(bucketName, ".") ||
-		strings.HasPrefix(bucketName, "-") ||
-		strings.Contains(bucketName, "..") ||
-		strings.Contains(bucketName, ".-") ||
-		strings.Contains(bucketName, "-.") {
+	if strings.HasPrefix(bucketName, "-") || strings.HasSuffix(bucketName, "-") ||
+		strings.HasPrefix(bucketName, "_") || strings.HasSuffix(bucketName, "_") ||
+		strings.HasPrefix(bucketName, ".") || strings.HasSuffix(bucketName, ".") {
 		return false
 	}
 	return true

@@ -9,12 +9,13 @@ import (
 )
 
 // ParseExtensions parses the extensions provided as a comma separated list
-func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
+func ParseExtensions(extensions string) (libgobuster.Set[string], error) {
+	ret := libgobuster.NewSet[string]()
+
 	if extensions == "" {
-		return libgobuster.StringSet{}, nil
+		return ret, nil
 	}
 
-	ret := libgobuster.NewStringSet()
 	for _, e := range strings.Split(extensions, ",") {
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
@@ -24,17 +25,18 @@ func ParseExtensions(extensions string) (libgobuster.StringSet, error) {
 }
 
 // ParseCommaSeparatedInt parses the status codes provided as a comma separated list
-func ParseCommaSeparatedInt(inputString string) (libgobuster.IntSet, error) {
+func ParseCommaSeparatedInt(inputString string) (libgobuster.Set[int], error) {
+	ret := libgobuster.NewSet[int]()
+
 	if inputString == "" {
-		return libgobuster.IntSet{}, nil
+		return ret, nil
 	}
 
-	ret := libgobuster.NewIntSet()
 	for _, c := range strings.Split(inputString, ",") {
 		c = strings.TrimSpace(c)
 		i, err := strconv.Atoi(c)
 		if err != nil {
-			return libgobuster.IntSet{}, fmt.Errorf("invalid string given: %s", c)
+			return libgobuster.NewSet[int](), fmt.Errorf("invalid string given: %s", c)
 		}
 		ret.Add(i)
 	}

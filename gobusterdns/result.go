@@ -2,8 +2,15 @@ package gobusterdns
 
 import (
 	"bytes"
-	"fmt"
+	"net/netip"
 	"strings"
+
+	"github.com/fatih/color"
+)
+
+var (
+	yellow = color.New(color.FgYellow).FprintfFunc()
+	green  = color.New(color.FgGreen).FprintfFunc()
 )
 
 // Result represents a single result
@@ -12,7 +19,7 @@ type Result struct {
 	ShowCNAME bool
 	Found     bool
 	Subdomain string
-	IPs       []string
+	IPs       []netip.Addr
 	CNAME     string
 }
 
@@ -20,28 +27,25 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
+	c := green
+
 	if r.Found {
-		if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-			return "", err
-		}
+		c(buf, "Found: ")
 	} else {
-		if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-			return "", err
-		}
+		c = yellow
+		c(buf, "Missed: ")
 	}
 
 	if r.ShowIPs && r.Found {
-		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Subdomain, strings.Join(r.IPs, ",")); err != nil {
-			return "", err
+		ips := make([]string, len(r.IPs))
+		for i := range r.IPs {
+			ips[i] = r.IPs[i].String()
 		}
+		c(buf, "%s [%s]\n", r.Subdomain, strings.Join(ips, ","))
 	} else if r.ShowCNAME && r.Found && r.CNAME != "" {
-		if _, err := fmt.Fprintf(buf, "%s [%s]\n", r.Subdomain, r.CNAME); err != nil {
-			return "", err
-		}
+		c(buf, "%s [%s]\n", r.Subdomain, r.CNAME)
 	} else {
-		if _, err := fmt.Fprintf(buf, "%s\n", r.Subdomain); err != nil {
-			return "", err
-		}
+		c(buf, "%s\n", r.Subdomain)
 	}
 
 	s := buf.String()

@@ -20,6 +20,8 @@ func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
+	cmd.Flags().BoolP("retry", "", false, "Should retry on request timeout")
+	cmd.Flags().IntP("retry-attempts", "", 3, "Times to retry on request timeout")
 }
 
 func addCommonHTTPOptions(cmd *cobra.Command) error {
@@ -69,6 +71,16 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 		return options, fmt.Errorf("invalid value for timeout: %w", err)
 	}
 
+	options.RetryOnTimeout, err = cmd.Flags().GetBool("retry")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for retry: %w", err)
+	}
+
+	options.RetryAttempts, err = cmd.Flags().GetInt("retry-attempts")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for retry-attempts: %w", err)
+	}
+
 	options.NoTLSValidation, err = cmd.Flags().GetBool("no-tls-validation")
 	if err != nil {
 		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
@@ -88,6 +100,8 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.Timeout = basic.Timeout
 	options.UserAgent = basic.UserAgent
 	options.NoTLSValidation = basic.NoTLSValidation
+	options.RetryOnTimeout = basic.RetryOnTimeout
+	options.RetryAttempts = basic.RetryAttempts
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {

@@ -1,7 +1,7 @@
 // cSpell Settings
 {
-    // Version of the setting file.  Always 0.1
-    "version": "0.1",
+    // Version of the setting file.  Always 0.2
+    "version": "0.2",
     // language - current active spelling language
     "language": "en",
     // words - list of words to be always considered correct
@@ -13,6 +13,7 @@
         "gobusterdns",
         "gobusterfuzz",
         "gobustervhost",
+        "gobustergcs",
         "vhost",
         "vhosts",
         "cname",
@@ -28,7 +29,10 @@
         "unconvert",
         "unparam",
         "prealloc",
-        "gochecknoglobals"
+        "gochecknoglobals",
+        "gochecknoinits",
+        "fatih",
+        "netip"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

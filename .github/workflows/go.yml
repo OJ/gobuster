@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.17", "1.18", "1.19"]
+        go: ["1.18", "1.19"]
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v2
@@ -28,8 +28,11 @@ jobs:
         run: |
           go get -v -t -d ./...
 
-      - name: Build
-        run: go build -v .
+      - name: Build linux
+        run: make linux
+
+      - name: Build windows
+        run: make windows
 
       - name: Test
         run: make test

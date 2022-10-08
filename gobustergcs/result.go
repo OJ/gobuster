@@ -1,4 +1,4 @@
-package gobusters3
+package gobustergcs
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ func (r Result) ResultToString() (string, error) {
 
 	c := green
 
-	c(buf, "http://%s.s3.amazonaws.com/", r.BucketName)
+	c(buf, "https://storage.googleapis.com/storage/v1/b/%s/o", r.BucketName)
 
 	if r.Status != "" {
 		c(buf, " [%s]", r.Status)

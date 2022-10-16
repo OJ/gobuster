@@ -78,6 +78,11 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
+	plugin.RequestBody, err = cmdFuzz.Flags().GetString("body")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for body: %w", err)
+	}
+
 	return globalopts, plugin, nil
 }
 
@@ -94,6 +99,7 @@ func init() {
 	}
 	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Negative status codes (will override statuscodes if set)")
 	cmdFuzz.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
+	cmdFuzz.Flags().StringP("body", "B", "", "Request body")
 
 	cmdFuzz.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

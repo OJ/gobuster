@@ -86,6 +86,9 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 // ProcessWord is the process implementation of gobusterfuzz
 func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	url := strings.ReplaceAll(d.options.URL, "FUZZ", word)
+	data := strings.ReplaceAll(d.options.RequestBody, "FUZZ", word)
+
+	buffer := strings.NewReader(data)
 
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
@@ -97,7 +100,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	var size int64
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, _, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, _, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{Body: buffer})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised

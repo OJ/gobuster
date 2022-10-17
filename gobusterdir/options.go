@@ -9,6 +9,7 @@ type OptionsDir struct {
 	libgobuster.HTTPOptions
 	Extensions                 string
 	ExtensionsParsed           libgobuster.Set[string]
+	ExtensionsFile             string
 	StatusCodes                string
 	StatusCodesParsed          libgobuster.Set[int]
 	StatusCodesBlacklist       string

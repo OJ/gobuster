@@ -66,11 +66,25 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
+	
 	ret, err := helper.ParseExtensions(plugin.Extensions)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
 	plugin.ExtensionsParsed = ret
+
+	plugin.ExtensionsFile, err = cmdDir.Flags().GetString("extensions-file")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for extensions file: %w", err)
+	}
+	
+	if plugin.ExtensionsFile != "" {
+		extensions, err := helper.ParseExtensionsFile(plugin.ExtensionsFile)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid value for extensions file: %w", err)
+		}
+		plugin.ExtensionsParsed.AddRange(extensions)
+	}
 
 	// parse normal status codes
 	plugin.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
@@ -150,6 +164,7 @@ func init() {
 	cmdDir.Flags().StringP("status-codes", "s", "", "Positive status codes (will be overwritten with status-codes-blacklist if set)")
 	cmdDir.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
+	cmdDir.Flags().StringP("extensions-file", "X", "", "Read file extension(s) to search from the file")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")

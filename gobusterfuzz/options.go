@@ -10,6 +10,7 @@ type OptionsFuzz struct {
 	ExcludedStatusCodes       string
 	ExcludedStatusCodesParsed libgobuster.Set[int]
 	ExcludeLength             []int
+	RequestBody               string        
 }
 
 // NewOptionsFuzz returns a new initialized OptionsFuzz

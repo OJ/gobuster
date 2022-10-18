@@ -30,19 +30,19 @@ func ParseExtensionsFile(file string) ([]string, error) {
 	var ret []string
 
 	stream, err := os.Open(file)
-    if err != nil {
-        return ret, err
-    }
-    defer stream.Close()
+	if err != nil {
+		return ret, err
+	}
+	defer stream.Close()
 
-    scanner := bufio.NewScanner(stream)
-    for scanner.Scan() {
+	scanner := bufio.NewScanner(stream)
+	for scanner.Scan() {
 		e := scanner.Text()
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
 		ret = append(ret, (strings.TrimPrefix(e, ".")))
-    }
-    return ret, nil
+	}
+	return ret, nil
 }
 
 // ParseCommaSeparatedInt parses the status codes provided as a comma separated list

@@ -321,8 +321,14 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.Extensions != "" {
+	if o.Extensions != "" || o.ExtensionsFile != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Extensions:\t%s\n", o.ExtensionsParsed.Stringify()); err != nil {
+			return "", err
+		}
+	}
+
+	if o.ExtensionsFile != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Extensions file:\t%s\n", o.ExtensionsFile); err != nil {
 			return "", err
 		}
 	}

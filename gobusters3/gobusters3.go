@@ -45,6 +45,7 @@ func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS
 		NoTLSValidation: opts.NoTLSValidation,
 		RetryOnTimeout:  opts.RetryOnTimeout,
 		RetryAttempts:   opts.RetryAttempts,
+		TLSCertificate:  opts.TLSCertificate,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

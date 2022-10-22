@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"crypto/tls"
+	"encoding/pem"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,6 +14,7 @@ import (
 	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/term"
 )
 
@@ -22,6 +26,11 @@ func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 	cmd.Flags().BoolP("retry", "", false, "Should retry on request timeout")
 	cmd.Flags().IntP("retry-attempts", "", 3, "Times to retry on request timeout")
+	// client certificates, either pem or p12
+	cmd.Flags().StringP("client-cert-pem", "", "", "public key in PEM format for optional TLS client certificates")
+	cmd.Flags().StringP("client-cert-pem-key", "", "", "private key in PEM format for optional TLS client certificates (this key needs to have no password)")
+	cmd.Flags().StringP("client-cert-p12", "", "", "a p12 file to use for options TLS client certificates")
+	cmd.Flags().StringP("client-cert-p12-password", "", "", "the password to the p12 file")
 }
 
 func addCommonHTTPOptions(cmd *cobra.Command) error {
@@ -85,6 +94,54 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	if err != nil {
 		return options, fmt.Errorf("invalid value for no-tls-validation: %w", err)
 	}
+
+	pemFile, err := cmd.Flags().GetString("client-cert-pem")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for client-cert-pem: %w", err)
+	}
+	pemKeyFile, err := cmd.Flags().GetString("client-cert-pem-key")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for client-cert-pem-key: %w", err)
+	}
+	p12File, err := cmd.Flags().GetString("client-cert-p12")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for client-cert-p12: %w", err)
+	}
+	p12Pass, err := cmd.Flags().GetString("client-cert-p12-password")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for client-cert-p12-password: %w", err)
+	}
+
+	if pemFile != "" && p12File != "" {
+		return options, fmt.Errorf("please supply either a pem or a p12, not both")
+	}
+
+	if pemFile != "" {
+		cert, err := tls.LoadX509KeyPair(pemFile, pemKeyFile)
+		if err != nil {
+			return options, fmt.Errorf("could not load supplied pem key: %w", err)
+		}
+		options.TLSCertificate = &cert
+	} else if p12File != "" {
+		p12Content, err := os.ReadFile(p12File)
+		if err != nil {
+			return options, fmt.Errorf("could not read p12 %s: %w", p12File, err)
+		}
+		blocks, err := pkcs12.ToPEM(p12Content, p12Pass)
+		if err != nil {
+			return options, fmt.Errorf("could not load P12: %w", err)
+		}
+		var pemData []byte
+		for _, b := range blocks {
+			pemData = append(pemData, pem.EncodeToMemory(b)...)
+		}
+		cert, err := tls.X509KeyPair(pemData, pemData)
+		if err != nil {
+			return options, fmt.Errorf("could not load certificate from P12: %w", err)
+		}
+		options.TLSCertificate = &cert
+	}
+
 	return options, nil
 }
 
@@ -102,6 +159,7 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 	options.NoTLSValidation = basic.NoTLSValidation
 	options.RetryOnTimeout = basic.RetryOnTimeout
 	options.RetryAttempts = basic.RetryAttempts
+	options.TLSCertificate = basic.TLSCertificate
 
 	options.URL, err = cmd.Flags().GetString("url")
 	if err != nil {

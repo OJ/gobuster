@@ -64,6 +64,13 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 		redirectFunc = nil
 	}
 
+	tlsConfig := tls.Config{
+		InsecureSkipVerify: opt.NoTLSValidation,
+	}
+	if opt.TLSCertificate != nil {
+		tlsConfig.Certificates = []tls.Certificate{*opt.TLSCertificate}
+	}
+
 	client.client = &http.Client{
 		Timeout:       opt.Timeout,
 		CheckRedirect: redirectFunc,
@@ -71,9 +78,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 			Proxy:               proxyURLFunc,
 			MaxIdleConns:        100,
 			MaxIdleConnsPerHost: 100,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: opt.NoTLSValidation,
-			},
+			TLSClientConfig:     &tlsConfig,
 		}}
 	client.username = opt.Username
 	client.password = opt.Password

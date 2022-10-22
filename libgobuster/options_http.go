@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"crypto/tls"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type BasicHTTPOptions struct {
 	Timeout         time.Duration
 	RetryOnTimeout  bool
 	RetryAttempts   int
+	TLSCertificate  *tls.Certificate
 }
 
 // HTTPOptions is the struct to pass in all http options to Gobuster

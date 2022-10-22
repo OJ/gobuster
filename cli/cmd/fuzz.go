@@ -42,48 +42,49 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 		return nil, nil, err
 	}
 
-	plugin := gobusterfuzz.NewOptionsFuzz()
+	pluginOpts := gobusterfuzz.NewOptionsFuzz()
 
 	httpOpts, err := parseCommonHTTPOptions(cmdFuzz)
 	if err != nil {
 		return nil, nil, err
 	}
-	plugin.Password = httpOpts.Password
-	plugin.URL = httpOpts.URL
-	plugin.UserAgent = httpOpts.UserAgent
-	plugin.Username = httpOpts.Username
-	plugin.Proxy = httpOpts.Proxy
-	plugin.Cookies = httpOpts.Cookies
-	plugin.Timeout = httpOpts.Timeout
-	plugin.FollowRedirect = httpOpts.FollowRedirect
-	plugin.NoTLSValidation = httpOpts.NoTLSValidation
-	plugin.Headers = httpOpts.Headers
-	plugin.Method = httpOpts.Method
-	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
-	plugin.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.Password = httpOpts.Password
+	pluginOpts.URL = httpOpts.URL
+	pluginOpts.UserAgent = httpOpts.UserAgent
+	pluginOpts.Username = httpOpts.Username
+	pluginOpts.Proxy = httpOpts.Proxy
+	pluginOpts.Cookies = httpOpts.Cookies
+	pluginOpts.Timeout = httpOpts.Timeout
+	pluginOpts.FollowRedirect = httpOpts.FollowRedirect
+	pluginOpts.NoTLSValidation = httpOpts.NoTLSValidation
+	pluginOpts.Headers = httpOpts.Headers
+	pluginOpts.Method = httpOpts.Method
+	pluginOpts.RetryOnTimeout = httpOpts.RetryOnTimeout
+	pluginOpts.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.TLSCertificate = httpOpts.TLSCertificate
 
 	// blacklist will override the normal status codes
-	plugin.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")
+	pluginOpts.ExcludedStatusCodes, err = cmdFuzz.Flags().GetString("excludestatuscodes")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
-	ret, err := helper.ParseCommaSeparatedInt(plugin.ExcludedStatusCodes)
+	ret, err := helper.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
-	plugin.ExcludedStatusCodesParsed = ret
+	pluginOpts.ExcludedStatusCodesParsed = ret
 
-	plugin.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
+	pluginOpts.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
-	plugin.RequestBody, err = cmdFuzz.Flags().GetString("body")
+	pluginOpts.RequestBody, err = cmdFuzz.Flags().GetString("body")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for body: %w", err)
 	}
 
-	return globalopts, plugin, nil
+	return globalopts, pluginOpts, nil
 }
 
 // nolint:gochecknoinits

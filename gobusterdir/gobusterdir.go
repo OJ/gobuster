@@ -62,6 +62,7 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 		NoTLSValidation: opts.NoTLSValidation,
 		RetryOnTimeout:  opts.RetryOnTimeout,
 		RetryAttempts:   opts.RetryAttempts,
+		TLSCertificate:  opts.TLSCertificate,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

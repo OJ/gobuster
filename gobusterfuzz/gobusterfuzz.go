@@ -53,6 +53,7 @@ func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*Gobus
 		NoTLSValidation: opts.NoTLSValidation,
 		RetryOnTimeout:  opts.RetryOnTimeout,
 		RetryAttempts:   opts.RetryAttempts,
+		TLSCertificate: opts.TLSCertificate,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

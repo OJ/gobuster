@@ -48,6 +48,7 @@ func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*Gob
 		NoTLSValidation: opts.NoTLSValidation,
 		RetryOnTimeout:  opts.RetryOnTimeout,
 		RetryAttempts:   opts.RetryAttempts,
+		TLSCertificate:  opts.TLSCertificate,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

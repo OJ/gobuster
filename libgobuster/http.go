@@ -19,15 +19,16 @@ type HTTPHeader struct {
 
 // HTTPClient represents a http object
 type HTTPClient struct {
-	client           *http.Client
-	userAgent        string
-	defaultUserAgent string
-	username         string
-	password         string
-	headers          []HTTPHeader
-	cookies          string
-	method           string
-	host             string
+	client                *http.Client
+	userAgent             string
+	defaultUserAgent      string
+	username              string
+	password              string
+	headers               []HTTPHeader
+	noCanonicalizeHeaders bool
+	cookies               string
+	method                string
+	host                  string
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -86,6 +87,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 	client.userAgent = opt.UserAgent
 	client.defaultUserAgent = DefaultUserAgent()
 	client.headers = opt.Headers
+	client.noCanonicalizeHeaders = opt.NoCanonicalizeHeaders
 	client.cookies = opt.Cookies
 	client.method = opt.Method
 	if client.method == "" {
@@ -165,11 +167,21 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 	// currently only relevant on fuzzing
 	if len(opts.ModifiedHeaders) > 0 {
 		for _, h := range opts.ModifiedHeaders {
-			req.Header.Set(h.Name, h.Value)
+			if client.noCanonicalizeHeaders {
+				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
+				req.Header[h.Name] = []string{h.Value}
+			} else {
+				req.Header.Set(h.Name, h.Value)
+			}
 		}
 	} else {
 		for _, h := range client.headers {
-			req.Header.Set(h.Name, h.Value)
+			if client.noCanonicalizeHeaders {
+				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
+				req.Header[h.Name] = []string{h.Value}
+			} else {
+				req.Header.Set(h.Name, h.Value)
+			}
 		}
 	}
 

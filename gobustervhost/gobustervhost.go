@@ -52,13 +52,14 @@ func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*Gob
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
-		BasicHTTPOptions: basicOptions,
-		FollowRedirect:   opts.FollowRedirect,
-		Username:         opts.Username,
-		Password:         opts.Password,
-		Headers:          opts.Headers,
-		Cookies:          opts.Cookies,
-		Method:           opts.Method,
+		BasicHTTPOptions:      basicOptions,
+		FollowRedirect:        opts.FollowRedirect,
+		Username:              opts.Username,
+		Password:              opts.Password,
+		Headers:               opts.Headers,
+		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
+		Cookies:               opts.Cookies,
+		Method:                opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts)

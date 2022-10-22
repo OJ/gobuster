@@ -19,11 +19,12 @@ type BasicHTTPOptions struct {
 // HTTPOptions is the struct to pass in all http options to Gobuster
 type HTTPOptions struct {
 	BasicHTTPOptions
-	Password       string
-	URL            string
-	Username       string
-	Cookies        string
-	Headers        []HTTPHeader
-	FollowRedirect bool
-	Method         string
+	Password              string
+	URL                   string
+	Username              string
+	Cookies               string
+	Headers               []HTTPHeader
+	NoCanonicalizeHeaders bool
+	FollowRedirect        bool
+	Method                string
 }

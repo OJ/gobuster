@@ -66,13 +66,14 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
-		BasicHTTPOptions: basicOptions,
-		FollowRedirect:   opts.FollowRedirect,
-		Username:         opts.Username,
-		Password:         opts.Password,
-		Headers:          opts.Headers,
-		Cookies:          opts.Cookies,
-		Method:           opts.Method,
+		BasicHTTPOptions:      basicOptions,
+		FollowRedirect:        opts.FollowRedirect,
+		Username:              opts.Username,
+		Password:              opts.Password,
+		Headers:               opts.Headers,
+		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
+		Cookies:               opts.Cookies,
+		Method:                opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts)

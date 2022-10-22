@@ -41,6 +41,7 @@ func addCommonHTTPOptions(cmd *cobra.Command) error {
 	cmd.Flags().StringP("password", "P", "", "Password for Basic Auth")
 	cmd.Flags().BoolP("follow-redirect", "r", false, "Follow redirects")
 	cmd.Flags().StringArrayP("headers", "H", []string{""}, "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'")
+	cmd.Flags().BoolP("no-canonicalize-headers", "", false, "Do not canonicalize HTTP header names. If set header names are sent as is.")
 	cmd.Flags().StringP("method", "m", "GET", "Use the following HTTP method")
 
 	if err := cmd.MarkFlagRequired("url"); err != nil {
@@ -229,6 +230,12 @@ func parseCommonHTTPOptions(cmd *cobra.Command) (libgobuster.HTTPOptions, error)
 		header := libgobuster.HTTPHeader{Name: key, Value: value}
 		options.Headers = append(options.Headers, header)
 	}
+
+	noCanonHeaders, err := cmd.Flags().GetBool("no-canonicalize-headers")
+	if err != nil {
+		return options, fmt.Errorf("invalid value for no-canonicalize-headers: %w", err)
+	}
+	options.NoCanonicalizeHeaders = noCanonHeaders
 
 	// Prompt for PW if not provided
 	if options.Username != "" && options.Password == "" {

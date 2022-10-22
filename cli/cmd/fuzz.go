@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterfuzz"
@@ -19,6 +20,10 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 	globalopts, pluginopts, err := parseFuzzOptions()
 	if err != nil {
 		return fmt.Errorf("error on parsing arguments: %w", err)
+	}
+
+	if !strings.Contains(pluginopts.URL, gobusterfuzz.FuzzKeyword) && !strings.Contains(pluginopts.RequestBody, gobusterfuzz.FuzzKeyword) {
+		return fmt.Errorf("please provide the %s keyword", gobusterfuzz.FuzzKeyword)
 	}
 
 	plugin, err := gobusterfuzz.NewGobusterFuzz(globalopts, pluginopts)

@@ -7,11 +7,13 @@ version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
+    target-branch: "dev"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "dev"
     schedule:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"

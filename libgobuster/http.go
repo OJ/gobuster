@@ -33,10 +33,12 @@ type HTTPClient struct {
 
 // RequestOptions is used to pass options to a single individual request
 type RequestOptions struct {
-	Host            string
-	Body            io.Reader
-	ReturnBody      bool
-	ModifiedHeaders []HTTPHeader
+	Host                     string
+	Body                     io.Reader
+	ReturnBody               bool
+	ModifiedHeaders          []HTTPHeader
+	UpdatedBasicAuthUsername string
+	UpdatedBasicAuthPassword string
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -185,7 +187,9 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 		}
 	}
 
-	if client.username != "" {
+	if opts.UpdatedBasicAuthUsername != "" {
+		req.SetBasicAuth(opts.UpdatedBasicAuthUsername, opts.UpdatedBasicAuthPassword)
+	} else if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)
 	}
 

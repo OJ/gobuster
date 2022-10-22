@@ -109,6 +109,12 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		requestOptions.Body = buffer
 	}
 
+	// fuzzing of basic auth
+	if strings.Contains(d.options.Username, FuzzKeyword) || strings.Contains(d.options.Password, FuzzKeyword) {
+		requestOptions.UpdatedBasicAuthUsername = strings.ReplaceAll(d.options.Username, FuzzKeyword, word)
+		requestOptions.UpdatedBasicAuthPassword = strings.ReplaceAll(d.options.Password, FuzzKeyword, word)
+	}
+
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests

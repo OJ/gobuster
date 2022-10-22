@@ -130,5 +130,13 @@ func containsFuzzKeyword(pluginopts gobusterfuzz.OptionsFuzz) bool {
 		}
 	}
 
+	if strings.Contains(pluginopts.Username, gobusterfuzz.FuzzKeyword) {
+		return true
+	}
+
+	if strings.Contains(pluginopts.Password, gobusterfuzz.FuzzKeyword) {
+		return true
+	}
+
 	return false
 }

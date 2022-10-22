@@ -26,7 +26,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 - Support TLS client certificates / mtl
 - support loading extensions from file
-- support fuzzing POST body
+- support fuzzing POST body and HTTP headers
 
 ## 3.2
 

@@ -92,6 +92,16 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 
 	requestOptions := libgobuster.RequestOptions{}
 
+	if len(d.options.Headers) > 0 {
+		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
+		for i := range d.options.Headers {
+			requestOptions.ModifiedHeaders[i] = libgobuster.HTTPHeader{
+				Name:  strings.ReplaceAll(d.options.Headers[i].Name, FuzzKeyword, word),
+				Value: strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word),
+			}
+		}
+	}
+
 	if d.options.RequestBody != "" {
 		data := strings.ReplaceAll(d.options.RequestBody, FuzzKeyword, word)
 		buffer := strings.NewReader(data)

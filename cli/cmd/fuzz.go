@@ -22,7 +22,7 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on parsing arguments: %w", err)
 	}
 
-	if !strings.Contains(pluginopts.URL, gobusterfuzz.FuzzKeyword) && !strings.Contains(pluginopts.RequestBody, gobusterfuzz.FuzzKeyword) {
+	if !containsFuzzKeyword(*pluginopts) {
 		return fmt.Errorf("please provide the %s keyword", gobusterfuzz.FuzzKeyword)
 	}
 
@@ -112,4 +112,22 @@ func init() {
 	}
 
 	rootCmd.AddCommand(cmdFuzz)
+}
+
+func containsFuzzKeyword(pluginopts gobusterfuzz.OptionsFuzz) bool {
+	if strings.Contains(pluginopts.URL, gobusterfuzz.FuzzKeyword) {
+		return true
+	}
+
+	if strings.Contains(pluginopts.RequestBody, gobusterfuzz.FuzzKeyword) {
+		return true
+	}
+
+	for _, h := range pluginopts.Headers {
+		if strings.Contains(h.Name, gobusterfuzz.FuzzKeyword) || strings.Contains(h.Value, gobusterfuzz.FuzzKeyword) {
+			return true
+		}
+	}
+
+	return false
 }

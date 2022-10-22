@@ -32,9 +32,10 @@ type HTTPClient struct {
 
 // RequestOptions is used to pass options to a single individual request
 type RequestOptions struct {
-	Host       string
-	Body       io.Reader
-	ReturnBody bool
+	Host            string
+	Body            io.Reader
+	ReturnBody      bool
+	ModifiedHeaders []HTTPHeader
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -103,7 +104,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 // Request makes an http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
 func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
-	resp, err := client.makeRequest(ctx, fullURL, opts.Host, opts.Body)
+	resp, err := client.makeRequest(ctx, fullURL, opts)
 	if err != nil {
 		// ignore context canceled errors
 		if errors.Is(ctx.Err(), context.Canceled) {
@@ -133,8 +134,8 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 	return resp.StatusCode, length, resp.Header, body, nil
 }
 
-func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string, data io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(client.method, fullURL, data)
+func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts RequestOptions) (*http.Response, error) {
+	req, err := http.NewRequest(client.method, fullURL, opts.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +148,8 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string,
 	}
 
 	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
-	if host != "" {
-		req.Host = host
+	if opts.Host != "" {
+		req.Host = opts.Host
 	} else if client.host != "" {
 		req.Host = client.host
 	}
@@ -160,8 +161,16 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string,
 	}
 
 	// add custom headers
-	for _, h := range client.headers {
-		req.Header.Set(h.Name, h.Value)
+	// if ModifiedHeaders are supplied use those, otherwise use the original ones
+	// currently only relevant on fuzzing
+	if len(opts.ModifiedHeaders) > 0 {
+		for _, h := range opts.ModifiedHeaders {
+			req.Header.Set(h.Name, h.Value)
+		}
+	} else {
+		for _, h := range client.headers {
+			req.Header.Set(h.Name, h.Value)
+		}
 	}
 
 	if client.username != "" {

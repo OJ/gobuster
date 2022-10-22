@@ -22,6 +22,12 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.3
+
+- Support TLS client certificates / mtl
+- support loading extensions from file
+- support fuzzing POST body
+
 ## 3.2
 
 - Use go 1.19

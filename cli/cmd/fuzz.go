@@ -96,7 +96,7 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 func init() {
 	cmdFuzz = &cobra.Command{
 		Use:   "fuzz",
-		Short: "Uses fuzzing mode",
+		Short: fmt.Sprintf("Uses fuzzing mode. Replaces the keyword %s in the URL, Headers and the request body", gobusterfuzz.FuzzKeyword),
 		RunE:  runFuzz,
 	}
 

@@ -479,7 +479,7 @@ https://buffered.io/categories
 ### Options
 
 ```text
-Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter
+Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
 
 Usage:
   gobuster vhost [flags]

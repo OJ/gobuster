@@ -24,7 +24,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## 3.3
 
-- Support TLS client certificates / mtl
+- Support TLS client certificates / mtls
 - support loading extensions from file
 - support fuzzing POST body, HTTP headers and basic auth
 - new option to not canonicalize header names

@@ -11,3 +11,8 @@ type OptionsVhost struct {
 	ExcludeLength []int
 	Domain        string
 }
+
+// NewOptionsVhost returns a new initialized OptionsVhost
+func NewOptionsVhost() *OptionsVhost {
+	return &OptionsVhost{}
+}

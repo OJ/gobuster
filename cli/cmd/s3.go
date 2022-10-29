@@ -35,26 +35,27 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 		return nil, nil, err
 	}
 
-	plugin := gobusters3.NewOptionsS3()
+	pluginOpts := gobusters3.NewOptionsS3()
 
 	httpOpts, err := parseBasicHTTPOptions(cmdS3)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	plugin.UserAgent = httpOpts.UserAgent
-	plugin.Proxy = httpOpts.Proxy
-	plugin.Timeout = httpOpts.Timeout
-	plugin.NoTLSValidation = httpOpts.NoTLSValidation
-	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
-	plugin.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.UserAgent = httpOpts.UserAgent
+	pluginOpts.Proxy = httpOpts.Proxy
+	pluginOpts.Timeout = httpOpts.Timeout
+	pluginOpts.NoTLSValidation = httpOpts.NoTLSValidation
+	pluginOpts.RetryOnTimeout = httpOpts.RetryOnTimeout
+	pluginOpts.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.TLSCertificate = httpOpts.TLSCertificate
 
-	plugin.MaxFilesToList, err = cmdS3.Flags().GetInt("maxfiles")
+	pluginOpts.MaxFilesToList, err = cmdS3.Flags().GetInt("maxfiles")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
 
-	return globalopts, plugin, nil
+	return globalopts, pluginOpts, nil
 }
 
 // nolint:gochecknoinits

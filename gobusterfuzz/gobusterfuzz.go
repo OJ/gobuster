@@ -13,6 +13,8 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
+const FuzzKeyword = "FUZZ"
+
 // ErrWildcard is returned if a wildcard response is found
 type ErrWildcard struct {
 	url        string
@@ -53,16 +55,18 @@ func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*Gobus
 		NoTLSValidation: opts.NoTLSValidation,
 		RetryOnTimeout:  opts.RetryOnTimeout,
 		RetryAttempts:   opts.RetryAttempts,
+		TLSCertificate:  opts.TLSCertificate,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
-		BasicHTTPOptions: basicOptions,
-		FollowRedirect:   opts.FollowRedirect,
-		Username:         opts.Username,
-		Password:         opts.Password,
-		Headers:          opts.Headers,
-		Cookies:          opts.Cookies,
-		Method:           opts.Method,
+		BasicHTTPOptions:      basicOptions,
+		FollowRedirect:        opts.FollowRedirect,
+		Username:              opts.Username,
+		Password:              opts.Password,
+		Headers:               opts.Headers,
+		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
+		Cookies:               opts.Cookies,
+		Method:                opts.Method,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts)
@@ -85,7 +89,31 @@ func (d *GobusterFuzz) PreRun(ctx context.Context) error {
 
 // ProcessWord is the process implementation of gobusterfuzz
 func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
-	url := strings.ReplaceAll(d.options.URL, "FUZZ", word)
+	url := strings.ReplaceAll(d.options.URL, FuzzKeyword, word)
+
+	requestOptions := libgobuster.RequestOptions{}
+
+	if len(d.options.Headers) > 0 {
+		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
+		for i := range d.options.Headers {
+			requestOptions.ModifiedHeaders[i] = libgobuster.HTTPHeader{
+				Name:  strings.ReplaceAll(d.options.Headers[i].Name, FuzzKeyword, word),
+				Value: strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word),
+			}
+		}
+	}
+
+	if d.options.RequestBody != "" {
+		data := strings.ReplaceAll(d.options.RequestBody, FuzzKeyword, word)
+		buffer := strings.NewReader(data)
+		requestOptions.Body = buffer
+	}
+
+	// fuzzing of basic auth
+	if strings.Contains(d.options.Username, FuzzKeyword) || strings.Contains(d.options.Password, FuzzKeyword) {
+		requestOptions.UpdatedBasicAuthUsername = strings.ReplaceAll(d.options.Username, FuzzKeyword, word)
+		requestOptions.UpdatedBasicAuthPassword = strings.ReplaceAll(d.options.Password, FuzzKeyword, word)
+	}
 
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
@@ -97,7 +125,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	var size int64
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, _, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, _, _, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised

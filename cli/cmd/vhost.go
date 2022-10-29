@@ -35,49 +35,52 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 	if err != nil {
 		return nil, nil, err
 	}
-	var plugin gobustervhost.OptionsVhost
+
+	pluginOpts := gobustervhost.NewOptionsVhost()
 
 	httpOpts, err := parseCommonHTTPOptions(cmdVhost)
 	if err != nil {
 		return nil, nil, err
 	}
-	plugin.Password = httpOpts.Password
-	plugin.URL = httpOpts.URL
-	plugin.UserAgent = httpOpts.UserAgent
-	plugin.Username = httpOpts.Username
-	plugin.Proxy = httpOpts.Proxy
-	plugin.Cookies = httpOpts.Cookies
-	plugin.Timeout = httpOpts.Timeout
-	plugin.FollowRedirect = httpOpts.FollowRedirect
-	plugin.NoTLSValidation = httpOpts.NoTLSValidation
-	plugin.Headers = httpOpts.Headers
-	plugin.Method = httpOpts.Method
-	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
-	plugin.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.Password = httpOpts.Password
+	pluginOpts.URL = httpOpts.URL
+	pluginOpts.UserAgent = httpOpts.UserAgent
+	pluginOpts.Username = httpOpts.Username
+	pluginOpts.Proxy = httpOpts.Proxy
+	pluginOpts.Cookies = httpOpts.Cookies
+	pluginOpts.Timeout = httpOpts.Timeout
+	pluginOpts.FollowRedirect = httpOpts.FollowRedirect
+	pluginOpts.NoTLSValidation = httpOpts.NoTLSValidation
+	pluginOpts.Headers = httpOpts.Headers
+	pluginOpts.Method = httpOpts.Method
+	pluginOpts.RetryOnTimeout = httpOpts.RetryOnTimeout
+	pluginOpts.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.TLSCertificate = httpOpts.TLSCertificate
+	pluginOpts.NoCanonicalizeHeaders = httpOpts.NoCanonicalizeHeaders
 
-	plugin.AppendDomain, err = cmdVhost.Flags().GetBool("append-domain")
+	pluginOpts.AppendDomain, err = cmdVhost.Flags().GetBool("append-domain")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for append-domain: %w", err)
 	}
 
-	plugin.ExcludeLength, err = cmdVhost.Flags().GetIntSlice("exclude-length")
+	pluginOpts.ExcludeLength, err = cmdVhost.Flags().GetIntSlice("exclude-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
-	plugin.Domain, err = cmdVhost.Flags().GetString("domain")
+	pluginOpts.Domain, err = cmdVhost.Flags().GetString("domain")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for domain: %w", err)
 	}
 
-	return globalopts, &plugin, nil
+	return globalopts, pluginOpts, nil
 }
 
 // nolint:gochecknoinits
 func init() {
 	cmdVhost = &cobra.Command{
 		Use:   "vhost",
-		Short: "Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter",
+		Short: "Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)",
 		RunE:  runVhost,
 	}
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {

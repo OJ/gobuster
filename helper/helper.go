@@ -1,7 +1,9 @@
 package helper
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -21,6 +23,30 @@ func ParseExtensions(extensions string) (libgobuster.Set[string], error) {
 		// remove leading . from extensions
 		ret.Add(strings.TrimPrefix(e, "."))
 	}
+	return ret, nil
+}
+
+func ParseExtensionsFile(file string) ([]string, error) {
+	var ret []string
+
+	stream, err := os.Open(file)
+	if err != nil {
+		return ret, err
+	}
+	defer stream.Close()
+
+	scanner := bufio.NewScanner(stream)
+	for scanner.Scan() {
+		e := scanner.Text()
+		e = strings.TrimSpace(e)
+		// remove leading . from extensions
+		ret = append(ret, (strings.TrimPrefix(e, ".")))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
 	return ret, nil
 }
 

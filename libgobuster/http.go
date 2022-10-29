@@ -19,22 +19,26 @@ type HTTPHeader struct {
 
 // HTTPClient represents a http object
 type HTTPClient struct {
-	client           *http.Client
-	userAgent        string
-	defaultUserAgent string
-	username         string
-	password         string
-	headers          []HTTPHeader
-	cookies          string
-	method           string
-	host             string
+	client                *http.Client
+	userAgent             string
+	defaultUserAgent      string
+	username              string
+	password              string
+	headers               []HTTPHeader
+	noCanonicalizeHeaders bool
+	cookies               string
+	method                string
+	host                  string
 }
 
 // RequestOptions is used to pass options to a single individual request
 type RequestOptions struct {
-	Host       string
-	Body       io.Reader
-	ReturnBody bool
+	Host                     string
+	Body                     io.Reader
+	ReturnBody               bool
+	ModifiedHeaders          []HTTPHeader
+	UpdatedBasicAuthUsername string
+	UpdatedBasicAuthPassword string
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -64,6 +68,13 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 		redirectFunc = nil
 	}
 
+	tlsConfig := tls.Config{
+		InsecureSkipVerify: opt.NoTLSValidation,
+	}
+	if opt.TLSCertificate != nil {
+		tlsConfig.Certificates = []tls.Certificate{*opt.TLSCertificate}
+	}
+
 	client.client = &http.Client{
 		Timeout:       opt.Timeout,
 		CheckRedirect: redirectFunc,
@@ -71,15 +82,14 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 			Proxy:               proxyURLFunc,
 			MaxIdleConns:        100,
 			MaxIdleConnsPerHost: 100,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: opt.NoTLSValidation,
-			},
+			TLSClientConfig:     &tlsConfig,
 		}}
 	client.username = opt.Username
 	client.password = opt.Password
 	client.userAgent = opt.UserAgent
 	client.defaultUserAgent = DefaultUserAgent()
 	client.headers = opt.Headers
+	client.noCanonicalizeHeaders = opt.NoCanonicalizeHeaders
 	client.cookies = opt.Cookies
 	client.method = opt.Method
 	if client.method == "" {
@@ -98,7 +108,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 // Request makes an http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
 func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
-	resp, err := client.makeRequest(ctx, fullURL, opts.Host, opts.Body)
+	resp, err := client.makeRequest(ctx, fullURL, opts)
 	if err != nil {
 		// ignore context canceled errors
 		if errors.Is(ctx.Err(), context.Canceled) {
@@ -128,8 +138,8 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 	return resp.StatusCode, length, resp.Header, body, nil
 }
 
-func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string, data io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(client.method, fullURL, data)
+func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts RequestOptions) (*http.Response, error) {
+	req, err := http.NewRequest(client.method, fullURL, opts.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +152,8 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string,
 	}
 
 	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
-	if host != "" {
-		req.Host = host
+	if opts.Host != "" {
+		req.Host = opts.Host
 	} else if client.host != "" {
 		req.Host = client.host
 	}
@@ -155,11 +165,31 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL, host string,
 	}
 
 	// add custom headers
-	for _, h := range client.headers {
-		req.Header.Set(h.Name, h.Value)
+	// if ModifiedHeaders are supplied use those, otherwise use the original ones
+	// currently only relevant on fuzzing
+	if len(opts.ModifiedHeaders) > 0 {
+		for _, h := range opts.ModifiedHeaders {
+			if client.noCanonicalizeHeaders {
+				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
+				req.Header[h.Name] = []string{h.Value}
+			} else {
+				req.Header.Set(h.Name, h.Value)
+			}
+		}
+	} else {
+		for _, h := range client.headers {
+			if client.noCanonicalizeHeaders {
+				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
+				req.Header[h.Name] = []string{h.Value}
+			} else {
+				req.Header.Set(h.Name, h.Value)
+			}
+		}
 	}
 
-	if client.username != "" {
+	if opts.UpdatedBasicAuthUsername != "" {
+		req.SetBasicAuth(opts.UpdatedBasicAuthUsername, opts.UpdatedBasicAuthPassword)
+	} else if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)
 	}
 

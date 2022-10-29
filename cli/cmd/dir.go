@@ -42,98 +42,114 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, err
 	}
 
-	plugin := gobusterdir.NewOptionsDir()
+	pluginOpts := gobusterdir.NewOptionsDir()
 
 	httpOpts, err := parseCommonHTTPOptions(cmdDir)
 	if err != nil {
 		return nil, nil, err
 	}
-	plugin.Password = httpOpts.Password
-	plugin.URL = httpOpts.URL
-	plugin.UserAgent = httpOpts.UserAgent
-	plugin.Username = httpOpts.Username
-	plugin.Proxy = httpOpts.Proxy
-	plugin.Cookies = httpOpts.Cookies
-	plugin.Timeout = httpOpts.Timeout
-	plugin.FollowRedirect = httpOpts.FollowRedirect
-	plugin.NoTLSValidation = httpOpts.NoTLSValidation
-	plugin.Headers = httpOpts.Headers
-	plugin.Method = httpOpts.Method
-	plugin.RetryOnTimeout = httpOpts.RetryOnTimeout
-	plugin.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.Password = httpOpts.Password
+	pluginOpts.URL = httpOpts.URL
+	pluginOpts.UserAgent = httpOpts.UserAgent
+	pluginOpts.Username = httpOpts.Username
+	pluginOpts.Proxy = httpOpts.Proxy
+	pluginOpts.Cookies = httpOpts.Cookies
+	pluginOpts.Timeout = httpOpts.Timeout
+	pluginOpts.FollowRedirect = httpOpts.FollowRedirect
+	pluginOpts.NoTLSValidation = httpOpts.NoTLSValidation
+	pluginOpts.Headers = httpOpts.Headers
+	pluginOpts.Method = httpOpts.Method
+	pluginOpts.RetryOnTimeout = httpOpts.RetryOnTimeout
+	pluginOpts.RetryAttempts = httpOpts.RetryAttempts
+	pluginOpts.TLSCertificate = httpOpts.TLSCertificate
+	pluginOpts.NoCanonicalizeHeaders = httpOpts.NoCanonicalizeHeaders
 
-	plugin.Extensions, err = cmdDir.Flags().GetString("extensions")
+	pluginOpts.Extensions, err = cmdDir.Flags().GetString("extensions")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
-	ret, err := helper.ParseExtensions(plugin.Extensions)
+
+	ret, err := helper.ParseExtensions(pluginOpts.Extensions)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
-	plugin.ExtensionsParsed = ret
+	pluginOpts.ExtensionsParsed = ret
+
+	pluginOpts.ExtensionsFile, err = cmdDir.Flags().GetString("extensions-file")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for extensions file: %w", err)
+	}
+
+	if pluginOpts.ExtensionsFile != "" {
+		extensions, err := helper.ParseExtensionsFile(pluginOpts.ExtensionsFile)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid value for extensions file: %w", err)
+		}
+		pluginOpts.ExtensionsParsed.AddRange(extensions)
+	}
 
 	// parse normal status codes
-	plugin.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
+	pluginOpts.StatusCodes, err = cmdDir.Flags().GetString("status-codes")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 	}
-	ret2, err := helper.ParseCommaSeparatedInt(plugin.StatusCodes)
+	ret2, err := helper.ParseCommaSeparatedInt(pluginOpts.StatusCodes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 	}
-	plugin.StatusCodesParsed = ret2
+	pluginOpts.StatusCodesParsed = ret2
 
 	// blacklist will override the normal status codes
-	plugin.StatusCodesBlacklist, err = cmdDir.Flags().GetString("status-codes-blacklist")
+	pluginOpts.StatusCodesBlacklist, err = cmdDir.Flags().GetString("status-codes-blacklist")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
-	ret3, err := helper.ParseCommaSeparatedInt(plugin.StatusCodesBlacklist)
+	ret3, err := helper.ParseCommaSeparatedInt(pluginOpts.StatusCodesBlacklist)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
-	plugin.StatusCodesBlacklistParsed = ret3
+	pluginOpts.StatusCodesBlacklistParsed = ret3
 
-	if plugin.StatusCodes != "" && plugin.StatusCodesBlacklist != "" {
+	if pluginOpts.StatusCodes != "" && pluginOpts.StatusCodesBlacklist != "" {
 		return nil, nil, fmt.Errorf("status-codes (%q) and status-codes-blacklist (%q) are both set - please set only one. status-codes-blacklist is set by default so you might want to disable it by supplying an empty string.",
-			plugin.StatusCodes, plugin.StatusCodesBlacklist)
+			pluginOpts.StatusCodes, pluginOpts.StatusCodesBlacklist)
 	}
 
-	if plugin.StatusCodes == "" && plugin.StatusCodesBlacklist == "" {
+	if pluginOpts.StatusCodes == "" && pluginOpts.StatusCodesBlacklist == "" {
 		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both not set, please set one")
 	}
 
-	plugin.UseSlash, err = cmdDir.Flags().GetBool("add-slash")
+	pluginOpts.UseSlash, err = cmdDir.Flags().GetBool("add-slash")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for add-slash: %w", err)
 	}
 
-	plugin.Expanded, err = cmdDir.Flags().GetBool("expanded")
+	pluginOpts.Expanded, err = cmdDir.Flags().GetBool("expanded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for expanded: %w", err)
 	}
 
-	plugin.NoStatus, err = cmdDir.Flags().GetBool("no-status")
+	pluginOpts.NoStatus, err = cmdDir.Flags().GetBool("no-status")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for no-status: %w", err)
 	}
 
-	plugin.HideLength, err = cmdDir.Flags().GetBool("hide-length")
+	pluginOpts.HideLength, err = cmdDir.Flags().GetBool("hide-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for hide-length: %w", err)
 	}
 
-	plugin.DiscoverBackup, err = cmdDir.Flags().GetBool("discover-backup")
+	pluginOpts.DiscoverBackup, err = cmdDir.Flags().GetBool("discover-backup")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for discover-backup: %w", err)
 	}
 
-	plugin.ExcludeLength, err = cmdDir.Flags().GetIntSlice("exclude-length")
+	pluginOpts.ExcludeLength, err = cmdDir.Flags().GetIntSlice("exclude-length")
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
 	}
 
-	return globalopts, plugin, nil
+	return globalopts, pluginOpts, nil
 }
 
 // nolint:gochecknoinits
@@ -150,6 +166,7 @@ func init() {
 	cmdDir.Flags().StringP("status-codes", "s", "", "Positive status codes (will be overwritten with status-codes-blacklist if set)")
 	cmdDir.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set)")
 	cmdDir.Flags().StringP("extensions", "x", "", "File extension(s) to search for")
+	cmdDir.Flags().StringP("extensions-file", "X", "", "Read file extension(s) to search from the file")
 	cmdDir.Flags().BoolP("expanded", "e", false, "Expanded mode, print full URLs")
 	cmdDir.Flags().BoolP("no-status", "n", false, "Don't print status codes")
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")

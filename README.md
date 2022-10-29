@@ -22,6 +22,13 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.3
+
+- Support TLS client certificates / mtl
+- support loading extensions from file
+- support fuzzing POST body, HTTP headers and basic auth
+- new option to not canonicalize header names
+
 ## 3.2
 
 - Use go 1.19
@@ -479,7 +486,7 @@ https://buffered.io/categories
 ### Options
 
 ```text
-Uses VHOST enumeration mode (you most probably want to use the IP adress as the URL parameter
+Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
 
 Usage:
   gobuster vhost [flags]

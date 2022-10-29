@@ -175,6 +175,11 @@ Scan:
 	}
 	close(wordChan)
 	workerGroup.Wait()
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

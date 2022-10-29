@@ -22,6 +22,8 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.4
+
 ## 3.3
 
 - Support TLS client certificates / mtl

@@ -42,6 +42,11 @@ func ParseExtensionsFile(file string) ([]string, error) {
 		// remove leading . from extensions
 		ret = append(ret, (strings.TrimPrefix(e, ".")))
 	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
 	return ret, nil
 }
 

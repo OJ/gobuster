@@ -87,6 +87,7 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 				}
 			}
 		case <-ctx.Done():
+			fmt.Println()
 			return
 		}
 	}

@@ -60,6 +60,14 @@ func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *l
 	wt, err := c.Receive(word, "octet")
 	if err != nil {
 		// file not found
+		if d.globalopts.Verbose {
+			progress.ResultChan <- Result{
+				Filename:     word,
+				Found:        false,
+				ErrorMessage: err.Error(),
+			}
+		}
+
 		return nil
 	}
 	result := Result{

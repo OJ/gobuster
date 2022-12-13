@@ -25,6 +25,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## 3.4
 
 - Enable TLS1.0 and TLS1.1 support
+- Add TFTP mode to search for files on tftp servers
 
 ## 3.3
 

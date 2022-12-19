@@ -1,4 +1,4 @@
-# Gobuster v3.2.0
+# Gobuster
 
 Gobuster is a tool used to brute-force:
 

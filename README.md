@@ -1,4 +1,4 @@
-# Gobuster v3.2.0
+# Gobuster
 
 Gobuster is a tool used to brute-force:
 
@@ -21,6 +21,11 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
 # Changes
+
+## 3.4
+
+- Enable TLS1.0 and TLS1.1 support
+- Add TFTP mode to search for files on tftp servers
 
 ## 3.3
 

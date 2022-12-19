@@ -2,5 +2,5 @@ package libgobuster
 
 const (
 	// VERSION contains the current gobuster version
-	VERSION = "3.3"
+	VERSION = "3.4"
 )

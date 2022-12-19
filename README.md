@@ -6,6 +6,8 @@ Gobuster is a tool used to brute-force:
 - DNS subdomains (with wildcard support).
 - Virtual Host names on target web servers.
 - Open Amazon S3 buckets
+- Open Google Cloud buckets
+- TFTP servers
 
 ## Tags, Statuses, etc
 
@@ -73,6 +75,7 @@ See the LICENSE file.
 - gcs - Enumerate open google cloud buckets
 - vhost - virtual host brute-forcing mode (not the same as DNS!)
 - fuzz - some basic fuzzing, replaces the `FUZZ` keyword
+- tftp - bruteforce tftp files
 
 ## Easy Installation
 
@@ -688,6 +691,41 @@ Global Flags:
 ```text
 gobuster gcs -w bucket-names.txt
 ```
+
+## `tftp` Mode
+
+### Options
+
+```text
+Uses TFTP enumeration mode
+
+Usage:
+  gobuster tftp [flags]
+
+Flags:
+  -h, --help               help for tftp
+  -s, --server string      The target TFTP server
+      --timeout duration   TFTP timeout (default 1s)
+
+Global Flags:
+      --delay duration    Time each thread waits between requests (e.g. 1500ms)
+      --no-color          Disable color output
+      --no-error          Don't display errors
+  -z, --no-progress       Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -p, --pattern string    File containing replacement patterns
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+### Examples
+
+```text
+gobuster tftp -s tftp.example.com -w common-filenames.txt
+```
+
 
 ## Wordlists via STDIN
 

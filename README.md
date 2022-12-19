@@ -22,6 +22,8 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.5
+
 ## 3.4
 
 - Enable TLS1.0 and TLS1.1 support

@@ -104,7 +104,7 @@ func init() {
 	if err := addCommonHTTPOptions(cmdFuzz); err != nil {
 		log.Fatalf("%v", err)
 	}
-	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Negative status codes (will override statuscodes if set)")
+	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Excluded status codes. Can also handle ranges like 200,300-400,404.")
 	cmdFuzz.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
 	cmdFuzz.Flags().StringP("body", "B", "", "Request body")
 

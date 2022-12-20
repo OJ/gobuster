@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -58,13 +59,38 @@ func ParseCommaSeparatedInt(inputString string) (libgobuster.Set[int], error) {
 		return ret, nil
 	}
 
-	for _, c := range strings.Split(inputString, ",") {
-		c = strings.TrimSpace(c)
-		i, err := strconv.Atoi(c)
-		if err != nil {
-			return libgobuster.NewSet[int](), fmt.Errorf("invalid string given: %s", c)
+	for _, part := range strings.Split(inputString, ",") {
+		part = strings.TrimSpace(part)
+		// check for range
+		if strings.Contains(part, "-") {
+			re := regexp.MustCompile(`^\s*(\d+)\s*-\s*(\d+)\s*$`)
+			match := re.FindStringSubmatch(part)
+			if match == nil || len(match) != 3 {
+				return libgobuster.NewSet[int](), fmt.Errorf("invalid range given: %s", part)
+			}
+			from := strings.TrimSpace(match[1])
+			to := strings.TrimSpace(match[2])
+			fromI, err := strconv.Atoi(from)
+			if err != nil {
+				return libgobuster.NewSet[int](), fmt.Errorf("invalid string in range %s: %s", part, from)
+			}
+			toI, err := strconv.Atoi(to)
+			if err != nil {
+				return libgobuster.NewSet[int](), fmt.Errorf("invalid string in range %s: %s", part, to)
+			}
+			if toI < fromI {
+				return libgobuster.NewSet[int](), fmt.Errorf("invalid range given: %s", part)
+			}
+			for i := fromI; i <= toI; i++ {
+				ret.Add(i)
+			}
+		} else {
+			i, err := strconv.Atoi(part)
+			if err != nil {
+				return libgobuster.NewSet[int](), fmt.Errorf("invalid string given: %s", part)
+			}
+			ret.Add(i)
 		}
-		ret.Add(i)
 	}
 	return ret, nil
 }

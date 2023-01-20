@@ -172,7 +172,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("no-progress", "z", false, "Don't display progress")
-	rootCmd.PersistentFlags().BoolP("exclude-wordlist", "j", true, "Exclude wordlist's itself from patterns")
+	rootCmd.PersistentFlags().BoolP("exclude-wordlist", "j", false, "Exclude wordlist's itself from patterns")
 	rootCmd.PersistentFlags().Bool("no-error", false, "Don't display errors")
 	rootCmd.PersistentFlags().StringP("pattern", "p", "", "File containing replacement patterns")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")

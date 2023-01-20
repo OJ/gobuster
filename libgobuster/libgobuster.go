@@ -152,7 +152,7 @@ Scan:
 			word := scanner.Text()
 			perms := g.processPatterns(word)
 			// add the original word
-			if g.Opts.ExcludeWordlist != true {
+			if !g.Opts.ExcludeWordlist {
 				wordChan <- word
 			}
 			// now create perms

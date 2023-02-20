@@ -4,7 +4,7 @@ ENV CGO_ENABLED=0
 COPY go.mod /src/
 RUN go mod download
 COPY . .
-RUN  go build -a -o gobuster -ldflags="-s -w" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src"
+RUN go build -a -o gobuster -trimpath
 
 FROM alpine:latest
 

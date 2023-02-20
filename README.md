@@ -24,6 +24,10 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.6
+
+- ....
+
 ## 3.5
 
 - Allow Ranges in status code and status code blacklist. Example: 200,300-305,404

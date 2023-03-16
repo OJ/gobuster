@@ -27,4 +27,4 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/OJ/gobuster/gobuster:latest
+            ghcr.io/OJ/gobuster:latest

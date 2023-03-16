@@ -9,7 +9,7 @@ jobs:
         go: ["1.18", "1.19"]
     steps:
       - name: Set up Go ${{ matrix.go }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
 

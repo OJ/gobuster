@@ -131,6 +131,9 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 		fmt.Println(c)
 		fmt.Println(ruler)
 		gobuster.LogInfo.Printf("Starting gobuster in %s mode", plugin.Name())
+		if opts.WordlistOffset > 0 {
+			gobuster.LogInfo.Printf("Skipping the first %d elements...", opts.WordlistOffset)
+		}
 		fmt.Println(ruler)
 	}
 

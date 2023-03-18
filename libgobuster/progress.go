@@ -33,6 +33,12 @@ func (p *Progress) RequestsIssued() int {
 	return p.requestsIssued
 }
 
+func (p *Progress) incrementRequestsIssues(by int) {
+	p.requestsCountMutex.Lock()
+	defer p.requestsCountMutex.Unlock()
+	p.requestsIssued += by
+}
+
 func (p *Progress) incrementRequests() {
 	p.requestsCountMutex.Lock()
 	defer p.requestsCountMutex.Unlock()

@@ -104,8 +104,8 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	// calcutate expected requests
 	g.Progress.IncrementTotalRequests(lines)
 
-	// add offset if needed
-	g.Progress.requestsIssued += g.Opts.WordlistOffset
+	// add offset if needed (offset defaults to 0)
+	g.Progress.incrementRequestsIssues(g.Opts.WordlistOffset)
 
 	// call the function once with a dummy entry to receive the number
 	// of custom words per wordlist word
@@ -127,6 +127,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	// skip lines
 	for i := 0; i < g.Opts.WordlistOffset; i++ {
 		if !wordlistScanner.Scan() {
+			if err := wordlistScanner.Err(); err != nil {
+				return nil, fmt.Errorf("failed to skip lines in wordlist: %w", err)
+			}
 			return nil, fmt.Errorf("failed to skip lines in wordlist")
 		}
 	}

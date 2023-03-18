@@ -6,6 +6,7 @@ import "time"
 type Options struct {
 	Threads        int
 	Wordlist       string
+	WordlistOffset int
 	PatternFile    string
 	Patterns       []string
 	OutputFilename string

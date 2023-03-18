@@ -97,8 +97,15 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %w", err)
 	}
 
+	if lines-g.Opts.WordlistOffset <= 0 {
+		return nil, fmt.Errorf("offset is greater than the number of lines in the wordlist")
+	}
+
 	// calcutate expected requests
 	g.Progress.IncrementTotalRequests(lines)
+
+	// add offset if needed
+	g.Progress.requestsIssued += g.Opts.WordlistOffset
 
 	// call the function once with a dummy entry to receive the number
 	// of custom words per wordlist word
@@ -114,7 +121,17 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to rewind wordlist: %w", err)
 	}
-	return bufio.NewScanner(wordlist), nil
+
+	wordlistScanner := bufio.NewScanner(wordlist)
+
+	// skip lines
+	for i := 0; i < g.Opts.WordlistOffset; i++ {
+		if !wordlistScanner.Scan() {
+			return nil, fmt.Errorf("failed to skip lines in wordlist")
+		}
+	}
+
+	return wordlistScanner, nil
 }
 
 // Run the busting of the website with the given

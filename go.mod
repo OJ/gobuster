@@ -6,7 +6,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/google/uuid v1.3.0
 	github.com/pin/tftp/v3 v3.0.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	golang.org/x/crypto v0.7.0
 	golang.org/x/term v0.7.0
 )

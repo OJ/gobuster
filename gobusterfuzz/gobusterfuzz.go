@@ -163,6 +163,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				Path:       url,
 				StatusCode: statusCode,
 				Size:       size,
+				Word:       word,
 			}
 		}
 	}

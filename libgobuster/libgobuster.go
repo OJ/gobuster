@@ -4,13 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 // PATTERN is the pattern for wordlist replacements in pattern file
@@ -28,19 +25,17 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts     *Options
+	Logger   Logger
 	plugin   GobusterPlugin
-	LogInfo  *log.Logger
-	LogError *log.Logger
 	Progress *Progress
 }
 
 // NewGobuster returns a new Gobuster object
-func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
+func NewGobuster(opts *Options, plugin GobusterPlugin, logger Logger) (*Gobuster, error) {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
-	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
-	g.LogError = log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags)
+	g.Logger = logger
 	g.Progress = NewProgress()
 
 	return &g, nil

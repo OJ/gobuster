@@ -14,11 +14,6 @@ import (
 const ruler = "==============================================================="
 const cliProgressUpdate = 500 * time.Millisecond
 
-func banner() {
-	fmt.Printf("Gobuster v%s\n", libgobuster.VERSION)
-	fmt.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)")
-}
-
 // resultWorker outputs the results as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.
 func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) {
@@ -29,7 +24,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	if filename != "" {
 		f, err = os.Create(filename)
 		if err != nil {
-			g.LogError.Fatalf("error on creating output file: %v", err)
+			g.Logger.Fatalf("error on creating output file: %v", err)
 		}
 		defer f.Close()
 	}
@@ -37,7 +32,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	for r := range g.Progress.ResultChan {
 		s, err := r.ResultToString()
 		if err != nil {
-			g.LogError.Fatal(err)
+			g.Logger.Fatal(err)
 		}
 		if s != "" {
 			s = strings.TrimSpace(s)
@@ -45,7 +40,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 			if f != nil {
 				err = writeToFile(f, s)
 				if err != nil {
-					g.LogError.Fatalf("error on writing output file: %v", err)
+					g.Logger.Fatalf("error on writing output file: %v", err)
 				}
 			}
 		}
@@ -59,7 +54,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 
 	for e := range g.Progress.ErrorChan {
 		if !g.Opts.Quiet && !g.Opts.NoError {
-			g.LogError.Printf("[!] %s\n", e.Error())
+			g.Logger.Errorf("[!] %s\n", e.Error())
 		}
 	}
 }
@@ -112,29 +107,32 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 		return fmt.Errorf("please provide a valid plugin")
 	}
 
+	log := libgobuster.NewLogger(opts.Debug)
+
 	ctxCancel, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	gobuster, err := libgobuster.NewGobuster(opts, plugin)
+	gobuster, err := libgobuster.NewGobuster(opts, plugin, log)
 	if err != nil {
 		return err
 	}
 
 	if !opts.Quiet {
-		fmt.Println(ruler)
-		banner()
-		fmt.Println(ruler)
+		log.Println(ruler)
+		log.Printf("Gobuster v%s\n", libgobuster.VERSION)
+		log.Println("by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)")
+		log.Println(ruler)
 		c, err := gobuster.GetConfigString()
 		if err != nil {
 			return fmt.Errorf("error on creating config string: %w", err)
 		}
-		fmt.Println(c)
-		fmt.Println(ruler)
-		gobuster.LogInfo.Printf("Starting gobuster in %s mode", plugin.Name())
+		log.Println(c)
+		log.Println(ruler)
+		gobuster.Logger.Printf("Starting gobuster in %s mode", plugin.Name())
 		if opts.WordlistOffset > 0 {
-			gobuster.LogInfo.Printf("Skipping the first %d elements...", opts.WordlistOffset)
+			gobuster.Logger.Printf("Skipping the first %d elements...", opts.WordlistOffset)
 		}
-		fmt.Println(ruler)
+		log.Println(ruler)
 	}
 
 	// our waitgroup for all goroutines
@@ -168,9 +166,9 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	}
 
 	if !opts.Quiet {
-		fmt.Println(ruler)
-		gobuster.LogInfo.Println("Finished")
-		fmt.Println(ruler)
+		log.Println(ruler)
+		gobuster.Logger.Println("Finished")
+		log.Println(ruler)
 	}
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
@@ -33,14 +32,14 @@ func BenchmarkDirMode(b *testing.B) {
 	pluginopts.Timeout = 10 * time.Second
 
 	pluginopts.Extensions = ".php,.csv"
-	tmpExt, err := helper.ParseExtensions(pluginopts.Extensions)
+	tmpExt, err := libgobuster.ParseExtensions(pluginopts.Extensions)
 	if err != nil {
 		b.Fatalf("could not parse extensions: %v", err)
 	}
 	pluginopts.ExtensionsParsed = tmpExt
 
 	pluginopts.StatusCodes = "200,204,301,302,307,401,403"
-	tmpStat, err := helper.ParseCommaSeparatedInt(pluginopts.StatusCodes)
+	tmpStat, err := libgobuster.ParseCommaSeparatedInt(pluginopts.StatusCodes)
 	if err != nil {
 		b.Fatalf("could not parse status codes: %v", err)
 	}

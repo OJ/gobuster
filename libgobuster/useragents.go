@@ -1,4 +1,4 @@
-package helper
+package libgobuster
 
 import (
 	"crypto/rand"

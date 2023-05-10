@@ -7,7 +7,6 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 )
@@ -69,7 +68,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
 
-	ret, err := helper.ParseExtensions(pluginOpts.Extensions)
+	ret, err := libgobuster.ParseExtensions(pluginOpts.Extensions)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for extensions: %w", err)
 	}
@@ -81,7 +80,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	}
 
 	if pluginOpts.ExtensionsFile != "" {
-		extensions, err := helper.ParseExtensionsFile(pluginOpts.ExtensionsFile)
+		extensions, err := libgobuster.ParseExtensionsFile(pluginOpts.ExtensionsFile)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid value for extensions file: %w", err)
 		}
@@ -93,7 +92,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 	}
-	ret2, err := helper.ParseCommaSeparatedInt(pluginOpts.StatusCodes)
+	ret2, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.StatusCodes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
 	}
@@ -104,7 +103,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}
-	ret3, err := helper.ParseCommaSeparatedInt(pluginOpts.StatusCodesBlacklist)
+	ret3, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.StatusCodesBlacklist)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
 	}

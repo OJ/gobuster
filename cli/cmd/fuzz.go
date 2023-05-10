@@ -8,7 +8,6 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterfuzz"
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 )
@@ -74,7 +73,7 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
-	ret, err := helper.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)
+	ret, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}

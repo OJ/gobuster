@@ -10,7 +10,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -113,7 +112,7 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 		return err
 	}
 
-	if helper.SliceContains(d.options.ExcludeLength, int(wildcardLength)) {
+	if libgobuster.SliceContains(d.options.ExcludeLength, int(wildcardLength)) {
 		// we are done and ignore the request as the length is excluded
 		return nil
 	}
@@ -220,7 +219,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+		if (resultStatus && !libgobuster.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
 			progress.ResultChan <- Result{
 				URL:        d.options.URL,
 				Path:       entity,
@@ -288,7 +287,7 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", libgobuster.JoinIntSlice(d.options.ExcludeLength)); err != nil {
 			return "", err
 		}
 	}

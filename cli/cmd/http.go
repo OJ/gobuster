@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/pkcs12"
@@ -64,7 +63,7 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 		return options, fmt.Errorf("invalid value for random-agent: %w", err)
 	}
 	if randomUA {
-		ua, err := helper.GetRandomUserAgent()
+		ua, err := libgobuster.GetRandomUserAgent()
 		if err != nil {
 			return options, err
 		}

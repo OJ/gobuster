@@ -159,6 +159,11 @@ func parseGlobalOptions() (*libgobuster.Options, error) {
 		color.NoColor = true
 	}
 
+	globalopts.Debug, err = rootCmd.Flags().GetBool("debug")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for debug: %w", err)
+	}
+
 	return globalopts, nil
 }
 
@@ -185,4 +190,5 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-error", false, "Don't display errors")
 	rootCmd.PersistentFlags().StringP("pattern", "p", "", "File containing replacement patterns")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug output")
 }

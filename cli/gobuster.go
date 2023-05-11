@@ -81,6 +81,21 @@ func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	}
 }
 
+func printProgress(g *libgobuster.Gobuster) {
+	if !g.Opts.Quiet && !g.Opts.NoProgress {
+		requestsIssued := g.Progress.RequestsIssued()
+		requestsExpected := g.Progress.RequestsExpected()
+		if g.Opts.Wordlist == "-" {
+			s := fmt.Sprintf("%sProgress: %d", TERMINAL_CLEAR_LINE, requestsIssued)
+			_, _ = fmt.Fprint(os.Stderr, s)
+			// only print status if we already read in the wordlist
+		} else if requestsExpected > 0 {
+			s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
+			_, _ = fmt.Fprint(os.Stderr, s)
+		}
+	}
+}
+
 // progressWorker outputs the progress every tick. It will stop once cancel() is called
 // on the context
 func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitGroup) {
@@ -91,19 +106,10 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 	for {
 		select {
 		case <-tick.C:
-			if !g.Opts.Quiet && !g.Opts.NoProgress {
-				requestsIssued := g.Progress.RequestsIssued()
-				requestsExpected := g.Progress.RequestsExpected()
-				if g.Opts.Wordlist == "-" {
-					s := fmt.Sprintf("%sProgress: %d", TERMINAL_CLEAR_LINE, requestsIssued)
-					_, _ = fmt.Fprint(os.Stderr, s)
-					// only print status if we already read in the wordlist
-				} else if requestsExpected > 0 {
-					s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
-					_, _ = fmt.Fprint(os.Stderr, s)
-				}
-			}
+			printProgress(g)
 		case <-ctx.Done():
+			// print the final progress so we end at 100%
+			printProgress(g)
 			fmt.Println()
 			return
 		}

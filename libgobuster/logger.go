@@ -17,10 +17,10 @@ type Logger struct {
 
 func NewLogger(debug bool) Logger {
 	return Logger{
-		log:      log.New(os.Stdout, "", log.LstdFlags),
-		errorLog: log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags),
-		debugLog: log.New(os.Stderr, color.New(color.FgBlue).Sprint("[DEBUG] "), log.LstdFlags),
-		infoLog:  log.New(os.Stderr, color.New(color.FgCyan).Sprint("[INFO] "), log.LstdFlags),
+		log:      log.New(os.Stdout, "", 0),
+		errorLog: log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), 0),
+		debugLog: log.New(os.Stderr, color.New(color.FgBlue).Sprint("[DEBUG] "), 0),
+		infoLog:  log.New(os.Stderr, color.New(color.FgCyan).Sprint("[INFO] "), 0),
 		debug:    debug,
 	}
 }

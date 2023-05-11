@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"text/tabwriter"
+	"unicode/utf8"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
@@ -173,6 +174,17 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		suffix = "/"
 	}
 	entity := fmt.Sprintf("%s%s", word, suffix)
+
+	// make sure the url ends with a slash
+	if !strings.HasSuffix(d.options.URL, "/") {
+		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
+	}
+	// prevent double slashes by removing leading /
+	if strings.HasPrefix(entity, "/") {
+		// get size of first rune and trim it
+		_, i := utf8.DecodeRuneInString(entity)
+		entity = entity[i:]
+	}
 	url := fmt.Sprintf("%s%s", d.options.URL, entity)
 
 	tries := 1

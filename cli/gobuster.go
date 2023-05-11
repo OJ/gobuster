@@ -55,6 +55,7 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 	for e := range g.Progress.ErrorChan {
 		if !g.Opts.Quiet && !g.Opts.NoError {
 			g.Logger.Error(e.Error())
+			g.Logger.Debugf("%#v", e)
 		}
 	}
 }

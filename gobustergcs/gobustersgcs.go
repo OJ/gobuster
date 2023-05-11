@@ -71,7 +71,7 @@ func (s *GobusterGCS) Name() string {
 }
 
 // PreRun is the pre run implementation of GobusterS3
-func (s *GobusterGCS) PreRun(ctx context.Context) error {
+func (s *GobusterGCS) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	return nil
 }
 

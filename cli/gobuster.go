@@ -54,7 +54,28 @@ func errorWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 
 	for e := range g.Progress.ErrorChan {
 		if !g.Opts.Quiet && !g.Opts.NoError {
-			g.Logger.Errorf("[!] %s\n", e.Error())
+			g.Logger.Error(e.Error())
+		}
+	}
+}
+
+// messageWorker outputs messages as they come in. This needs to be a range and should not handle
+// the context so the channel always has a receiver and libgobuster will not block.
+func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for msg := range g.Progress.MessageChan {
+		if !g.Opts.Quiet {
+			switch msg.Level {
+			case libgobuster.LevelDebug:
+				g.Logger.Debug(msg.Message)
+			case libgobuster.LevelError:
+				g.Logger.Error(msg.Message)
+			case libgobuster.LevelInfo:
+				g.Logger.Info(msg.Message)
+			default:
+				panic(fmt.Sprintf("invalid level %d", msg.Level))
+			}
 		}
 	}
 }
@@ -145,6 +166,9 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 
 	wg.Add(1)
 	go errorWorker(gobuster, &wg)
+
+	wg.Add(1)
+	go messageWorker(gobuster, &wg)
 
 	if !opts.Quiet && !opts.NoProgress {
 		// if not quiet add a new workgroup entry and start the goroutine

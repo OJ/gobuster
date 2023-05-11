@@ -82,7 +82,7 @@ func (d *GobusterFuzz) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterfuzz
-func (d *GobusterFuzz) PreRun(ctx context.Context) error {
+func (d *GobusterFuzz) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	return nil
 }
 

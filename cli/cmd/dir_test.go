@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -70,8 +68,6 @@ func BenchmarkDirMode(b *testing.B) {
 		b.Fatalf("could not get devnull %v", err)
 	}
 	defer devnull.Close()
-	log.SetFlags(0)
-	log.SetOutput(io.Discard)
 
 	// Run the real benchmark
 	for x := 0; x < b.N; x++ {

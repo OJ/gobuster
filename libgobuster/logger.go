@@ -10,6 +10,8 @@ import (
 type Logger struct {
 	log      *log.Logger
 	errorLog *log.Logger
+	debugLog *log.Logger
+	infoLog  *log.Logger
 	debug    bool
 }
 
@@ -17,6 +19,8 @@ func NewLogger(debug bool) Logger {
 	return Logger{
 		log:      log.New(os.Stdout, "", log.LstdFlags),
 		errorLog: log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags),
+		debugLog: log.New(os.Stderr, color.New(color.FgBlue).Sprint("[DEBUG] "), log.LstdFlags),
+		infoLog:  log.New(os.Stderr, color.New(color.FgCyan).Sprint("[INFO] "), log.LstdFlags),
 		debug:    debug,
 	}
 }
@@ -25,14 +29,22 @@ func (l Logger) Debug(v ...any) {
 	if !l.debug {
 		return
 	}
-	l.log.Print(v...)
+	l.debugLog.Print(v...)
 }
 
 func (l Logger) Debugf(format string, v ...any) {
 	if !l.debug {
 		return
 	}
-	l.log.Printf(format, v...)
+	l.debugLog.Printf(format, v...)
+}
+
+func (l Logger) Info(v ...any) {
+	l.infoLog.Print(v...)
+}
+
+func (l Logger) Infof(format string, v ...any) {
+	l.infoLog.Printf(format, v...)
 }
 
 func (l Logger) Print(v ...any) {

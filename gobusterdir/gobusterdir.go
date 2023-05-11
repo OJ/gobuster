@@ -90,7 +90,7 @@ func (d *GobusterDir) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (d *GobusterDir) PreRun(ctx context.Context) error {
+func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)

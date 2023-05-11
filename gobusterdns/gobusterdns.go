@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"net/netip"
 	"strings"
@@ -78,7 +77,7 @@ func (d *GobusterDNS) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdns
-func (d *GobusterDNS) PreRun(ctx context.Context) error {
+func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	// Resolve a subdomain that probably shouldn't exist
 	guid := uuid.New()
 	wildcardIps, err := d.dnsLookup(ctx, fmt.Sprintf("%s.%s", guid, d.options.Domain))
@@ -95,7 +94,14 @@ func (d *GobusterDNS) PreRun(ctx context.Context) error {
 		_, err = d.dnsLookup(ctx, d.options.Domain)
 		if err != nil {
 			// Not an error, just a warning. Eg. `yp.to` doesn't resolve, but `cr.yp.to` does!
-			log.Printf("[-] Unable to validate base domain: %s (%v)", d.options.Domain, err)
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelInfo,
+				Message: fmt.Sprintf("[-] Unable to validate base domain: %s (%v)", d.options.Domain, err),
+			}
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelDebug,
+				Message: fmt.Sprintf("%#v", err),
+			}
 		}
 	}
 

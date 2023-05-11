@@ -42,7 +42,7 @@ func (d *GobusterTFTP) Name() string {
 }
 
 // PreRun is the pre run implementation of gobustertftp
-func (d *GobusterTFTP) PreRun(ctx context.Context) error {
+func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	_, err := tftp.NewClient(d.options.Server)
 	if err != nil {
 		return err

@@ -137,8 +137,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 func (g *Gobuster) Run(ctx context.Context) error {
 	defer close(g.Progress.ResultChan)
 	defer close(g.Progress.ErrorChan)
+	defer close(g.Progress.MessageChan)
 
-	if err := g.plugin.PreRun(ctx); err != nil {
+	if err := g.plugin.PreRun(ctx, g.Progress); err != nil {
 		return err
 	}
 

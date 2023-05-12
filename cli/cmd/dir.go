@@ -25,11 +25,13 @@ func runDir(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}
 
-	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
+	log := libgobuster.NewLogger(globalopts.Debug)
+	if err := cli.Gobuster(mainContext, globalopts, plugin, log); err != nil {
 		var wErr *gobusterdir.ErrWildcard
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
+		log.Debugf("%#v", err)
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil

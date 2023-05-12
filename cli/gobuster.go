@@ -125,7 +125,7 @@ func writeToFile(f *os.File, output string) error {
 }
 
 // Gobuster is the main entry point for the CLI
-func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin) error {
+func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin, log libgobuster.Logger) error {
 	// Sanity checks
 	if opts == nil {
 		return fmt.Errorf("please provide valid options")
@@ -134,8 +134,6 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	if plugin == nil {
 		return fmt.Errorf("please provide a valid plugin")
 	}
-
-	log := libgobuster.NewLogger(opts.Debug)
 
 	ctxCancel, cancel := context.WithCancel(ctx)
 	defer cancel()

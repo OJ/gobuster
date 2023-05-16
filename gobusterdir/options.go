@@ -19,7 +19,8 @@ type OptionsDir struct {
 	Expanded                   bool
 	NoStatus                   bool
 	DiscoverBackup             bool
-	ExcludeLength              []int
+	ExcludeLength              string
+	ExcludeLengthParsed        libgobuster.Set[int]
 }
 
 // NewOptionsDir returns a new initialized OptionsDir
@@ -28,5 +29,6 @@ func NewOptionsDir() *OptionsDir {
 		StatusCodesParsed:          libgobuster.NewSet[int](),
 		StatusCodesBlacklistParsed: libgobuster.NewSet[int](),
 		ExtensionsParsed:           libgobuster.NewSet[string](),
+		ExcludeLengthParsed:        libgobuster.NewSet[int](),
 	}
 }

@@ -145,10 +145,15 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 		return nil, nil, fmt.Errorf("invalid value for discover-backup: %w", err)
 	}
 
-	pluginOpts.ExcludeLength, err = cmdDir.Flags().GetIntSlice("exclude-length")
+	pluginOpts.ExcludeLength, err = cmdDir.Flags().GetString("exclude-length")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for exclude-length: %w", err)
 	}
+	ret4, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for exclude-length: %w", err)
+	}
+	pluginOpts.ExcludeLengthParsed = ret4
 
 	return globalopts, pluginOpts, nil
 }
@@ -173,7 +178,7 @@ func init() {
 	cmdDir.Flags().Bool("hide-length", false, "Hide the length of the body in the output")
 	cmdDir.Flags().BoolP("add-slash", "f", false, "Append / to each request")
 	cmdDir.Flags().BoolP("discover-backup", "d", false, "Also search for backup files by appending multiple backup extensions")
-	cmdDir.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
+	cmdDir.Flags().String("exclude-length", "", "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206")
 
 	cmdDir.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

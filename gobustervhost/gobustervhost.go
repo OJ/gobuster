@@ -151,7 +151,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !libgobuster.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
+	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {
 			resultStatus = true
@@ -248,7 +248,7 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", libgobuster.JoinIntSlice(v.options.ExcludeLength)); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", v.options.ExcludeLengthParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

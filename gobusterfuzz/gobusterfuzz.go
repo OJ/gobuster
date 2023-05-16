@@ -145,7 +145,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	if statusCode != 0 {
 		resultStatus := true
 
-		if libgobuster.SliceContains(d.options.ExcludeLength, int(size)) {
+		if d.options.ExcludeLengthParsed.Contains(int(size)) {
 			resultStatus = false
 		}
 
@@ -218,7 +218,7 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", libgobuster.JoinIntSlice(d.options.ExcludeLength)); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", d.options.ExcludeLengthParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

@@ -28,6 +28,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 - Wordlist offset parameter to skip x lines from the wordlist
 - prevent double slashes when building up an url in dir mode
+- allow for multiple values and ranges on `--exclude-length`
 
 ## 3.5
 

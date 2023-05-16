@@ -9,13 +9,15 @@ type OptionsFuzz struct {
 	libgobuster.HTTPOptions
 	ExcludedStatusCodes       string
 	ExcludedStatusCodesParsed libgobuster.Set[int]
-	ExcludeLength             []int
-	RequestBody               string        
+	ExcludeLength             string
+	ExcludeLengthParsed       libgobuster.Set[int]
+	RequestBody               string
 }
 
 // NewOptionsFuzz returns a new initialized OptionsFuzz
 func NewOptionsFuzz() *OptionsFuzz {
 	return &OptionsFuzz{
 		ExcludedStatusCodesParsed: libgobuster.NewSet[int](),
+		ExcludeLengthParsed:       libgobuster.NewSet[int](),
 	}
 }

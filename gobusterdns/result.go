@@ -19,6 +19,7 @@ type Result struct {
 	ShowCNAME bool
 	Found     bool
 	Subdomain string
+	NoFQDN    bool
 	IPs       []netip.Addr
 	CNAME     string
 }
@@ -29,6 +30,9 @@ func (r Result) ResultToString() (string, error) {
 
 	c := green
 
+	if !r.NoFQDN {
+		r.Subdomain = strings.TrimSuffix(r.Subdomain, ".")
+	}
 	if r.Found {
 		c(buf, "Found: ")
 	} else {

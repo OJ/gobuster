@@ -112,7 +112,8 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	if !d.options.NoFQDN && !strings.HasSuffix(subdomain, ".") {
-		subdomain += "."
+		// add a . to indicate this is the full domain and we do not want to traverse the search domains on the system
+		subdomain = fmt.Sprintf("%s.", subdomain)
 	}
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err == nil {

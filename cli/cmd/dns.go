@@ -76,6 +76,11 @@ func parseDNSOptions() (*libgobuster.Options, *gobusterdns.OptionsDNS, error) {
 		return nil, nil, fmt.Errorf("invalid value for resolver: %w", err)
 	}
 
+	pluginOpts.NoFQDN, err = cmdDNS.Flags().GetBool("no-fqdn")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for no-fqdn: %w", err)
+	}
+
 	if pluginOpts.Resolver != "" && runtime.GOOS == "windows" {
 		return nil, nil, fmt.Errorf("currently can not set custom dns resolver on windows. See https://golang.org/pkg/net/#hdr-Name_Resolution")
 	}
@@ -96,6 +101,7 @@ func init() {
 	cmdDNS.Flags().BoolP("show-cname", "c", false, "Show CNAME records (cannot be used with '-i' option)")
 	cmdDNS.Flags().DurationP("timeout", "", time.Second, "DNS resolver timeout")
 	cmdDNS.Flags().BoolP("wildcard", "", false, "Force continued operation when wildcard found")
+	cmdDNS.Flags().BoolP("no-fqdn", "", false, "Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain")
 	cmdDNS.Flags().StringP("resolver", "r", "", "Use custom DNS server (format server.com or server.com:port)")
 	if err := cmdDNS.MarkFlagRequired("domain"); err != nil {
 		log.Fatalf("error on marking flag as required: %v", err)

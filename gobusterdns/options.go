@@ -11,6 +11,7 @@ type OptionsDNS struct {
 	ShowCNAME      bool
 	WildcardForced bool
 	Resolver       string
+	NoFQDN         bool
 	Timeout        time.Duration
 }
 

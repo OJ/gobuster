@@ -20,7 +20,7 @@ import (
 func addBasicHTTPOptions(cmd *cobra.Command) {
 	cmd.Flags().StringP("useragent", "a", libgobuster.DefaultUserAgent(), "Set the User-Agent string")
 	cmd.Flags().BoolP("random-agent", "", false, "Use a random User-Agent string")
-	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port]")
+	cmd.Flags().StringP("proxy", "", "", "Proxy to use for requests [http(s)://host:port] or [socks5://host:port]")
 	cmd.Flags().DurationP("timeout", "", 10*time.Second, "HTTP Timeout")
 	cmd.Flags().BoolP("no-tls-validation", "k", false, "Skip TLS certificate verification")
 	cmd.Flags().BoolP("retry", "", false, "Should retry on request timeout")

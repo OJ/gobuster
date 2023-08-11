@@ -1,4 +1,4 @@
-# Gobuster
+# Gobuster (OJ Reeves @TheColonial)
 
 Gobuster is a tool used to brute-force:
 
@@ -12,6 +12,20 @@ Gobuster is a tool used to brute-force:
 ## Tags, Statuses, etc
 
 [![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
+
+## Oh dear God.. WHY!?
+
+Because I wanted:
+
+1. ... something that didn't have a fat Java GUI (console FTW).
+1. ... to build something that just worked on the command line.
+1. ... something that did not do recursive brute force.
+1. ... something that allowed me to brute force folders and multiple extensions at once.
+1. ... something that compiled to native on multiple platforms.
+1. ... something that was faster than an interpreted script (such as Python).
+1. ... something that didn't require a runtime.
+1. ... use something that was good with concurrency (hence Go).
+1. ... to build something in Go that wasn't totally useless.
 
 
 ## Love this tool? Back it!
@@ -40,7 +54,15 @@ All funds that are donated to this project will be donated to charity. A full lo
 - support fuzzing POST body, HTTP headers and basic auth
 - new option to not canonicalize header names
 
+
+```text
+Uses DNS subdomain bruteforcing mode
+
+Usage:
+  gobuster dns [flags]
+
 ## 3.2
+
 
 - Use go 1.19
 - use contexts in the correct way
@@ -50,13 +72,61 @@ All funds that are donated to this project will be donated to charity. A full lo
 - google cloud bucket enumeration
 - fix nil reference errors
 
+
+Global Flags:
+  -z, --noprogress        Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
 ## 3.1
+
 
 - enumerate public AWS S3 buckets
 - fuzzing mode
 - specify HTTP method
 - added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
 - The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
+
+
+```text
+Uses directory/file brutceforcing mode
+
+Usage:
+  gobuster dir [flags]
+
+Flags:
+  -f, --addslash                      Apped / to each request
+  -c, --cookies string                Cookies to use for the requests
+  -e, --expanded                      Expanded mode, print full URLs
+  -x, --extensions string             File extension(s) to search for
+  -r, --followredirect                Follow redirects
+  -H, --headers stringArray           Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+  -h, --help                          help for dir
+  -l, --includelength                 Include the length of the body in the output
+  -k, --insecuressl                   Skip SSL certificate verification
+  -n, --nostatus                      Don't print status codes
+  -P, --password string               Password for Basic Auth
+  -p, --proxy string                  Proxy to use for requests [http(s)://host:port]
+  -s, --statuscodes string            Positive status codes (will be overwritten with statuscodesblacklist if set) (default "200,204,301,302,307,401,403")
+  -b, --statuscodesblacklist string   Negative status codes (will override statuscodes if set)
+      --timeout duration              HTTP Timeout (default 10s)
+  -u, --url string                    The target URL
+  -a, --useragent string              Set the User-Agent string (default "gobuster/3.0.1")
+  -U, --username string               Username for Basic Auth
+      --wildcard                      Force continued operation when wildcard found
+
+Global Flags:
+  -z, --noprogress        Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
 
 ## 3.0
 
@@ -67,11 +137,34 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # License
 
+
 See the LICENSE file.
+
+
+```text
+Uses VHOST bruteforcing mode
+
+Usage:
+  gobuster vhost [flags]
 
 # Manual
 
+
 ## Available Modes
+
+
+Global Flags:
+  -z, --noprogress        Don't display progress
+  -o, --output string     Output file to write results to (defaults to stdout)
+  -q, --quiet             Don't print the banner and other noise
+  -t, --threads int       Number of concurrent threads (default 10)
+  -v, --verbose           Verbose output (errors)
+  -w, --wordlist string   Path to the wordlist
+```
+
+## 1. Install Go pre-requisites
+
+    gem install go && apt install golang -y 
 
 - dir - the classic directory brute-forcing mode
 - dns - DNS subdomain brute-forcing mode
@@ -103,14 +196,107 @@ PS: You need at least go 1.19 to compile gobuster.
 
 Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.19 to compile gobuster.
 
-### Compiling
+
+### 2. Install [Go](https://golang.org/doc/install?download=go1.14.2.linux-amd64.tar.gz).
+
+
+### 3. Install GoBuster:
 
 `gobuster` has external dependencies, and so they need to be pulled in first:
 
+
 ```bash
-go get && go build
+apt install gobuster -y && cd /root && go get github.com/OJ/gobuster && cd /root && git clone https://github.com/OJ/gobuster.git && cd gobuster && go get && go build && go install
 ```
 
+
+Optional= If you have all the dependencies already, you can make use of the build scripts:
+
+* `make` - builds for the current Go configuration (ie. runs `go build`).
+* `make windows` - builds 32 and 64 bit binaries for windows, and writes them to the `build` subfolder.
+* `make linux` - builds 32 and 64 bit binaries for linux, and writes them to the `build` subfolder.
+* `make darwin` - builds 32 and 64 bit binaries for darwin, and writes them to the `build` subfolder.
+* `make all` - builds for all platforms and architectures, and writes the resulting binaries to the `build` subfolder.
+* `make clean` - clears out the `build` subfolder.
+* `make test` - runs the tests.
+
+## Wordlists via STDIN
+
+Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
+
+```bash
+hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
+```
+
+Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
+
+## Examples
+
+### `dir` Mode
+
+Command line might look like this:
+
+```bash
+gobuster dir -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
+```
+
+Default options looks like this:
+
+```bash
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
+
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.0.1
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:49:43 Starting gobuster
+===============================================================
+/categories (Status: 301)
+/contact (Status: 301)
+/posts (Status: 301)
+/index (Status: 200)
+===============================================================
+2019/06/21 11:49:44 Finished
+===============================================================
+```
+
+Default options with status codes disabled looks like this:
+
+```bash
+gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
+
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Mode         : dir
+[+] Url/Domain   : https://buffered.io/
+[+] Threads      : 10
+[+] Wordlist     : /home/oj/wordlists/shortlist.txt
+[+] Status codes : 200,204,301,302,307,401,403
+[+] User Agent   : gobuster/3.0.1
+[+] No status    : true
+[+] Timeout      : 10s
+===============================================================
+2019/06/21 11:50:18 Starting gobuster
+===============================================================
+/categories
+/contact
+/index
+/posts
+===============================================================
+2019/06/21 11:50:18 Finished
+===============================================================
+```
+=======
 This will create a `gobuster` binary for you. If you want to install it in the `$GOPATH/bin` folder you can run:
 
 ```bash
@@ -156,7 +342,17 @@ Global Flags:
   -w, --wordlist string   Path to the wordlist
 ```
 
+Ninja mode
+
+```bash
+gobuster dir -f c 'session=123456' -e -x .php,.html -l -k -u domain.com --wildcard -t 37 -w /usr/share/wordlists/dirb/common.txt -a CustomAgent -v -o /root/gobuster/gobuster_dir_domain.com
+```
+
+
+### `dns` Mode
+
 ### Examples
+
 
 
 ```text
@@ -311,7 +507,6 @@ Found: test.127.0.0.1.xip.io
 ===============================================================
 ```
 
-## `dir` Mode
 
 ### Options
 

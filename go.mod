@@ -12,6 +12,15 @@ require (
 )
 
 require (
+	github.com/google/uuid v1.3.0
+	github.com/spf13/cobra v1.4.0
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+)
+
+require (
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect

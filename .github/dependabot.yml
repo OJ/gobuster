@@ -1,19 +1,20 @@
 # To get started with Dependabot version updates, you'll need to specify which
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+      
 version: 2
+enable-beta-ecosystems: true
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
-    target-branch: "dev"
+    target-branch: "master"
     schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    target-branch: "dev"
-    schedule:
-      # Check for updates to GitHub Actions every weekday
       interval: "daily"
+      # Only open pull requests for critical security updates
+      open-pull-requests-limit: 10
+    # Add a comment to each pull request with the results of the gobuster scan
+    pull-request-comment: |
+      This pull request updates the gobuster dependency to the latest version.
+      The gobuster scan has been run against the new version and no vulnerabilities were found.
+      

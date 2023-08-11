@@ -1,70 +1,111 @@
 package libgobuster
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"testing/iotest"
 )
 
-func TestNewStringSet(t *testing.T) {
-	if NewStringSet().Set == nil {
-		t.Fatal("newStringSet returned nil Set")
+func TestNewSet(t *testing.T) {
+	t.Parallel()
+	if NewSet[string]().Set == nil {
+		t.Fatal("NewSet[string] returned nil Set")
+	}
+
+	if NewSet[int]().Set == nil {
+		t.Fatal("NewSet[int] returned nil Set")
 	}
 }
 
-func TestNewIntSet(t *testing.T) {
-	if NewIntSet().Set == nil {
-		t.Fatal("newIntSet returned nil Set")
-	}
-}
-
-func TestStringSetAdd(t *testing.T) {
-	x := NewStringSet()
+func TestSetAdd(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %v", len(x.Set))
+		t.Fatalf("Unexpected string size. Should have 1 Got %v", len(x.Set))
+	}
+
+	y := NewSet[int]()
+	y.Add(1)
+	if len(y.Set) != 1 {
+		t.Fatalf("Unexpected int size. Should have 1 Got %v", len(y.Set))
 	}
 }
 
-func TestStringSetAddDouble(t *testing.T) {
-	x := NewStringSet()
+func TestSetAddDouble(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
 	x.Add("test")
 	x.Add("test")
 	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
+		t.Fatalf("Unexpected string size. Should be 1 (unique) Got %v", len(x.Set))
+	}
+
+	y := NewSet[int]()
+	y.Add(1)
+	y.Add(1)
+	if len(y.Set) != 1 {
+		t.Fatalf("Unexpected int size. Should be 1 (unique) Got %v", len(y.Set))
 	}
 }
 
-func TestStringSetAddRange(t *testing.T) {
-	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk"})
+func TestSetAddRange(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
+	x.AddRange([]string{"string1", "string2"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected string size. Should have 2 Got %v", len(x.Set))
+	}
+
+	y := NewSet[int]()
+	y.AddRange([]int{1, 2})
+	if len(y.Set) != 2 {
+		t.Fatalf("Unexpected int size. Should have 2 Got %v", len(y.Set))
 	}
 }
 
-func TestStringSetAddRangeDouble(t *testing.T) {
-	x := NewStringSet()
-	x.AddRange([]string{"asdf", "ghjk", "asdf", "ghjk"})
+func TestSetAddRangeDouble(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
+	x.AddRange([]string{"string1", "string2", "string1", "string2"})
 	if len(x.Set) != 2 {
-		t.Fatalf("Unexptected size. Should have 2 Got %d", len(x.Set))
+		t.Fatalf("Unexpected string size. Should be 2 (unique) Got %v", len(x.Set))
+	}
+
+	y := NewSet[int]()
+	y.AddRange([]int{1, 2, 1, 2})
+	if len(y.Set) != 2 {
+		t.Fatalf("Unexpected int size. Should be 2 (unique) Got %v", len(y.Set))
 	}
 }
 
-func TestStringSetContains(t *testing.T) {
-	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+func TestSetContains(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
-	for _, y := range v {
-		if !x.Contains(y) {
-			t.Fatalf("Did not find value %s in array. %v", y, x.Set)
+	for _, i := range v {
+		if !x.Contains(i) {
+			t.Fatalf("Did not find value %s in array. %v", i, x.Set)
+		}
+	}
+
+	y := NewSet[int]()
+	v2 := []int{1, 2312, 123121, 999, -99}
+	y.AddRange(v2)
+	for _, i := range v2 {
+		if !y.Contains(i) {
+			t.Fatalf("Did not find value %d in array. %v", i, y.Set)
 		}
 	}
 }
 
-func TestStringSetContainsAny(t *testing.T) {
-	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+func TestSetContainsAny(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	if !x.ContainsAny(v) {
 		t.Fatalf("Did not find any")
@@ -74,66 +115,47 @@ func TestStringSetContainsAny(t *testing.T) {
 	if x.ContainsAny([]string{"mmmm", "nnnnn"}) {
 		t.Fatal("Found unexpected values")
 	}
+
+	y := NewSet[int]()
+	v2 := []int{1, 2312, 123121, 999, -99}
+	y.AddRange(v2)
+	if !y.ContainsAny(v2) {
+		t.Fatalf("Did not find any")
+	}
+
+	// test not found
+	if y.ContainsAny([]int{9235, 2398532}) {
+		t.Fatal("Found unexpected values")
+	}
 }
 
-func TestStringSetStringify(t *testing.T) {
-	x := NewStringSet()
-	v := []string{"asdf", "ghjk", "1234", "5678"}
+func TestSetStringify(t *testing.T) {
+	t.Parallel()
+	x := NewSet[string]()
+	v := []string{"string1", "string2", "1234", "5678"}
 	x.AddRange(v)
 	z := x.Stringify()
 	// order is random
-	for _, y := range v {
-		if !strings.Contains(z, y) {
-			t.Fatalf("Did not find value %q in %q", y, z)
+	for _, i := range v {
+		if !strings.Contains(z, i) {
+			t.Fatalf("Did not find value %q in %q", i, z)
 		}
 	}
-}
 
-func TestIntSetAdd(t *testing.T) {
-	x := NewIntSet()
-	x.Add(1)
-	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
-	}
-}
-
-func TestIntSetAddDouble(t *testing.T) {
-	x := NewIntSet()
-	x.Add(1)
-	x.Add(1)
-	if len(x.Set) != 1 {
-		t.Fatalf("Unexptected size. Should have 1 Got %d", len(x.Set))
-	}
-}
-
-func TestIntSetContains(t *testing.T) {
-	x := NewIntSet()
-	v := []int{1, 2, 3, 4}
-	for _, y := range v {
-		x.Add(y)
-	}
-	for _, y := range v {
-		if !x.Contains(y) {
-			t.Fatalf("Did not find value %d in array. %v", y, x.Set)
+	y := NewSet[int]()
+	v2 := []int{1, 2312, 123121, 999, -99}
+	y.AddRange(v2)
+	z = y.Stringify()
+	// order is random
+	for _, i := range v2 {
+		if !strings.Contains(z, fmt.Sprint(i)) {
+			t.Fatalf("Did not find value %q in %q", i, z)
 		}
-	}
-}
-
-func TestIntSetStringify(t *testing.T) {
-	x := NewIntSet()
-	v := []int{1, 3, 2, 4}
-	expected := "1,2,3,4"
-	for _, y := range v {
-		x.Add(y)
-	}
-	z := x.Stringify()
-	// should be sorted
-	if expected != z {
-		t.Fatalf("Expected %q got %q", expected, z)
 	}
 }
 
 func TestLineCounter(t *testing.T) {
+	t.Parallel()
 	var tt = []struct {
 		testName string
 		s        string
@@ -146,7 +168,9 @@ func TestLineCounter(t *testing.T) {
 		{"Empty", "", 1},
 	}
 	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
 			r := strings.NewReader(x.s)
 			l, err := lineCounter(r)
 			if err != nil {
@@ -160,9 +184,10 @@ func TestLineCounter(t *testing.T) {
 }
 
 func TestLineCounterError(t *testing.T) {
+	t.Parallel()
 	r := iotest.TimeoutReader(strings.NewReader("test"))
 	_, err := lineCounter(r)
-	if err != iotest.ErrTimeout {
+	if !errors.Is(err, iotest.ErrTimeout) {
 		t.Fatalf("Got wrong error! %v", err)
 	}
 }

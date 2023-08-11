@@ -2,49 +2,44 @@ package libgobuster
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 )
 
-// IntSet is a set of Ints
-type IntSet struct {
-	Set map[int]bool
+// Set is a set of Ts
+type Set[T comparable] struct {
+	Set map[T]bool
 }
 
-// StringSet is a set of Strings
-type StringSet struct {
-	Set map[string]bool
-}
-
-// NewStringSet creates a new initialized StringSet
-func NewStringSet() StringSet {
-	return StringSet{Set: map[string]bool{}}
+// NewSSet creates a new initialized Set
+func NewSet[T comparable]() Set[T] {
+	return Set[T]{Set: map[T]bool{}}
 }
 
 // Add an element to a set
-func (set *StringSet) Add(s string) bool {
+func (set *Set[T]) Add(s T) bool {
 	_, found := set.Set[s]
 	set.Set[s] = true
 	return !found
 }
 
 // AddRange adds a list of elements to a set
-func (set *StringSet) AddRange(ss []string) {
+func (set *Set[T]) AddRange(ss []T) {
 	for _, s := range ss {
 		set.Set[s] = true
 	}
 }
 
 // Contains tests if an element is in a set
-func (set *StringSet) Contains(s string) bool {
+func (set *Set[T]) Contains(s T) bool {
 	_, found := set.Set[s]
 	return found
 }
 
 // ContainsAny checks if any of the elements exist
-func (set *StringSet) ContainsAny(ss []string) bool {
+func (set *Set[T]) ContainsAny(ss []T) bool {
 	for _, s := range ss {
 		if set.Set[s] {
 			return true
@@ -54,52 +49,19 @@ func (set *StringSet) ContainsAny(ss []string) bool {
 }
 
 // Length returns the length of the Set
-func (set *StringSet) Length() int {
+func (set *Set[T]) Length() int {
 	return len(set.Set)
 }
 
 // Stringify the set
-func (set *StringSet) Stringify() string {
-	values := []string{}
+func (set *Set[T]) Stringify() string {
+	values := make([]string, len(set.Set))
+	i := 0
 	for s := range set.Set {
-		values = append(values, s)
+		values[i] = fmt.Sprint(s)
+		i++
 	}
 	return strings.Join(values, ",")
-}
-
-// NewIntSet creates a new initialized IntSet
-func NewIntSet() IntSet {
-	return IntSet{Set: map[int]bool{}}
-}
-
-// Add adds an element to a set
-func (set *IntSet) Add(i int) bool {
-	_, found := set.Set[i]
-	set.Set[i] = true
-	return !found
-}
-
-// Contains tests if an element is in a set
-func (set *IntSet) Contains(i int) bool {
-	_, found := set.Set[i]
-	return found
-}
-
-// Stringify the set
-func (set *IntSet) Stringify() string {
-	values := []int{}
-	for s := range set.Set {
-		values = append(values, s)
-	}
-	sort.Ints(values)
-
-	delim := ","
-	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(values)), delim), "[]")
-}
-
-// Length returns the length of the Set
-func (set *IntSet) Length() int {
-	return len(set.Set)
 }
 
 func lineCounter(r io.Reader) (int, error) {
@@ -112,7 +74,7 @@ func lineCounter(r io.Reader) (int, error) {
 		count += bytes.Count(buf[:c], lineSep)
 
 		switch {
-		case err == io.EOF:
+		case errors.Is(err, io.EOF):
 			return count, nil
 
 		case err != nil:

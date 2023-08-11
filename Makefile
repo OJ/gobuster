@@ -1,59 +1,41 @@
-TARGET=./build
-ARCHS=amd64 386
-LDFLAGS="-s -w"
-GCFLAGS="all=-trimpath=$(shell pwd)"
-ASMFLAGS="all=-trimpath=$(shell pwd)"
+.DEFAULT_GOAL := linux
 
-current:
-	@go build -o ./gobuster; \
-	echo "Done."
-
-fmt:
-	@go fmt ./...; \
-	echo "Done."
-
-update:
-	@go get -u; \
-	go mod tidy -v; \
-	echo "Done."
-
-windows:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for windows $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-windows-$${GOARCH} ; \
-		GOOS=windows GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-windows-$${GOARCH}/gobuster.exe ; \
-	done; \
-	echo "Done."
-
+.PHONY: linux
 linux:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for linux $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-linux-$${GOARCH} ; \
-		GOOS=linux GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-linux-$${GOARCH}/gobuster ; \
-	done; \
-	echo "Done."
+	go build -o ./gobuster
 
-darwin:
-	@for GOARCH in ${ARCHS}; do \
-		echo "Building for darwin $${GOARCH} ..." ; \
-		mkdir -p ${TARGET}/gobuster-darwin-$${GOARCH} ; \
-		GOOS=darwin GOARCH=$${GOARCH} GO111MODULE=on CGO_ENABLED=0 go build -ldflags=${LDFLAGS} -gcflags=${GCFLAGS} -asmflags=${ASMFLAGS} -o ${TARGET}/gobuster-darwin-$${GOARCH}/gobuster ; \
-	done; \
-	echo "Done."
+.PHONY: windows
+windows:
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o ./gobuster.exe
 
-all: clean fmt update lint test darwin linux windows
+.PHONY: fmt
+fmt:
+	go fmt ./...
 
+.PHONY: update
+update:
+	go get -u
+	go mod tidy -v
+
+.PHONY: all
+all: fmt update linux windows test lint
+
+.PHONY: test
 test:
-	@go test -v -race ./... ; \
-	echo "Done."
+	go test -v -race ./...
 
+.PHONY: lint
 lint:
-	@go get -u github.com/golangci/golangci-lint@master ; \
-	golangci-lint run ./... ; \
-	go mod tidy ; \
-	echo Done
+	"$$(go env GOPATH)/bin/golangci-lint" run ./...
+	go mod tidy
 
-clean:
-	@rm -rf ${TARGET}/* ; \
-	go clean ./... ; \
-	echo "Done."
+.PHONY: lint-update
+lint-update:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin
+	$$(go env GOPATH)/bin/golangci-lint --version
+
+.PHONY: tag
+tag:
+	@[ "${TAG}" ] && echo "Tagging a new version ${TAG}" || ( echo "TAG is not set"; exit 1 )
+	git tag -a "${TAG}" -m "${TAG}"
+	git push origin "${TAG}"

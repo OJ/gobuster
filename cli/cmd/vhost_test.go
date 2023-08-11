@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -18,11 +18,11 @@ func BenchmarkVhostMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
-	pluginopts := gobustervhost.OptionsVhost{}
+	pluginopts := gobustervhost.NewOptionsVhost()
 	pluginopts.URL = h.URL
 	pluginopts.Timeout = 10 * time.Second
 
-	wordlist, err := ioutil.TempFile("", "")
+	wordlist, err := os.CreateTemp("", "")
 	if err != nil {
 		b.Fatalf("could not create tempfile: %v", err)
 	}
@@ -48,13 +48,13 @@ func BenchmarkVhostMode(b *testing.B) {
 	}
 	defer devnull.Close()
 	log.SetFlags(0)
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	// Run the real benchmark
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobustervhost.NewGobusterVhost(ctx, &globalopts, &pluginopts)
+		plugin, err := gobustervhost.NewGobusterVhost(&globalopts, pluginopts)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

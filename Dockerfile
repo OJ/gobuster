@@ -1,10 +1,10 @@
 FROM golang:latest AS build-env
 WORKDIR /src
-ENV GO111MODULE=on
+ENV CGO_ENABLED=0
 COPY go.mod /src/
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o gobuster -ldflags="-s -w" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src"
+RUN go build -a -o gobuster -trimpath
 
 FROM alpine:3.15.4
 

@@ -24,6 +24,10 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.7
+
+- TODO
+
 ## 3.6
 
 - Wordlist offset parameter to skip x lines from the wordlist

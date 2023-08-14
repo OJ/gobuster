@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,7 +11,6 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
@@ -33,14 +30,14 @@ func BenchmarkDirMode(b *testing.B) {
 	pluginopts.Timeout = 10 * time.Second
 
 	pluginopts.Extensions = ".php,.csv"
-	tmpExt, err := helper.ParseExtensions(pluginopts.Extensions)
+	tmpExt, err := libgobuster.ParseExtensions(pluginopts.Extensions)
 	if err != nil {
 		b.Fatalf("could not parse extensions: %v", err)
 	}
 	pluginopts.ExtensionsParsed = tmpExt
 
 	pluginopts.StatusCodes = "200,204,301,302,307,401,403"
-	tmpStat, err := helper.ParseCommaSeparatedInt(pluginopts.StatusCodes)
+	tmpStat, err := libgobuster.ParseCommaSeparatedInt(pluginopts.StatusCodes)
 	if err != nil {
 		b.Fatalf("could not parse status codes: %v", err)
 	}
@@ -71,8 +68,7 @@ func BenchmarkDirMode(b *testing.B) {
 		b.Fatalf("could not get devnull %v", err)
 	}
 	defer devnull.Close()
-	log.SetFlags(0)
-	log.SetOutput(io.Discard)
+	log := libgobuster.NewLogger(false)
 
 	// Run the real benchmark
 	for x := 0; x < b.N; x++ {
@@ -83,7 +79,7 @@ func BenchmarkDirMode(b *testing.B) {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}
 
-		if err := cli.Gobuster(ctx, &globalopts, plugin); err != nil {
+		if err := cli.Gobuster(ctx, &globalopts, plugin, log); err != nil {
 			b.Fatalf("error on running gobuster: %v", err)
 		}
 		os.Stdout = oldStdout

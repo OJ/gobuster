@@ -13,6 +13,7 @@ var (
 
 // Result represents a single result
 type Result struct {
+	Word       string
 	Verbose    bool
 	Found      bool
 	Path       string
@@ -38,7 +39,7 @@ func (r Result) ResultToString() (string, error) {
 		c(buf, "Found: ")
 	}
 
-	c(buf, "[Status=%d] [Length=%d] %s", r.StatusCode, r.Size, r.Path)
+	c(buf, "[Status=%d] [Length=%d] [Word=%s] %s", r.StatusCode, r.Size, r.Word, r.Path)
 	c(buf, "\n")
 
 	s := buf.String()

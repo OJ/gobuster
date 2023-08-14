@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -47,8 +45,7 @@ func BenchmarkVhostMode(b *testing.B) {
 		b.Fatalf("could not get devnull %v", err)
 	}
 	defer devnull.Close()
-	log.SetFlags(0)
-	log.SetOutput(io.Discard)
+	log := libgobuster.NewLogger(false)
 
 	// Run the real benchmark
 	for x := 0; x < b.N; x++ {
@@ -59,7 +56,7 @@ func BenchmarkVhostMode(b *testing.B) {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}
 
-		if err := cli.Gobuster(ctx, &globalopts, plugin); err != nil {
+		if err := cli.Gobuster(ctx, &globalopts, plugin, log); err != nil {
 			b.Fatalf("error on running gobuster: %v", err)
 		}
 		os.Stdout = oldStdout

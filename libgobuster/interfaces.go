@@ -5,7 +5,7 @@ import "context"
 // GobusterPlugin is an interface which plugins must implement
 type GobusterPlugin interface {
 	Name() string
-	PreRun(context.Context) error
+	PreRun(context.Context, *Progress) error
 	ProcessWord(context.Context, string, *Progress) error
 	AdditionalWords(string) []string
 	GetConfigString() (string, error)

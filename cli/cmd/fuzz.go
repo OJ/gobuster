@@ -8,7 +8,6 @@ import (
 
 	"github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterfuzz"
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/spf13/cobra"
 )
@@ -31,11 +30,13 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}
 
-	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
+	log := libgobuster.NewLogger(globalopts.Debug)
+	if err := cli.Gobuster(mainContext, globalopts, plugin, log); err != nil {
 		var wErr *gobusterfuzz.ErrWildcard
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
+		log.Debugf("%#v", err)
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil
@@ -74,16 +75,21 @@ func parseFuzzOptions() (*libgobuster.Options, *gobusterfuzz.OptionsFuzz, error)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
-	ret, err := helper.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)
+	ret, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for excludestatuscodes: %w", err)
 	}
 	pluginOpts.ExcludedStatusCodesParsed = ret
 
-	pluginOpts.ExcludeLength, err = cmdFuzz.Flags().GetIntSlice("exclude-length")
+	pluginOpts.ExcludeLength, err = cmdFuzz.Flags().GetString("exclude-length")
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid value for excludelength: %w", err)
+		return nil, nil, fmt.Errorf("invalid value for exclude-length: %w", err)
 	}
+	ret2, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for exclude-length: %w", err)
+	}
+	pluginOpts.ExcludeLengthParsed = ret2
 
 	pluginOpts.RequestBody, err = cmdFuzz.Flags().GetString("body")
 	if err != nil {
@@ -105,7 +111,7 @@ func init() {
 		log.Fatalf("%v", err)
 	}
 	cmdFuzz.Flags().StringP("excludestatuscodes", "b", "", "Excluded status codes. Can also handle ranges like 200,300-400,404.")
-	cmdFuzz.Flags().IntSlice("exclude-length", []int{}, "exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.")
+	cmdFuzz.Flags().String("exclude-length", "", "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206")
 	cmdFuzz.Flags().StringP("body", "B", "", "Request body")
 
 	cmdFuzz.PersistentPreRun = func(cmd *cobra.Command, args []string) {

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"text/tabwriter"
+	"unicode/utf8"
 
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -91,7 +91,7 @@ func (d *GobusterDir) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (d *GobusterDir) PreRun(ctx context.Context) error {
+func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(d.options.URL, "/") {
 		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
@@ -113,7 +113,7 @@ func (d *GobusterDir) PreRun(ctx context.Context) error {
 		return err
 	}
 
-	if helper.SliceContains(d.options.ExcludeLength, int(wildcardLength)) {
+	if d.options.ExcludeLengthParsed.Contains(int(wildcardLength)) {
 		// we are done and ignore the request as the length is excluded
 		return nil
 	}
@@ -174,6 +174,17 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		suffix = "/"
 	}
 	entity := fmt.Sprintf("%s%s", word, suffix)
+
+	// make sure the url ends with a slash
+	if !strings.HasSuffix(d.options.URL, "/") {
+		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
+	}
+	// prevent double slashes by removing leading /
+	if strings.HasPrefix(entity, "/") {
+		// get size of first rune and trim it
+		_, i := utf8.DecodeRuneInString(entity)
+		entity = entity[i:]
+	}
 	url := fmt.Sprintf("%s%s", d.options.URL, entity)
 
 	tries := 1
@@ -220,7 +231,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if (resultStatus && !helper.SliceContains(d.options.ExcludeLength, int(size))) || d.globalopts.Verbose {
+		if (resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size))) || d.globalopts.Verbose {
 			progress.ResultChan <- Result{
 				URL:        d.options.URL,
 				Path:       entity,
@@ -288,7 +299,7 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(d.options.ExcludeLength)); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", d.options.ExcludeLengthParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

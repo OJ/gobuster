@@ -4,13 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 // PATTERN is the pattern for wordlist replacements in pattern file
@@ -28,19 +25,17 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts     *Options
+	Logger   Logger
 	plugin   GobusterPlugin
-	LogInfo  *log.Logger
-	LogError *log.Logger
 	Progress *Progress
 }
 
 // NewGobuster returns a new Gobuster object
-func NewGobuster(opts *Options, plugin GobusterPlugin) (*Gobuster, error) {
+func NewGobuster(opts *Options, plugin GobusterPlugin, logger Logger) (*Gobuster, error) {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
-	g.LogInfo = log.New(os.Stdout, "", log.LstdFlags)
-	g.LogError = log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), log.LstdFlags)
+	g.Logger = logger
 	g.Progress = NewProgress()
 
 	return &g, nil
@@ -97,8 +92,15 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 		return nil, fmt.Errorf("failed to get number of lines: %w", err)
 	}
 
+	if lines-g.Opts.WordlistOffset <= 0 {
+		return nil, fmt.Errorf("offset is greater than the number of lines in the wordlist")
+	}
+
 	// calcutate expected requests
 	g.Progress.IncrementTotalRequests(lines)
+
+	// add offset if needed (offset defaults to 0)
+	g.Progress.incrementRequestsIssues(g.Opts.WordlistOffset)
 
 	// call the function once with a dummy entry to receive the number
 	// of custom words per wordlist word
@@ -114,7 +116,20 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to rewind wordlist: %w", err)
 	}
-	return bufio.NewScanner(wordlist), nil
+
+	wordlistScanner := bufio.NewScanner(wordlist)
+
+	// skip lines
+	for i := 0; i < g.Opts.WordlistOffset; i++ {
+		if !wordlistScanner.Scan() {
+			if err := wordlistScanner.Err(); err != nil {
+				return nil, fmt.Errorf("failed to skip lines in wordlist: %w", err)
+			}
+			return nil, fmt.Errorf("failed to skip lines in wordlist")
+		}
+	}
+
+	return wordlistScanner, nil
 }
 
 // Run the busting of the website with the given
@@ -122,8 +137,9 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 func (g *Gobuster) Run(ctx context.Context) error {
 	defer close(g.Progress.ResultChan)
 	defer close(g.Progress.ErrorChan)
+	defer close(g.Progress.MessageChan)
 
-	if err := g.plugin.PreRun(ctx); err != nil {
+	if err := g.plugin.PreRun(ctx, g.Progress); err != nil {
 		return err
 	}
 

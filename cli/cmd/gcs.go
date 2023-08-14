@@ -23,7 +23,9 @@ func runGCS(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error on creating gobustergcs: %w", err)
 	}
 
-	if err := cli.Gobuster(mainContext, globalopts, plugin); err != nil {
+	log := libgobuster.NewLogger(globalopts.Debug)
+	if err := cli.Gobuster(mainContext, globalopts, plugin, log); err != nil {
+		log.Debugf("%#v", err)
 		return fmt.Errorf("error on running gobuster: %w", err)
 	}
 	return nil

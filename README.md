@@ -24,6 +24,13 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.6
+
+- Wordlist offset parameter to skip x lines from the wordlist
+- prevent double slashes when building up an url in dir mode
+- allow for multiple values and ranges on `--exclude-length`
+- `no-fqdn` parameter on dns bruteforce to disable the use of the systems search domains. This should speed up the run if you have configured some search domains. [https://github.com/OJ/gobuster/pull/418](https://github.com/OJ/gobuster/pull/418)
+
 ## 3.5
 
 - Allow Ranges in status code and status code blacklist. Example: 200,300-305,404

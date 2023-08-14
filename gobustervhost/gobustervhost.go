@@ -11,7 +11,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/OJ/gobuster/v3/helper"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
@@ -76,7 +75,7 @@ func (v *GobusterVhost) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (v *GobusterVhost) PreRun(ctx context.Context) error {
+func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL, "/") {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
@@ -152,7 +151,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !helper.SliceContains(v.options.ExcludeLength, int(size))) || v.globalopts.Verbose {
+	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {
 			resultStatus = true
@@ -249,7 +248,7 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 	}
 
 	if len(o.ExcludeLength) > 0 {
-		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", helper.JoinIntSlice(v.options.ExcludeLength)); err != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", v.options.ExcludeLengthParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

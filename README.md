@@ -100,6 +100,14 @@ We are now shipping binaries for each of the releases so that you don't even hav
 
 If you're stupid enough to trust binaries that I've put together, you can download them from the [releases](https://github.com/OJ/gobuster/releases) page.
 
+### Docker
+
+You can also grab a prebuilt docker image from [https://github.com/OJ/gobuster/pkgs/container/gobuster](https://github.com/OJ/gobuster/pkgs/container/gobuster)
+
+```bash
+docker pull ghcr.io/oj/gobuster:latest
+```
+
 ### Using `go install`
 
 If you have a [Go](https://golang.org/) environment ready to go (at least go 1.19), it's as easy as:

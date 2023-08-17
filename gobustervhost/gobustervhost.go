@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -94,6 +96,9 @@ func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progre
 	// request default vhost for normalBody
 	_, _, _, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return fmt.Errorf("server closed connection without sending any data back when connecting to %s. Maybe you are connecting via https to on http port or vice versa?", v.options.URL)
+		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.normalBody = body
@@ -102,6 +107,9 @@ func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progre
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
 	_, _, _, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return fmt.Errorf("server closed connection without sending any data back when connecting to %s. Maybe you are connecting via https to on http port or vice versa?", v.options.URL)
+		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.abnormalBody = body

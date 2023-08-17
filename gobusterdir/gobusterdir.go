@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -99,6 +101,9 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 
 	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return fmt.Errorf("server closed connection without sending any data back when connecting to %s. Maybe you are connecting via https to on http port or vice versa?", d.options.URL)
+		}
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
 

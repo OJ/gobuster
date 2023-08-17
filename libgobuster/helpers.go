@@ -176,16 +176,6 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 	return ret, nil
 }
 
-// SliceContains checks if an integer slice contains a specific value
-func SliceContains(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
 // JoinIntSlice joins an int slice by ,
 func JoinIntSlice(s []int) string {
 	valuesText := make([]string, len(s))

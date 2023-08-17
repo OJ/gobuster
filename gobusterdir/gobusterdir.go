@@ -27,13 +27,20 @@ var (
 // ErrWildcard is returned if a wildcard response is found
 type ErrWildcard struct {
 	url        string
+	location   string
 	statusCode int
 	length     int64
 }
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d (Length: %d)", e.url, e.statusCode, e.length)
+	addInfo := ""
+	if e.location != "" {
+		addInfo = fmt.Sprintf("%s => %d (redirect to %s) (Length: %d)", e.url, e.statusCode, e.location, e.length)
+	} else {
+		addInfo = fmt.Sprintf("%s => %d (Length: %d)", e.url, e.statusCode, e.length)
+	}
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s", addInfo)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -118,7 +125,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 		url = fmt.Sprintf("%s/", url)
 	}
 
-	wildcardResp, wildcardLength, _, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
 		if errors.Is(err, io.EOF) {
 			return libgobuster.ErrorEOF
@@ -137,11 +144,11 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 
 	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	} else if d.options.StatusCodesParsed.Length() > 0 {
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
+			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	} else {
 		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")

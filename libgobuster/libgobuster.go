@@ -64,7 +64,7 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.
 			err := g.plugin.ProcessWord(ctx, wordCleaned, g.Progress)
 			if err != nil {
 				// do not exit and continue
-				g.Progress.ErrorChan <- err
+				g.Progress.ErrorChan <- fmt.Errorf("error on word %s: %w", wordCleaned, err)
 				continue
 			}
 

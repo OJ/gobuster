@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"net"
+	"io"
+	"os"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
@@ -128,7 +131,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
 				// put error in error chan so it's printed out and ignore it
@@ -136,6 +139,13 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				progress.ErrorChan <- err
 				continue
 			} else {
+				if errors.Is(err, io.EOF) {
+					return libgobuster.ErrorEOF
+				} else if os.IsTimeout(err) {
+					return libgobuster.ErrorTimeout
+				} else if errors.Is(err, syscall.ECONNREFUSED) {
+					return libgobuster.ErrorConnectionRefused
+				}
 				return err
 			}
 		}

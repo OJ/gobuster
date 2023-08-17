@@ -34,7 +34,7 @@ func runDNS(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w. To force processing of Wildcard DNS, specify the '--wildcard' switch", wErr)
 		}
 		log.Debugf("%#v", err)
-		return fmt.Errorf("error on running gobuster: %w", err)
+		return fmt.Errorf("error on running gobuster on %s: %w", pluginopts.Domain, err)
 	}
 	return nil
 }

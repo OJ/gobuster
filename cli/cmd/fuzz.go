@@ -37,7 +37,7 @@ func runFuzz(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
 		log.Debugf("%#v", err)
-		return fmt.Errorf("error on running gobuster: %w", err)
+		return fmt.Errorf("error on running gobuster on %s: %w", pluginopts.URL, err)
 	}
 	return nil
 }

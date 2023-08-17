@@ -26,7 +26,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## 3.7
 
-- TODO
+- More user friendly error messages
 
 ## 3.6
 

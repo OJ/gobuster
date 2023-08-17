@@ -7,9 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"os"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 	"unicode/utf8"
 
@@ -102,7 +103,11 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
 		if errors.Is(err, io.EOF) {
-			return fmt.Errorf("server closed connection without sending any data back when connecting to %s. Maybe you are connecting via https to on http port or vice versa?", d.options.URL)
+			return libgobuster.ErrorEOF
+		} else if os.IsTimeout(err) {
+			return libgobuster.ErrorTimeout
+		} else if errors.Is(err, syscall.ECONNREFUSED) {
+			return libgobuster.ErrorConnectionRefused
 		}
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
@@ -115,6 +120,13 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 
 	wildcardResp, wildcardLength, _, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return libgobuster.ErrorEOF
+		} else if os.IsTimeout(err) {
+			return libgobuster.ErrorTimeout
+		} else if errors.Is(err, syscall.ECONNREFUSED) {
+			return libgobuster.ErrorConnectionRefused
+		}
 		return err
 	}
 
@@ -207,7 +219,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
 				// put error in error chan so it's printed out and ignore it
@@ -215,6 +227,13 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				progress.ErrorChan <- err
 				continue
 			} else {
+				if errors.Is(err, io.EOF) {
+					return libgobuster.ErrorEOF
+				} else if os.IsTimeout(err) {
+					return libgobuster.ErrorTimeout
+				} else if errors.Is(err, syscall.ECONNREFUSED) {
+					return libgobuster.ErrorConnectionRefused
+				}
 				return err
 			}
 		}

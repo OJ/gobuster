@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"syscall"
@@ -125,9 +126,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 
 	var statusCode int
 	var size int64
+	var responseHeaders http.Header
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, _, _, err = d.http.Request(ctx, url, requestOptions)
+		statusCode, size, responseHeaders, _, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -171,6 +173,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				StatusCode: statusCode,
 				Size:       size,
 				Word:       word,
+				Header:     responseHeaders,
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package gobusterdns
 
 import (
 	"bytes"
+	"fmt"
 	"net/netip"
 	"strings"
 
@@ -23,16 +24,22 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
+	green(buf, "Found: %s", r.Subdomain)
+
 	if len(r.IPs) > 0 {
 		ips := make([]string, len(r.IPs))
 		for i := range r.IPs {
 			ips[i] = r.IPs[i].String()
 		}
-		green(buf, "Found: %s [%s]\n", r.Subdomain, strings.Join(ips, ","))
+		green(buf, " IPs: %s", strings.Join(ips, ","))
 	}
 
 	if r.CNAME != "" {
-		green(buf, "Found CNAME: %s [%s]\n", r.Subdomain, r.CNAME)
+		green(buf, " CNAME: %s", r.CNAME)
+	}
+
+	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
+		return "", err
 	}
 
 	s := buf.String()

@@ -24,7 +24,7 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	green(buf, "Found: %s", r.Subdomain)
+	green(buf, "%s", r.Subdomain)
 
 	if len(r.IPs) > 0 {
 		ips := make([]string, len(r.IPs))

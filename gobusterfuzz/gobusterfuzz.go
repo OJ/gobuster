@@ -165,10 +165,8 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 			}
 		}
 
-		if resultStatus || d.globalopts.Verbose {
+		if resultStatus {
 			progress.ResultChan <- Result{
-				Verbose:    d.globalopts.Verbose,
-				Found:      resultStatus,
 				Path:       url,
 				StatusCode: statusCode,
 				Size:       size,

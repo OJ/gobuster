@@ -7,15 +7,12 @@ import (
 )
 
 var (
-	yellow = color.New(color.FgYellow).FprintfFunc()
-	green  = color.New(color.FgGreen).FprintfFunc()
+	green = color.New(color.FgGreen).FprintfFunc()
 )
 
 // Result represents a single result
 type Result struct {
 	Word       string
-	Verbose    bool
-	Found      bool
 	Path       string
 	StatusCode int
 	Size       int64
@@ -25,22 +22,7 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	c := green
-
-	// Prefix if we're in verbose mode
-	if r.Verbose {
-		if r.Found {
-			c(buf, "Found: ")
-		} else {
-			c = yellow
-			c(buf, "Missed: ")
-		}
-	} else if r.Found {
-		c(buf, "Found: ")
-	}
-
-	c(buf, "[Status=%d] [Length=%d] [Word=%s] %s", r.StatusCode, r.Size, r.Word, r.Path)
-	c(buf, "\n")
+	green(buf, "[Status=%d] [Length=%d] [Word=%s] %s\n", r.StatusCode, r.Size, r.Word, r.Path)
 
 	s := buf.String()
 	return s, nil

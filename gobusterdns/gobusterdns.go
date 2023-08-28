@@ -127,11 +127,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 
 	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
 		result := Result{
-			Subdomain: subdomain,
-		}
-
-		if d.options.NoFQDN {
-			result.Subdomain = strings.TrimSuffix(result.Subdomain, ".")
+			Subdomain: strings.TrimSuffix(subdomain, "."),
 		}
 
 		if d.options.ShowIPs {

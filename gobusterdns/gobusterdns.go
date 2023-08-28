@@ -9,7 +9,6 @@ import (
 	"net/netip"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
@@ -116,32 +115,31 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 		subdomain = fmt.Sprintf("%s.", subdomain)
 	}
 	ips, err := d.dnsLookup(ctx, subdomain)
-	if err == nil {
-		if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
-			result := Result{
-				Subdomain: subdomain,
-				Found:     true,
-				ShowIPs:   d.options.ShowIPs,
-				ShowCNAME: d.options.ShowCNAME,
-				NoFQDN:    d.options.NoFQDN,
-			}
-			if d.options.ShowIPs {
-				result.IPs = ips
-			} else if d.options.ShowCNAME {
-				cname, err := d.dnsLookupCname(ctx, subdomain)
-				if err == nil {
-					result.CNAME = cname
-				}
-			}
-			progress.ResultChan <- result
-		}
-	} else if d.globalopts.Verbose {
-		progress.ResultChan <- Result{
+	if err != nil {
+		return err
+	}
+
+	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
+		result := Result{
 			Subdomain: subdomain,
-			Found:     false,
-			ShowIPs:   d.options.ShowIPs,
-			ShowCNAME: d.options.ShowCNAME,
 		}
+
+		if d.options.NoFQDN {
+			result.Subdomain = strings.TrimSuffix(result.Subdomain, ".")
+		}
+
+		if d.options.ShowIPs {
+			result.IPs = ips
+		}
+		if d.options.CheckCNAME {
+			cname, err := d.dnsLookupCname(ctx, subdomain)
+			if err == nil {
+				result.CNAME = cname
+			} else {
+				progress.ErrorChan <- err
+			}
+		}
+		progress.ResultChan <- result
 	}
 	return nil
 }
@@ -177,8 +175,8 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.ShowCNAME {
-		if _, err := fmt.Fprintf(tw, "[+] Show CNAME:\ttrue\n"); err != nil {
+	if o.CheckCNAME {
+		if _, err := fmt.Fprintf(tw, "[+] Check CNAME:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
@@ -239,6 +237,5 @@ func (d *GobusterDNS) dnsLookup(ctx context.Context, domain string) ([]netip.Add
 func (d *GobusterDNS) dnsLookupCname(ctx context.Context, domain string) (string, error) {
 	ctx2, cancel := context.WithTimeout(ctx, d.options.Timeout)
 	defer cancel()
-	time.Sleep(time.Second)
 	return d.resolver.LookupCNAME(ctx2, domain)
 }

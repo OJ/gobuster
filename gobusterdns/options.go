@@ -8,7 +8,7 @@ import (
 type OptionsDNS struct {
 	Domain         string
 	ShowIPs        bool
-	ShowCNAME      bool
+	CheckCNAME     bool
 	WildcardForced bool
 	Resolver       string
 	NoFQDN         bool

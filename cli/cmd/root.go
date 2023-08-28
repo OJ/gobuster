@@ -184,7 +184,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("wordlist", "w", "", "Path to the wordlist. Set to - to use STDIN.")
 	rootCmd.PersistentFlags().IntP("wordlist-offset", "", 0, "Resume from a given position in the wordlist (defaults to 0)")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to stdout)")
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output (errors)")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Don't print the banner and other noise")
 	rootCmd.PersistentFlags().BoolP("no-progress", "z", false, "Don't display progress")
 	rootCmd.PersistentFlags().Bool("no-error", false, "Don't display errors")

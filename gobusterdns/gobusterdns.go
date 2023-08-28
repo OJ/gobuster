@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -116,6 +117,11 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 	}
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err != nil {
+		var wErr *net.DNSError
+		if errors.As(err, &wErr) && wErr.IsNotFound {
+			// host not found is the expected error here
+			return nil
+		}
 		return err
 	}
 
@@ -136,7 +142,11 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 			if err == nil {
 				result.CNAME = cname
 			} else {
-				progress.ErrorChan <- err
+				var wErr *net.DNSError
+				if !errors.As(err, &wErr) && !wErr.IsNotFound {
+					// host not found is the expected error here, send all other errors to the error channel
+					progress.ErrorChan <- err
+				}
 			}
 		}
 		progress.ResultChan <- result

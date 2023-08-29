@@ -32,11 +32,11 @@ func main() {
 
 	app := &cli.App{
 		Name:      "gobuster",
+		Usage:     "the tool you love",
 		UsageText: "gobuster command [command options]",
 		Authors: []*cli.Author{
 			{
-				Name:  "Christian Mehlmauer",
-				Email: "firefart@gmail.com",
+				Name: "Christian Mehlmauer",
 			},
 			{
 				Name: "OJ Reeves",

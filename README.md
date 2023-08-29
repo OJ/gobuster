@@ -31,6 +31,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - Clean up DNS mode
 - renamed `show-cname` to `check-cname` in dns mode
 - get rid of `verbose` flag
+- the version command now also shows some build variables for more info
 
 ## 3.6
 

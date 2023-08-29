@@ -26,6 +26,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## 3.7
 
+- use new cli library that does not rely on global variables
 - More user friendly error messages
 - Clean up DNS mode
 - renamed `show-cname` to `check-cname` in dns mode

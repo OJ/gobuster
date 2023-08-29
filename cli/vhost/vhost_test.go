@@ -1,8 +1,10 @@
-package cmd
+package vhost
 
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -11,6 +13,14 @@ import (
 	"github.com/OJ/gobuster/v3/gobustervhost"
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
+
+func httpServer(b *testing.B, content string) *httptest.Server {
+	b.Helper()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, content)
+	}))
+	return ts
+}
 
 func BenchmarkVhostMode(b *testing.B) {
 	h := httpServer(b, "test")

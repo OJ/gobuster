@@ -147,7 +147,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	}
 
 	extraStr := ""
-	if s.globalopts.Verbose {
+	if s.options.ShowFiles {
 		// get status
 		if bytes.Contains(body, []byte("<Error>")) {
 			awsError := AWSError{}
@@ -232,8 +232,8 @@ func (s *GobusterS3) GetConfigString() (string, error) {
 		return "", err
 	}
 
-	if s.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
+	if s.options.ShowFiles {
+		if _, err := fmt.Fprintf(tw, "[+] Show Files:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

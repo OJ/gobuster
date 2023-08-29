@@ -262,19 +262,26 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if (resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size))) || d.globalopts.Verbose {
-			progress.ResultChan <- Result{
-				URL:        d.options.URL,
-				Path:       entity,
-				Verbose:    d.globalopts.Verbose,
-				Expanded:   d.options.Expanded,
-				NoStatus:   d.options.NoStatus,
-				HideLength: d.options.HideLength,
-				Found:      resultStatus,
-				Header:     header,
-				StatusCode: statusCode,
-				Size:       size,
+		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
+			path := "/"
+			if d.options.Expanded {
+				path = d.options.URL
 			}
+			path = fmt.Sprintf("%s%-20s", path, entity)
+
+			r := Result{
+				Path:       path,
+				Header:     header,
+				StatusCode: -1,
+				Size:       -1,
+			}
+			if !d.options.NoStatus {
+				r.StatusCode = statusCode
+			}
+			if !d.options.HideLength {
+				r.Size = size
+			}
+			progress.ResultChan <- r
 		}
 	}
 
@@ -397,12 +404,6 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

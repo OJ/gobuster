@@ -56,6 +56,10 @@ func parseGCSOptions() (*libgobuster.Options, *gobustergcs.OptionsGCS, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
+	pluginopts.ShowFiles, err = cmdGCS.Flags().GetBool("show-files")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for show-files: %w", err)
+	}
 
 	return globalopts, pluginopts, nil
 }
@@ -69,7 +73,8 @@ func init() {
 	}
 
 	addBasicHTTPOptions(cmdGCS)
-	cmdGCS.Flags().IntP("maxfiles", "m", 5, "max files to list when listing buckets (only shown in verbose mode)")
+	cmdGCS.Flags().IntP("maxfiles", "m", 5, "max files to list when listing buckets")
+	cmdGCS.Flags().BoolP("show-files", "s", true, "show files from found buckets")
 
 	cmdGCS.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

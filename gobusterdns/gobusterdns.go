@@ -217,12 +217,6 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		}
 	}
 
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
 	if err := tw.Flush(); err != nil {
 		return "", fmt.Errorf("error on tostring: %w", err)
 	}

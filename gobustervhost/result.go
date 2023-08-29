@@ -18,7 +18,6 @@ var (
 
 // Result represents a single result
 type Result struct {
-	Found      bool
 	Vhost      string
 	StatusCode int
 	Size       int64
@@ -27,11 +26,6 @@ type Result struct {
 
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
-	statusText := yellow("Missed")
-	if r.Found {
-		statusText = green("Found")
-	}
-
 	statusCodeColor := white
 	if r.StatusCode == 200 {
 		statusCodeColor = green
@@ -51,5 +45,5 @@ func (r Result) ResultToString() (string, error) {
 		locationString = blue(fmt.Sprintf(" [--> %s]", location))
 	}
 
-	return fmt.Sprintf("%s: %s %s [Size: %d]%s\n", statusText, r.Vhost, statusCode, r.Size, locationString), nil
+	return fmt.Sprintf("%s %s [Size: %d]%s\n", r.Vhost, statusCode, r.Size, locationString), nil
 }

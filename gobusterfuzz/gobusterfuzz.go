@@ -264,12 +264,6 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
 	if _, err := fmt.Fprintf(tw, "[+] Timeout:\t%s\n", o.Timeout.String()); err != nil {
 		return "", err
 	}

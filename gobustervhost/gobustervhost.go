@@ -175,13 +175,8 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
-		resultStatus := false
-		if found {
-			resultStatus = true
-		}
+	if found && !v.options.ExcludeLengthParsed.Contains(int(size)) {
 		progress.ResultChan <- Result{
-			Found:      resultStatus,
 			Vhost:      subdomain,
 			StatusCode: statusCode,
 			Size:       size,
@@ -253,12 +248,6 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if o.Username != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
-			return "", err
-		}
-	}
-
-	if v.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

@@ -60,19 +60,10 @@ func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *l
 	wt, err := c.Receive(word, "octet")
 	if err != nil {
 		// file not found
-		if d.globalopts.Verbose {
-			progress.ResultChan <- Result{
-				Filename:     word,
-				Found:        false,
-				ErrorMessage: err.Error(),
-			}
-		}
-
 		return nil
 	}
 	result := Result{
 		Filename: word,
-		Found:    true,
 	}
 	if n, ok := wt.(tftp.IncomingTransfer).Size(); ok {
 		result.Size = n
@@ -120,12 +111,6 @@ func (d *GobusterTFTP) GetConfigString() (string, error) {
 
 	if d.globalopts.PatternFile != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
-			return "", err
-		}
-	}
-
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

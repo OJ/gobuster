@@ -56,6 +56,10 @@ func parseS3Options() (*libgobuster.Options, *gobusters3.OptionsS3, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid value for maxfiles: %w", err)
 	}
+	pluginOpts.ShowFiles, err = cmdS3.Flags().GetBool("show-files")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for show-files: %w", err)
+	}
 
 	return globalopts, pluginOpts, nil
 }
@@ -70,6 +74,7 @@ func init() {
 
 	addBasicHTTPOptions(cmdS3)
 	cmdS3.Flags().IntP("maxfiles", "m", 5, "max files to list when listing buckets (only shown in verbose mode)")
+	cmdS3.Flags().BoolP("show-files", "s", true, "show files from found buckets")
 
 	cmdS3.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		configureGlobalOptions()

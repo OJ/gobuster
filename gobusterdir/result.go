@@ -19,13 +19,7 @@ var (
 
 // Result represents a single result
 type Result struct {
-	URL        string
 	Path       string
-	Verbose    bool
-	Expanded   bool
-	NoStatus   bool
-	HideLength bool
-	Found      bool
 	Header     http.Header
 	StatusCode int
 	Size       int64
@@ -35,33 +29,7 @@ type Result struct {
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	// Prefix if we're in verbose mode
-	if r.Verbose {
-		if r.Found {
-			if _, err := fmt.Fprintf(buf, "Found: "); err != nil {
-				return "", err
-			}
-		} else {
-			if _, err := fmt.Fprintf(buf, "Missed: "); err != nil {
-				return "", err
-			}
-		}
-	}
-
-	if r.Expanded {
-		if _, err := fmt.Fprintf(buf, "%s", r.URL); err != nil {
-			return "", err
-		}
-	} else {
-		if _, err := fmt.Fprintf(buf, "/"); err != nil {
-			return "", err
-		}
-	}
-	if _, err := fmt.Fprintf(buf, "%-20s", r.Path); err != nil {
-		return "", err
-	}
-
-	if !r.NoStatus {
+	if r.StatusCode >= 0 {
 		color := white
 		if r.StatusCode == 200 {
 			color = green
@@ -76,7 +44,7 @@ func (r Result) ResultToString() (string, error) {
 		color(buf, " (Status: %d)", r.StatusCode)
 	}
 
-	if !r.HideLength {
+	if r.Size >= 0 {
 		if _, err := fmt.Fprintf(buf, " [Size: %d]", r.Size); err != nil {
 			return "", err
 		}

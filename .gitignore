@@ -20,6 +20,3 @@
 
 .vscode/
 gobuster
-build
-
-dist/

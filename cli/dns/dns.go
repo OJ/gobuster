@@ -28,9 +28,9 @@ func getFlags() []cli.Flag {
 		&cli.StringFlag{Name: "domain", Aliases: []string{"do"}, Usage: "The target domain", Required: true},
 		&cli.BoolFlag{Name: "show-ips", Aliases: []string{"i"}, Value: false, Usage: "Show IP addresses of found domains"},
 		&cli.BoolFlag{Name: "check-cname", Aliases: []string{"c"}, Value: false, Usage: "Also check CNAME records"},
-		&cli.DurationFlag{Name: "timeout", Value: 1 * time.Second, Usage: "DNS resolver timeout"},
-		&cli.BoolFlag{Name: "wildcard", Value: false, Usage: "Force continued operation when wildcard found"},
-		&cli.BoolFlag{Name: "no-fqdn", Value: false, Usage: "Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain"},
+		&cli.DurationFlag{Name: "timeout", Aliases: []string{"to"}, Value: 1 * time.Second, Usage: "DNS resolver timeout"},
+		&cli.BoolFlag{Name: "wildcard", Aliases: []string{"wc"}, Value: false, Usage: "Force continued operation when wildcard found"},
+		&cli.BoolFlag{Name: "no-fqdn", Aliases: []string{"nf"}, Value: false, Usage: "Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain"},
 		&cli.StringFlag{Name: "resolver", Usage: "Use custom DNS server (format server.com or server.com:port)"},
 	}...)
 	flags = append(flags, internalcli.GlobalOptions()...)

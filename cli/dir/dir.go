@@ -31,10 +31,10 @@ func getFlags() []cli.Flag {
 		&cli.StringFlag{Name: "extensions-file", Aliases: []string{"X"}, Usage: "Read file extension(s) to search from the file"},
 		&cli.BoolFlag{Name: "expanded", Aliases: []string{"e"}, Value: false, Usage: "Expanded mode, print full URLs"},
 		&cli.BoolFlag{Name: "no-status", Aliases: []string{"n"}, Value: false, Usage: "Don't print status codes"},
-		&cli.BoolFlag{Name: "hide-length", Value: false, Usage: "Hide the length of the body in the output"},
+		&cli.BoolFlag{Name: "hide-length", Aliases: []string{"hl"}, Value: false, Usage: "Hide the length of the body in the output"},
 		&cli.BoolFlag{Name: "add-slash", Aliases: []string{"f"}, Value: false, Usage: "Append / to each request"},
-		&cli.BoolFlag{Name: "discover-backup", Value: false, Usage: "Also search for backup files by appending multiple backup extensions"},
-		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"l"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
+		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Also search for backup files by appending multiple backup extensions"},
+		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 	}...)
 	return flags
 }

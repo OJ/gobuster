@@ -22,16 +22,16 @@ import (
 func BasicHTTPOptions() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{Name: "useragent", Aliases: []string{"a"}, Value: libgobuster.DefaultUserAgent(), Usage: "Set the User-Agent string"},
-		&cli.BoolFlag{Name: "random-agent", Value: false, Usage: "Use a random User-Agent string"},
+		&cli.BoolFlag{Name: "random-agent", Aliases: []string{"rua"}, Value: false, Usage: "Use a random User-Agent string"},
 		&cli.StringFlag{Name: "proxy", Usage: "Proxy to use for requests [http(s)://host:port] or [socks5://host:port]"},
-		&cli.DurationFlag{Name: "timeout", Value: 10 * time.Second, Usage: "HTTP Timeout"},
+		&cli.DurationFlag{Name: "timeout", Aliases: []string{"to"}, Value: 10 * time.Second, Usage: "HTTP Timeout"},
 		&cli.BoolFlag{Name: "no-tls-validation", Aliases: []string{"k"}, Value: false, Usage: "Skip TLS certificate verification"},
 		&cli.BoolFlag{Name: "retry", Value: false, Usage: "Should retry on request timeout"},
-		&cli.IntFlag{Name: "retry-attempts", Value: 3, Usage: "Times to retry on request timeout"},
-		&cli.StringFlag{Name: "client-cert-pem", Usage: "public key in PEM format for optional TLS client certificates]"},
-		&cli.StringFlag{Name: "client-cert-pem-key", Usage: "private key in PEM format for optional TLS client certificates (this key needs to have no password)"},
-		&cli.StringFlag{Name: "client-cert-p12", Usage: "a p12 file to use for options TLS client certificates"},
-		&cli.StringFlag{Name: "client-cert-p12-password", Usage: "the password to the p12 file"},
+		&cli.IntFlag{Name: "retry-attempts", Aliases: []string{"ra"}, Value: 3, Usage: "Times to retry on request timeout"},
+		&cli.StringFlag{Name: "client-cert-pem", Aliases: []string{"ccp"}, Usage: "public key in PEM format for optional TLS client certificates]"},
+		&cli.StringFlag{Name: "client-cert-pem-key", Aliases: []string{"ccpk"}, Usage: "private key in PEM format for optional TLS client certificates (this key needs to have no password)"},
+		&cli.StringFlag{Name: "client-cert-p12", Aliases: []string{"ccp12"}, Usage: "a p12 file to use for options TLS client certificates"},
+		&cli.StringFlag{Name: "client-cert-p12-password", Aliases: []string{"ccp12p"}, Usage: "the password to the p12 file"},
 	}
 }
 
@@ -99,7 +99,7 @@ func CommonHTTPOptions() []cli.Flag {
 		&cli.StringFlag{Name: "password", Aliases: []string{"P"}, Usage: "Password for Basic Auth"},
 		&cli.BoolFlag{Name: "follow-redirect", Aliases: []string{"r"}, Value: false, Usage: "Follow redirects"},
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
-		&cli.BoolFlag{Name: "no-canonicalize-headers", Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
+		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
 		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "the password to the p12 file"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
@@ -181,16 +181,16 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 func GlobalOptions() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{Name: "wordlist", Aliases: []string{"w"}, Usage: "Path to the wordlist. Set to - to use STDIN.", Required: true},
-		&cli.DurationFlag{Name: "delay", Usage: "Time each thread waits between requests (e.g. 1500ms)"},
+		&cli.DurationFlag{Name: "delay", Aliases: []string{"d"}, Usage: "Time each thread waits between requests (e.g. 1500ms)"},
 		&cli.IntFlag{Name: "threads", Aliases: []string{"t"}, Value: 10, Usage: "Number of concurrent threads"},
-		&cli.IntFlag{Name: "wordlist-offset", Value: 0, Usage: "Resume from a given position in the wordlist"},
+		&cli.IntFlag{Name: "wordlist-offset", Aliases: []string{"wo"}, Value: 0, Usage: "Resume from a given position in the wordlist"},
 		&cli.StringFlag{Name: "output", Aliases: []string{"o"}, Usage: "Output file to write results to (defaults to stdout)"},
 		&cli.BoolFlag{Name: "quiet", Aliases: []string{"q"}, Value: false, Usage: "Don't print the banner and other noise"},
-		&cli.BoolFlag{Name: "no-progress", Aliases: []string{"z"}, Value: false, Usage: "Don't display progress"},
-		&cli.BoolFlag{Name: "no-error", Value: false, Usage: "Don't display errors"},
+		&cli.BoolFlag{Name: "no-progress", Aliases: []string{"np"}, Value: false, Usage: "Don't display progress"},
+		&cli.BoolFlag{Name: "no-error", Aliases: []string{"ne"}, Value: false, Usage: "Don't display errors"},
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
-		&cli.BoolFlag{Name: "no-color", Value: false, Usage: "Disable color output"},
-		&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}, Value: false, Usage: "enable debug output"},
+		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
+		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}
 }
 

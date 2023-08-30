@@ -25,7 +25,7 @@ func getFlags() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, []cli.Flag{
 		&cli.StringFlag{Name: "server", Aliases: []string{"s"}, Usage: "The target TFTP server", Required: true},
-		&cli.DurationFlag{Name: "timeout", Value: 1 * time.Second, Usage: "TFTP timeout"},
+		&cli.DurationFlag{Name: "timeout", Aliases: []string{"to"}, Value: 1 * time.Second, Usage: "TFTP timeout"},
 	}...)
 	flags = append(flags, internalcli.GlobalOptions()...)
 	return flags

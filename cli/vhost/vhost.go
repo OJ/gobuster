@@ -24,9 +24,9 @@ func getFlags() []cli.Flag {
 	flags = append(flags, internalcli.CommonHTTPOptions()...)
 	flags = append(flags, internalcli.GlobalOptions()...)
 	flags = append(flags, []cli.Flag{
-		&cli.BoolFlag{Name: "append-domain", Value: false, Usage: "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist."},
-		&cli.StringFlag{Name: "exclude-length", Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
-		&cli.StringFlag{Name: "domain", Usage: "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted"},
+		&cli.BoolFlag{Name: "append-domain", Aliases: []string{"ad"}, Value: false, Usage: "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist."},
+		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
+		&cli.StringFlag{Name: "domain", Aliases: []string{"do"}, Usage: "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted"},
 	}...)
 
 	return flags

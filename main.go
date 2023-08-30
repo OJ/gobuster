@@ -36,10 +36,10 @@ func main() {
 		UsageText: "gobuster command [command options]",
 		Authors: []*cli.Author{
 			{
-				Name: "Christian Mehlmauer",
+				Name: "Christian Mehlmauer (@firefart)",
 			},
 			{
-				Name: "OJ Reeves",
+				Name: "OJ Reeves (@TheColonial)",
 			},
 		},
 		Version: libgobuster.GetVersion(),

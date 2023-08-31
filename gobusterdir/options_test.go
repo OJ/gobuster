@@ -5,7 +5,7 @@ import "testing"
 func TestNewOptions(t *testing.T) {
 	t.Parallel()
 
-	o := NewOptionsDir()
+	o := NewOptions()
 	if o.StatusCodesParsed.Set == nil {
 		t.Fatal("StatusCodesParsed not initialized")
 	}

@@ -34,7 +34,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobusterfuzz.NewOptionsFuzz()
+	pluginOpts := gobusterfuzz.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)
 	if err != nil {
@@ -67,7 +67,7 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("please provide the %s keyword", gobusterfuzz.FuzzKeyword)
 	}
 
-	plugin, err := gobusterfuzz.NewGobusterFuzz(&globalOpts, pluginOpts)
+	plugin, err := gobusterfuzz.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}

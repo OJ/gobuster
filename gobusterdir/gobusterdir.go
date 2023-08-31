@@ -50,8 +50,8 @@ type GobusterDir struct {
 	http       *libgobuster.HTTPClient
 }
 
-// NewGobusterDir creates a new initialized GobusterDir
-func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
+// New creates a new initialized GobusterDir
+func New(globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

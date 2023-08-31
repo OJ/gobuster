@@ -23,8 +23,8 @@ type OptionsDir struct {
 	ExcludeLengthParsed        libgobuster.Set[int]
 }
 
-// NewOptionsDir returns a new initialized OptionsDir
-func NewOptionsDir() *OptionsDir {
+// NewOptions returns a new initialized OptionsDir
+func NewOptions() *OptionsDir {
 	return &OptionsDir{
 		StatusCodesParsed:          libgobuster.NewSet[int](),
 		StatusCodesBlacklistParsed: libgobuster.NewSet[int](),

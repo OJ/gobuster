@@ -38,7 +38,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobusterdns.NewOptionsDNS()
+	pluginOpts := gobusterdns.NewOptions()
 
 	pluginOpts.Domain = c.String("domain")
 	pluginOpts.ShowIPs = c.Bool("show-ips")
@@ -57,7 +57,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobusterdns.NewGobusterDNS(&globalOpts, pluginOpts)
+	plugin, err := gobusterdns.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdns: %w", err)
 	}

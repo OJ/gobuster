@@ -36,8 +36,8 @@ type GobusterFuzz struct {
 	http       *libgobuster.HTTPClient
 }
 
-// NewGobusterFuzz creates a new initialized GobusterFuzz
-func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
+// New creates a new initialized GobusterFuzz
+func New(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

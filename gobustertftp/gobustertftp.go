@@ -19,8 +19,8 @@ type GobusterTFTP struct {
 	options    *OptionsTFTP
 }
 
-// NewGobusterTFTP creates a new initialized NewGobusterTFTP
-func NewGobusterTFTP(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
+// New creates a new initialized NewGobusterTFTP
+func New(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

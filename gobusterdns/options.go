@@ -15,7 +15,7 @@ type OptionsDNS struct {
 	Timeout        time.Duration
 }
 
-// NewOptionsDNS returns a new initialized OptionsDNS
-func NewOptionsDNS() *OptionsDNS {
+// NewOptions returns a new initialized OptionsDNS
+func NewOptions() *OptionsDNS {
 	return &OptionsDNS{}
 }

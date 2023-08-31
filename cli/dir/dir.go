@@ -40,7 +40,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobusterdir.NewOptionsDir()
+	pluginOpts := gobusterdir.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)
 	if err != nil {
@@ -104,7 +104,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobusterdir.NewGobusterDir(&globalOpts, pluginOpts)
+	plugin, err := gobusterdir.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}

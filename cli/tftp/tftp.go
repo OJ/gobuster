@@ -32,7 +32,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobustertftp.NewOptionsTFTP()
+	pluginOpts := gobustertftp.NewOptions()
 
 	pluginOpts.Server = c.String("server")
 	if !strings.Contains(pluginOpts.Server, ":") {
@@ -46,7 +46,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobustertftp.NewGobusterTFTP(&globalOpts, pluginOpts)
+	plugin, err := gobustertftp.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustertftp: %w", err)
 	}

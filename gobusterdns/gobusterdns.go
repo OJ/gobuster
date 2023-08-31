@@ -44,8 +44,8 @@ func newCustomDialer(server string) func(ctx context.Context, network, address s
 	}
 }
 
-// NewGobusterDNS creates a new initialized GobusterDNS
-func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
+// New creates a new initialized GobusterDNS
+func New(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

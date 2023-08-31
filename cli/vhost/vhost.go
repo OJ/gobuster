@@ -33,7 +33,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobustervhost.NewOptionsVhost()
+	pluginOpts := gobustervhost.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)
 	if err != nil {
@@ -56,7 +56,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobustervhost.NewGobusterVhost(&globalOpts, pluginOpts)
+	plugin, err := gobustervhost.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustervhost: %w", err)
 	}

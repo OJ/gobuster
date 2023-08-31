@@ -11,7 +11,7 @@ type OptionsGCS struct {
 	ShowFiles      bool
 }
 
-// NewOptionsGCS returns a new initialized OptionsS3
-func NewOptionsGCS() *OptionsGCS {
+// NewOptions returns a new initialized OptionsS3
+func NewOptions() *OptionsGCS {
 	return &OptionsGCS{}
 }

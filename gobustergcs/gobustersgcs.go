@@ -26,8 +26,8 @@ type GobusterGCS struct {
 	bucketRegex *regexp.Regexp
 }
 
-// NewGobusterGCS creates a new initialized GobusterGCS
-func NewGobusterGCS(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error) {
+// New creates a new initialized GobusterGCS
+func New(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

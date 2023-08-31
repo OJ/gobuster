@@ -25,7 +25,7 @@ func BenchmarkDirMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
-	pluginopts := gobusterdir.NewOptionsDir()
+	pluginopts := gobusterdir.NewOptions()
 	pluginopts.URL = h.URL
 	pluginopts.Timeout = 10 * time.Second
 
@@ -74,7 +74,7 @@ func BenchmarkDirMode(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobusterdir.NewGobusterDir(&globalopts, pluginopts)
+		plugin, err := gobusterdir.New(&globalopts, pluginopts)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

@@ -28,8 +28,8 @@ type GobusterVhost struct {
 	abnormalBody []byte
 }
 
-// NewGobusterVhost creates a new initialized GobusterDir
-func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
+// New creates a new initialized GobusterDir
+func New(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}

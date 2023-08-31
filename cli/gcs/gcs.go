@@ -31,7 +31,7 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
-	pluginOpts := gobustergcs.NewOptionsGCS()
+	pluginOpts := gobustergcs.NewOptions()
 
 	httpOptions, err := internalcli.ParseBasicHTTPOptions(c)
 	if err != nil {
@@ -47,7 +47,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobustergcs.NewGobusterGCS(&globalOpts, pluginOpts)
+	plugin, err := gobustergcs.New(&globalOpts, pluginOpts)
 	if err != nil {
 		return fmt.Errorf("error on creating gobustergcs: %w", err)
 	}

@@ -118,6 +118,14 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		requestOptions.UpdatedBasicAuthPassword = strings.ReplaceAll(d.options.Password, FuzzKeyword, word)
 	}
 
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying word %s", word),
+		}
+	}
+
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests

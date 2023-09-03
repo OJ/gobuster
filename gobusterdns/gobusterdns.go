@@ -115,6 +115,15 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 		// add a . to indicate this is the full domain and we do not want to traverse the search domains on the system
 		subdomain = fmt.Sprintf("%s.", subdomain)
 	}
+
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying subdomain %s", subdomain),
+		}
+	}
+
 	ips, err := d.dnsLookup(ctx, subdomain)
 	if err != nil {
 		var wErr *net.DNSError

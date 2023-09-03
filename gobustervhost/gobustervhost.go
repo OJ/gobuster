@@ -135,6 +135,14 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		subdomain = word
 	}
 
+	// add some debug output
+	if v.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying vhost %s", subdomain),
+		}
+	}
+
 	tries := 1
 	if v.options.RetryOnTimeout && v.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests

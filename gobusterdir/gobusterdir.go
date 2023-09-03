@@ -211,6 +211,14 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	}
 	url := fmt.Sprintf("%s%s", d.options.URL, entity)
 
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying %s", entity),
+		}
+	}
+
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests

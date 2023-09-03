@@ -87,6 +87,14 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 
 	bucketURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o?maxResults=%d", word, s.options.MaxFilesToList)
 
+	// add some debug output
+	if s.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying word %s", word),
+		}
+	}
+
 	tries := 1
 	if s.options.RetryOnTimeout && s.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests

@@ -52,6 +52,14 @@ func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progres
 
 // ProcessWord is the process implementation of gobustertftp
 func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying word %s", word),
+		}
+	}
+
 	c, err := tftp.NewClient(d.options.Server)
 	if err != nil {
 		return err

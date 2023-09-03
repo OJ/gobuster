@@ -153,31 +153,32 @@ Help is built-in!
 ### Options
 
 ```text
-Uses DNS subdomain enumeration mode
+NAME:
+   gobuster dns - Uses DNS subdomain enumeration mode
 
-Usage:
-  gobuster dns [flags]
+USAGE:
+   gobuster dns [command options] [arguments...]
 
-Flags:
-  -d, --domain string      The target domain
-  -h, --help               help for dns
-  -r, --resolver string    Use custom DNS server (format server.com or server.com:port)
-  -c, --show-cname         Show CNAME records (cannot be used with '-i' option)
-  -i, --show-ips           Show IP addresses
-      --timeout duration   DNS resolver timeout (default 1s)
-      --wildcard           Force continued operation when wildcard found
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --domain value, --do value           The target domain
+   --show-ips, -i                       Show IP addresses of found domains (default: false)
+   --check-cname, -c                    Also check CNAME records (default: false)
+   --timeout value, --to value          DNS resolver timeout (default: 1s)
+   --wildcard, --wc                     Force continued operation when wildcard found (default: false)
+   --no-fqdn, --nf                      Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain (default: false)
+   --resolver value                     Use custom DNS server (format server.com or server.com:port)
+   --wordlist value, -w value           Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value              Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value            Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value  Resume from a given position in the wordlist (default: 0)
+   --output value, -o value             Output file to write results to (defaults to stdout)
+   --quiet, -q                          Don't print the banner and other noise (default: false)
+   --no-progress, --np                  Don't display progress (default: false)
+   --no-error, --ne                     Don't display errors (default: false)
+   --pattern value, -p value            File containing replacement patterns
+   --no-color, --nc                     Disable color output (default: false)
+   --debug                              enable debug output (default: false)
+   --help, -h                           show help
 ```
 
 ### Examples
@@ -340,48 +341,54 @@ Found: test.127.0.0.1.xip.io
 ### Options
 
 ```text
-Uses directory/file enumeration mode
+NAME:
+   gobuster dir - Uses directory/file enumeration mode
 
-Usage:
-  gobuster dir [flags]
+USAGE:
+   gobuster dir [command options] [arguments...]
 
-Flags:
-  -f, --add-slash                       Append / to each request
-  -c, --cookies string                  Cookies to use for the requests
-  -d, --discover-backup                 Also search for backup files by appending multiple backup extensions
-      --exclude-length ints             exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -e, --expanded                        Expanded mode, print full URLs
-  -x, --extensions string               File extension(s) to search for
-  -r, --follow-redirect                 Follow redirects
-  -H, --headers stringArray             Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                            help for dir
-      --hide-length                     Hide the length of the body in the output
-  -m, --method string                   Use the following HTTP method (default "GET")
-  -n, --no-status                       Don't print status codes
-  -k, --no-tls-validation               Skip TLS certificate verification
-  -P, --password string                 Password for Basic Auth
-      --proxy string                    Proxy to use for requests [http(s)://host:port]
-      --random-agent                    Use a random User-Agent string
-      --retry                           Should retry on request timeout
-      --retry-attempts int              Times to retry on request timeout (default 3)
-  -s, --status-codes string             Positive status codes (will be overwritten with status-codes-blacklist if set)
-  -b, --status-codes-blacklist string   Negative status codes (will override status-codes if set) (default "404")
-      --timeout duration                HTTP Timeout (default 10s)
-  -u, --url string                      The target URL
-  -a, --useragent string                Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string                 Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --status-codes value, -s value                           Positive status codes (will be overwritten with status-codes-blacklist if set). Can also handle ranges like 200,300-400,404
+   --status-codes-blacklist value, -b value                 Negative status codes (will override status-codes if set). Can also handle ranges like 200,300-400,404. (default: "404")
+   --extensions value, -x value                             File extension(s) to search for
+   --extensions-file value, -X value                        Read file extension(s) to search from the file
+   --expanded, -e                                           Expanded mode, print full URLs (default: false)
+   --no-status, -n                                          Don't print status codes (default: false)
+   --hide-length, --hl                                      Hide the length of the body in the output (default: false)
+   --add-slash, -f                                          Append / to each request (default: false)
+   --discover-backup, --db                                  Also search for backup files by appending multiple backup extensions (default: false)
+   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --help, -h                                               show help
 ```
 
 ### Examples
@@ -522,42 +529,47 @@ https://buffered.io/categories
 ### Options
 
 ```text
-Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
+NAME:
+   gobuster vhost - Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
 
-Usage:
-  gobuster vhost [flags]
+USAGE:
+   gobuster vhost [command options] [arguments...]
 
-Flags:
-      --append-domain         Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.
-  -c, --cookies string        Cookies to use for the requests
-      --domain string         the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
-      --exclude-length ints   exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -r, --follow-redirect       Follow redirects
-  -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                  help for vhost
-  -m, --method string         Use the following HTTP method (default "GET")
-  -k, --no-tls-validation     Skip TLS certificate verification
-  -P, --password string       Password for Basic Auth
-      --proxy string          Proxy to use for requests [http(s)://host:port]
-      --random-agent          Use a random User-Agent string
-      --retry                 Should retry on request timeout
-      --retry-attempts int    Times to retry on request timeout (default 3)
-      --timeout duration      HTTP Timeout (default 10s)
-  -u, --url string            The target URL
-  -a, --useragent string      Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string       Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --append-domain, --ad                                    Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist. (default: false)
+   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --domain value, --do value                               the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
+   --help, -h                                               show help
 ```
 
 ### Examples
@@ -597,41 +609,47 @@ Found: mail.mysite.com
 ### Options
 
 ```text
-Uses fuzzing mode
+NAME:
+   gobuster fuzz - Uses fuzzing mode. Replaces the keyword FUZZ in the URL, Headers and the request body
 
-Usage:
-  gobuster fuzz [flags]
+USAGE:
+   gobuster fuzz [command options] [arguments...]
 
-Flags:
-  -c, --cookies string              Cookies to use for the requests
-      --exclude-length ints         exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -b, --excludestatuscodes string   Negative status codes (will override statuscodes if set)
-  -r, --follow-redirect             Follow redirects
-  -H, --headers stringArray         Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                        help for fuzz
-  -m, --method string               Use the following HTTP method (default "GET")
-  -k, --no-tls-validation           Skip TLS certificate verification
-  -P, --password string             Password for Basic Auth
-      --proxy string                Proxy to use for requests [http(s)://host:port]
-      --random-agent                Use a random User-Agent string
-      --retry                       Should retry on request timeout
-      --retry-attempts int          Times to retry on request timeout (default 3)
-      --timeout duration            HTTP Timeout (default 10s)
-  -u, --url string                  The target URL
-  -a, --useragent string            Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string             Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --exclude-statuscodes value, -b value                    Excluded status codes. Can also handle ranges like 200,300-400,404.
+   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --body value, -B value                                   Request body
+   --help, -h                                               show help
 ```
 
 ### Examples
@@ -645,33 +663,38 @@ gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
 ### Options
 
 ```text
-Uses aws bucket enumeration mode
+NAME:
+   gobuster s3 - Uses aws bucket enumeration mode
 
-Usage:
-  gobuster s3 [flags]
+USAGE:
+   gobuster s3 [command options] [arguments...]
 
-Flags:
-  -h, --help                 help for s3
-  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
-  -k, --no-tls-validation    Skip TLS certificate verification
-      --proxy string         Proxy to use for requests [http(s)://host:port]
-      --random-agent         Use a random User-Agent string
-      --retry                Should retry on request timeout
-      --retry-attempts int   Times to retry on request timeout (default 3)
-      --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --max-files value, -m value                       max files to list when listing buckets (default: 5)
+   --show-files, -s                                  show files from found buckets (default: true)
+   --wordlist value, -w value                        Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                           Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                         Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value               Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                          Output file to write results to (defaults to stdout)
+   --quiet, -q                                       Don't print the banner and other noise (default: false)
+   --no-progress, --np                               Don't display progress (default: false)
+   --no-error, --ne                                  Don't display errors (default: false)
+   --pattern value, -p value                         File containing replacement patterns
+   --no-color, --nc                                  Disable color output (default: false)
+   --debug                                           enable debug output (default: false)
+   --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                             Use a random User-Agent string (default: false)
+   --proxy value                                     Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                       HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                           Skip TLS certificate verification (default: false)
+   --retry                                           Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value              public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --help, -h                                        show help
 ```
 
 ### Examples
@@ -685,33 +708,38 @@ gobuster s3 -w bucket-names.txt
 ### Options
 
 ```text
-Uses gcs bucket enumeration mode
+NAME:
+   gobuster gcs - Uses gcs bucket enumeration mode
 
-Usage:
-  gobuster gcs [flags]
+USAGE:
+   gobuster gcs [command options] [arguments...]
 
-Flags:
-  -h, --help                 help for gcs
-  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
-  -k, --no-tls-validation    Skip TLS certificate verification
-      --proxy string         Proxy to use for requests [http(s)://host:port]
-      --random-agent         Use a random User-Agent string
-      --retry                Should retry on request timeout
-      --retry-attempts int   Times to retry on request timeout (default 3)
-      --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --max-files value, -m value                       max files to list when listing buckets (default: 5)
+   --show-files, -s                                  show files from found buckets (default: true)
+   --wordlist value, -w value                        Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                           Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                         Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value               Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                          Output file to write results to (defaults to stdout)
+   --quiet, -q                                       Don't print the banner and other noise (default: false)
+   --no-progress, --np                               Don't display progress (default: false)
+   --no-error, --ne                                  Don't display errors (default: false)
+   --pattern value, -p value                         File containing replacement patterns
+   --no-color, --nc                                  Disable color output (default: false)
+   --debug                                           enable debug output (default: false)
+   --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                             Use a random User-Agent string (default: false)
+   --proxy value                                     Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                       HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                           Skip TLS certificate verification (default: false)
+   --retry                                           Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value              public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --help, -h                                        show help
 ```
 
 ### Examples
@@ -725,27 +753,27 @@ gobuster gcs -w bucket-names.txt
 ### Options
 
 ```text
-Uses TFTP enumeration mode
+NAME:
+   gobuster tftp - Uses TFTP enumeration mode
 
-Usage:
-  gobuster tftp [flags]
+USAGE:
+   gobuster tftp [command options] [arguments...]
 
-Flags:
-  -h, --help               help for tftp
-  -s, --server string      The target TFTP server
-      --timeout duration   TFTP timeout (default 1s)
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --server value, -s value             The target TFTP server
+   --timeout value, --to value          TFTP timeout (default: 1s)
+   --wordlist value, -w value           Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value              Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value            Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value  Resume from a given position in the wordlist (default: 0)
+   --output value, -o value             Output file to write results to (defaults to stdout)
+   --quiet, -q                          Don't print the banner and other noise (default: false)
+   --no-progress, --np                  Don't display progress (default: false)
+   --no-error, --ne                     Don't display errors (default: false)
+   --pattern value, -p value            File containing replacement patterns
+   --no-color, --nc                     Disable color output (default: false)
+   --debug                              enable debug output (default: false)
+   --help, -h                           show help
 ```
 
 ### Examples

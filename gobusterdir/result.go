@@ -28,6 +28,9 @@ type Result struct {
 // ResultToString converts the Result to it's textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
+	if _, err := buf.WriteString(r.Path); err != nil {
+		return "", err
+	}
 
 	if r.StatusCode >= 0 {
 		color := white

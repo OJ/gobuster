@@ -18,10 +18,6 @@ import (
 )
 
 func main() {
-	// log := logrus.New()
-	// log.SetOutput(os.Stdout)
-	// log.SetLevel(logrus.InfoLevel)
-
 	cli.VersionPrinter = func(cCtx *cli.Context) {
 		fmt.Printf("gobuster version %s\n", libgobuster.VERSION)
 		if info, ok := debug.ReadBuildInfo(); ok {
@@ -43,16 +39,15 @@ func main() {
 			},
 		},
 		Version: libgobuster.GetVersion(),
-	}
-
-	app.Commands = []*cli.Command{
-		dir.Command(),
-		vhost.Command(),
-		dns.Command(),
-		fuzz.Command(),
-		tftp.Command(),
-		s3.Command(),
-		gcs.Command(),
+		Commands: []*cli.Command{
+			dir.Command(),
+			vhost.Command(),
+			dns.Command(),
+			fuzz.Command(),
+			tftp.Command(),
+			s3.Command(),
+			gcs.Command(),
+		},
 	}
 
 	err := app.Run(os.Args)

@@ -32,6 +32,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - renamed `show-cname` to `check-cname` in dns mode
 - get rid of `verbose` flag
 - the version command now also shows some build variables for more info
+- switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
 
 ## 3.6
 

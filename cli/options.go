@@ -3,7 +3,6 @@ package cli
 import (
 	"bufio"
 	"crypto/tls"
-	"encoding/pem"
 	"fmt"
 	"os"
 	"regexp"
@@ -15,8 +14,8 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/term"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 func BasicHTTPOptions() []cli.Flag {
@@ -72,19 +71,14 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 		if err != nil {
 			return opts, fmt.Errorf("could not read p12 %s: %w", p12File, err)
 		}
-		blocks, err := pkcs12.ToPEM(p12Content, p12Pass)
+		privKey, pubKey, _, err := pkcs12.DecodeChain(p12Content, p12Pass)
 		if err != nil {
 			return opts, fmt.Errorf("could not load P12: %w", err)
 		}
-		var pemData []byte
-		for _, b := range blocks {
-			pemData = append(pemData, pem.EncodeToMemory(b)...)
+		opts.TLSCertificate = &tls.Certificate{
+			Certificate: [][]byte{pubKey.Raw},
+			PrivateKey:  privKey,
 		}
-		cert, err := tls.X509KeyPair(pemData, pemData)
-		if err != nil {
-			return opts, fmt.Errorf("could not load certificate from P12: %w", err)
-		}
-		opts.TLSCertificate = &cert
 	}
 
 	return opts, nil

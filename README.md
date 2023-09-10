@@ -27,10 +27,11 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## 3.7
 
 - use new cli library that does not rely on global variables
+- a lot more short options
 - More user friendly error messages
 - Clean up DNS mode
 - renamed `show-cname` to `check-cname` in dns mode
-- get rid of `verbose` flag
+- get rid of `verbose` flag and introduced `debug` instead
 - the version command now also shows some build variables for more info
 - switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
 

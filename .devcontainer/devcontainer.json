@@ -19,8 +19,9 @@
 			"extensions": [
 				"golang.go",
 				"shardulm94.trailing-spaces",
-				"IBM.output-colorizer"
+				"IBM.output-colorizer",
+				"ms-vscode.makefile-tools"
 			]
 		}
-	},
+	}
 }

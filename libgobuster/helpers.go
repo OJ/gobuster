@@ -69,6 +69,10 @@ func (set *Set[T]) Stringify() string {
 }
 
 // nolint:unused
+// this method is much more faster than lineCounter but has the following errors:
+// - empty files are reported as 1 lines
+// - files only containing a newline are reported as 1 lines
+// - also counts lines with comments
 func lineCounter_old(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1

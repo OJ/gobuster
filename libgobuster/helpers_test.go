@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -169,6 +170,8 @@ func TestLineCounter(t *testing.T) {
 		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
 		{"3 Lines cr lf with comment", "TestString\r\n# Test\r\n1234", 2},
 		{"Empty", "", 0},
+		{"Empty 2", "\n", 0},
+		{"Empty 3", "\r\n", 0},
 	}
 	for _, x := range tt {
 		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
@@ -183,6 +186,65 @@ func TestLineCounter(t *testing.T) {
 				t.Fatalf("wrong line count! Got %d expected %d", l, x.expected)
 			}
 		})
+	}
+}
+
+func TestLineCounterOld(t *testing.T) {
+	t.Parallel()
+	var tt = []struct {
+		testName string
+		s        string
+		expected int
+	}{
+		{"One Line", "test", 1},
+		{"3 Lines", "TestString\nTest\n1234", 3},
+		{"Trailing newline", "TestString\nTest\n1234\n", 3},
+		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
+		{"Empty", "", 1},       // these are wrong but I've found no good way to handle those
+		{"Empty 2", "\n", 1},   // these are wrong but I've found no good way to handle those
+		{"Empty 3", "\r\n", 1}, // these are wrong but I've found no good way to handle those
+	}
+	for _, x := range tt {
+		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
+			r := strings.NewReader(x.s)
+			l, err := lineCounter_old(r)
+			if err != nil {
+				t.Fatalf("Got error: %v", err)
+			}
+			if l != x.expected {
+				t.Fatalf("wrong line count! Got %d expected %d", l, x.expected)
+			}
+		})
+	}
+}
+
+func BenchmarkLineCounter(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, err := os.Open("../rockyou.txt")
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		defer r.Close()
+		_, err = lineCounter(r)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+	}
+}
+
+func BenchmarkLineCounterOld(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, err := os.Open("../rockyou.txt")
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		defer r.Close()
+		_, err = lineCounter_old(r)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
 	}
 }
 

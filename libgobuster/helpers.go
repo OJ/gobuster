@@ -73,17 +73,27 @@ func lineCounter_old(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1
 	lineSep := []byte{'\n'}
+	var lastChar byte
 
 	for {
 		c, err := r.Read(buf)
 		count += bytes.Count(buf[:c], lineSep)
 
+		// store last character received if we got any bytes
+		if c > 0 {
+			lastChar = buf[c-1]
+		}
+
 		switch {
 		case errors.Is(err, io.EOF):
+			// account for trailing new line
+			if lastChar == '\n' {
+				count = count - 1
+			}
 			return count, nil
 
 		case err != nil:
-			return count, err
+			return -1, err
 		}
 	}
 }

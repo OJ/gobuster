@@ -68,7 +68,7 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-func lineCounter(r io.Reader) (int, error) {
+func lineCounter_old(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1
 	lineSep := []byte{'\n'}
@@ -85,6 +85,24 @@ func lineCounter(r io.Reader) (int, error) {
 			return count, err
 		}
 	}
+}
+
+func lineCounter(r io.Reader) (int, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanLines)
+	var count int
+	for scanner.Scan() {
+		w := scanner.Text()
+		if w == "" || strings.HasPrefix(w, "#") {
+			continue
+		}
+
+		count++
+	}
+	if err := scanner.Err(); err != nil {
+		return -1, err
+	}
+	return count, nil
 }
 
 // DefaultUserAgent returns the default user agent to use in HTTP requests

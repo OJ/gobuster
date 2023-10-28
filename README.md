@@ -34,6 +34,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - get rid of `verbose` flag and introduced `debug` instead
 - the version command now also shows some build variables for more info
 - switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
+- use a more accurate line counter which is also slower as before
 
 ## 3.6
 

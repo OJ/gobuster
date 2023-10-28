@@ -164,9 +164,11 @@ func TestLineCounter(t *testing.T) {
 	}{
 		{"One Line", "test", 1},
 		{"3 Lines", "TestString\nTest\n1234", 3},
-		{"Trailing newline", "TestString\nTest\n1234\n", 4},
+		{"Trailing newline", "TestString\nTest\n1234\n", 3},
+		{"Trailing newline with comment", "TestString\n# Test\n1234\n", 2},
 		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
-		{"Empty", "", 1},
+		{"3 Lines cr lf with comment", "TestString\r\n# Test\r\n1234", 2},
+		{"Empty", "", 0},
 	}
 	for _, x := range tt {
 		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables

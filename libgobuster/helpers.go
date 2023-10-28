@@ -68,6 +68,7 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
+// nolint:unused
 func lineCounter_old(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1

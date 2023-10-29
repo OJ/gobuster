@@ -141,7 +141,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	v.once.Do(func() {
 		if !strings.Contains(subdomain, ".") {
 			progress.MessageChan <- libgobuster.Message{
-				Level:   libgobuster.LevelInfo,
+				Level:   libgobuster.LevelWarn,
 				Message: fmt.Sprintf("the first subdomain to try does not contain a dot (%s). You might want to use the option to append the base domain otherwise the vhost will be tried as is", subdomain),
 			}
 		}

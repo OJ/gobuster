@@ -72,6 +72,8 @@ func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 				g.Logger.Debug(msg.Message)
 			case libgobuster.LevelError:
 				g.Logger.Error(msg.Message)
+			case libgobuster.LevelWarn:
+				g.Logger.Warn(msg.Message)
 			case libgobuster.LevelInfo:
 				g.Logger.Info(msg.Message)
 			default:

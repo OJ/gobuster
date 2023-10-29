@@ -7,6 +7,7 @@ type MessageLevel int
 const (
 	LevelDebug MessageLevel = iota
 	LevelInfo
+	LevelWarn
 	LevelError
 )
 

@@ -11,6 +11,7 @@ type Logger struct {
 	log      *log.Logger
 	errorLog *log.Logger
 	debugLog *log.Logger
+	warnLog  *log.Logger
 	infoLog  *log.Logger
 	debug    bool
 }
@@ -20,6 +21,7 @@ func NewLogger(debug bool) Logger {
 		log:      log.New(os.Stdout, "", 0),
 		errorLog: log.New(os.Stderr, color.New(color.FgRed).Sprint("[ERROR] "), 0),
 		debugLog: log.New(os.Stderr, color.New(color.FgBlue).Sprint("[DEBUG] "), 0),
+		warnLog:  log.New(os.Stderr, color.New(color.FgYellow).Sprint("[WARN] "), 0),
 		infoLog:  log.New(os.Stderr, color.New(color.FgCyan).Sprint("[INFO] "), 0),
 		debug:    debug,
 	}
@@ -37,6 +39,14 @@ func (l Logger) Debugf(format string, v ...any) {
 		return
 	}
 	l.debugLog.Printf(format, v...)
+}
+
+func (l Logger) Warn(v ...any) {
+	l.warnLog.Print(v...)
+}
+
+func (l Logger) Warnf(format string, v ...any) {
+	l.warnLog.Printf(format, v...)
 }
 
 func (l Logger) Info(v ...any) {

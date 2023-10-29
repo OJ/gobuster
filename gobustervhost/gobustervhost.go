@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"syscall"
 	"text/tabwriter"
 
@@ -26,6 +27,7 @@ type GobusterVhost struct {
 	domain       string
 	normalBody   []byte
 	abnormalBody []byte
+	once         sync.Once
 }
 
 // New creates a new initialized GobusterDir
@@ -134,6 +136,16 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		// wordlist needs to include full domains
 		subdomain = word
 	}
+
+	// warn people when there is no . detected so they might want to use the other options
+	v.once.Do(func() {
+		if !strings.Contains(subdomain, ".") {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelInfo,
+				Message: fmt.Sprintf("the first subdomain to try does not contain a dot (%s). You might want to use the option to append the base domain otherwise the vhost will be tried as is", subdomain),
+			}
+		}
+	})
 
 	// add some debug output
 	if v.globalopts.Debug {

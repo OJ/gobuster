@@ -68,12 +68,11 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-// nolint:unused
-// this method is much more faster than lineCounter but has the following errors:
-// - empty files are reported as 1 lines
-// - files only containing a newline are reported as 1 lines
+// this method is much more faster than lineCounter_slow but has the following errors:
+// - empty files are reported as 1 line
+// - files only containing a newline are reported as 1 line
 // - also counts lines with comments
-func lineCounter_old(r io.Reader) (int, error) {
+func lineCounter(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1
 	lineSep := []byte{'\n'}
@@ -102,13 +101,13 @@ func lineCounter_old(r io.Reader) (int, error) {
 	}
 }
 
-func lineCounter(r io.Reader) (int, error) {
+func lineCounter_slow(r io.Reader) (int, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
 	var count int
 	for scanner.Scan() {
 		w := scanner.Text()
-		if w == "" || strings.HasPrefix(w, "#") {
+		if w == "" {
 			continue
 		}
 

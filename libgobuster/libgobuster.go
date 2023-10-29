@@ -55,8 +55,8 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.
 			g.Progress.incrementRequests()
 
 			wordCleaned := strings.TrimSpace(word)
-			// Skip "comment" (starts with #), as well as empty lines
-			if strings.HasPrefix(wordCleaned, "#") || len(wordCleaned) == 0 {
+			// Skip empty lines
+			if len(wordCleaned) == 0 {
 				break
 			}
 

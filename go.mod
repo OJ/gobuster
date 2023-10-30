@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/fatih/color v1.15.0
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/pin/tftp/v3 v3.0.0
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/term v0.13.0

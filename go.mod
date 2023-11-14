@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/pin/tftp/v3 v3.0.0
 	github.com/urfave/cli/v2 v2.25.7
-	golang.org/x/term v0.13.0
+	golang.org/x/term v0.14.0
 	software.sslmate.com/src/go-pkcs12 v0.4.0
 )
 

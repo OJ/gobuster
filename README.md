@@ -37,6 +37,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - comments in wordlists (strings starting with #) are no longer ignored
 - warn in vhost mode if the --append-domain switch might have been forgotten
 - allow to exclude status code in vhost mode
+- added automaxprocs for use in docker with cpu limits
 
 ## 3.6
 

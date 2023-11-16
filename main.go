@@ -15,6 +15,8 @@ import (
 	"github.com/OJ/gobuster/v3/cli/vhost"
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/urfave/cli/v2"
+
+	_ "go.uber.org/automaxprocs"
 )
 
 func main() {

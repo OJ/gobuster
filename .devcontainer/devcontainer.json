@@ -20,7 +20,8 @@
 				"golang.go",
 				"shardulm94.trailing-spaces",
 				"IBM.output-colorizer",
-				"ms-vscode.makefile-tools"
+				"ms-vscode.makefile-tools",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	}

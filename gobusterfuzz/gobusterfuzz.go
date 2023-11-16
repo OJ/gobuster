@@ -26,7 +26,7 @@ type ErrWildcard struct {
 
 // Error is the implementation of the error interface
 func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d", e.url, e.statusCode)
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d. Please exclude the response length or the status code or set the wildcard option.", e.url, e.statusCode)
 }
 
 // GobusterFuzz is the main type to implement the interface

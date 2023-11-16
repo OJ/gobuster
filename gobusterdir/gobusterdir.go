@@ -40,7 +40,7 @@ func (e *ErrWildcard) Error() string {
 	} else {
 		addInfo = fmt.Sprintf("%s => %d (Length: %d)", e.url, e.statusCode, e.length)
 	}
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s", addInfo)
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s. Please exclude the response length or the status code or set the wildcard option.", addInfo)
 }
 
 // GobusterDir is the main type to implement the interface

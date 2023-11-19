@@ -100,7 +100,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
 		for i := range d.options.Headers {
 			// Host header can't be set via Headers, needs to be a separate field
-			if d.options.Headers[i].Name == "Host" {
+			if http.CanonicalHeaderKey(d.options.Headers[i].Name) == "Host" {
 				requestOptions.Host = strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word)
 				continue
 			}

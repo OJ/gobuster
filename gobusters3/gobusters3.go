@@ -57,7 +57,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsS3, logger *libgobuster.L
 		FollowRedirect: true,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts, globalopts.Debug, logger)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
 	if err != nil {
 		return nil, err
 	}

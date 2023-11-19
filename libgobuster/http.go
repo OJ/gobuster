@@ -30,7 +30,6 @@ type HTTPClient struct {
 	cookies               string
 	method                string
 	host                  string
-	debug                 bool
 	logger                *Logger
 }
 
@@ -45,7 +44,7 @@ type RequestOptions struct {
 }
 
 // NewHTTPClient returns a new HTTPClient
-func NewHTTPClient(opt *HTTPOptions, debug bool, logger *Logger) (*HTTPClient, error) {
+func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	var proxyURLFunc func(*http.Request) (*url.URL, error)
 	var client HTTPClient
 	proxyURLFunc = http.ProxyFromEnvironment
@@ -107,7 +106,6 @@ func NewHTTPClient(opt *HTTPOptions, debug bool, logger *Logger) (*HTTPClient, e
 			break
 		}
 	}
-	client.debug = debug
 	client.logger = logger
 	return &client, nil
 }
@@ -205,7 +203,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 		req.SetBasicAuth(client.username, client.password)
 	}
 
-	if client.debug {
+	if client.logger.debug {
 		dump, err := httputil.DumpRequestOut(req, false)
 		if err != nil {
 			return nil, err

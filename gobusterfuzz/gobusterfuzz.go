@@ -72,7 +72,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster
 		Method:                opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts, globalopts.Debug, logger)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
 	if err != nil {
 		return nil, err
 	}

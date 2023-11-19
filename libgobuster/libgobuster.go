@@ -25,13 +25,13 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
 	Opts     *Options
-	Logger   Logger
+	Logger   *Logger
 	plugin   GobusterPlugin
 	Progress *Progress
 }
 
 // NewGobuster returns a new Gobuster object
-func NewGobuster(opts *Options, plugin GobusterPlugin, logger Logger) (*Gobuster, error) {
+func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuster, error) {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin

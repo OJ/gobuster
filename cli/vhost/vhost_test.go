@@ -61,7 +61,7 @@ func BenchmarkVhostMode(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		os.Stdout = devnull
 		os.Stderr = devnull
-		plugin, err := gobustervhost.New(&globalopts, pluginopts)
+		plugin, err := gobustervhost.New(&globalopts, pluginopts, log)
 		if err != nil {
 			b.Fatalf("error on creating gobusterdir: %v", err)
 		}

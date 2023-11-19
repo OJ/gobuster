@@ -27,7 +27,7 @@ type GobusterGCS struct {
 }
 
 // New creates a new initialized GobusterGCS
-func New(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error) {
+func New(globalopts *libgobuster.Options, opts *OptionsGCS, logger *libgobuster.Logger) (*GobusterGCS, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -57,7 +57,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error
 		FollowRedirect: true,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, globalopts.Debug, logger)
 	if err != nil {
 		return nil, err
 	}

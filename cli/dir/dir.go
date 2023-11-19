@@ -104,12 +104,13 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobusterdir.New(&globalOpts, pluginOpts)
+	log := libgobuster.NewLogger(globalOpts.Debug)
+
+	plugin, err := gobusterdir.New(&globalOpts, pluginOpts, log)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterdir: %w", err)
 	}
 
-	log := libgobuster.NewLogger(globalOpts.Debug)
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
 		var wErr *gobusterdir.ErrWildcard
 		if errors.As(err, &wErr) {

@@ -51,7 +51,8 @@ func TestRequest(t *testing.T) {
 	h := httpServerT(t, ret)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, false, log)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -78,7 +79,8 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, false, log)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
@@ -98,7 +100,8 @@ func BenchmarkRequestWitBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, false, log)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
@@ -118,8 +121,9 @@ func BenchmarkNewHTTPClient(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
+	log := NewLogger(false)
 	for x := 0; x < b.N; x++ {
-		_, err := NewHTTPClient(&o)
+		_, err := NewHTTPClient(&o, false, log)
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}

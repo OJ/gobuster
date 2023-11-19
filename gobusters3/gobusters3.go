@@ -27,7 +27,7 @@ type GobusterS3 struct {
 }
 
 // New creates a new initialized GobusterS3
-func New(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
+func New(globalopts *libgobuster.Options, opts *OptionsS3, logger *libgobuster.Logger) (*GobusterS3, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -57,7 +57,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) 
 		FollowRedirect: true,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, globalopts.Debug, logger)
 	if err != nil {
 		return nil, err
 	}

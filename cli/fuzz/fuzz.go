@@ -67,12 +67,13 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("please provide the %s keyword", gobusterfuzz.FuzzKeyword)
 	}
 
-	plugin, err := gobusterfuzz.New(&globalOpts, pluginOpts)
+	log := libgobuster.NewLogger(globalOpts.Debug)
+
+	plugin, err := gobusterfuzz.New(&globalOpts, pluginOpts, log)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusterfuzz: %w", err)
 	}
 
-	log := libgobuster.NewLogger(globalOpts.Debug)
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
 		log.Debugf("%#v", err)
 		return fmt.Errorf("error on running gobuster on %s: %w", pluginOpts.URL, err)

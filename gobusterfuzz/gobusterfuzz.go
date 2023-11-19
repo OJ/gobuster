@@ -37,7 +37,7 @@ type GobusterFuzz struct {
 }
 
 // New creates a new initialized GobusterFuzz
-func New(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
+func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster.Logger) (*GobusterFuzz, error) {
 	if globalopts == nil {
 		return nil, fmt.Errorf("please provide valid global options")
 	}
@@ -72,7 +72,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, err
 		Method:                opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, globalopts.Debug, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +99,12 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	if len(d.options.Headers) > 0 {
 		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
 		for i := range d.options.Headers {
+			// Host header can't be set via Headers, needs to be a separate field
+			if d.options.Headers[i].Name == "Host" {
+				requestOptions.Host = strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word)
+				continue
+			}
+
 			requestOptions.ModifiedHeaders[i] = libgobuster.HTTPHeader{
 				Name:  strings.ReplaceAll(d.options.Headers[i].Name, FuzzKeyword, word),
 				Value: strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word),

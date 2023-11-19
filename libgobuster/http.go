@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 )
@@ -29,6 +30,8 @@ type HTTPClient struct {
 	cookies               string
 	method                string
 	host                  string
+	debug                 bool
+	logger                *Logger
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -42,7 +45,7 @@ type RequestOptions struct {
 }
 
 // NewHTTPClient returns a new HTTPClient
-func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
+func NewHTTPClient(opt *HTTPOptions, debug bool, logger *Logger) (*HTTPClient, error) {
 	var proxyURLFunc func(*http.Request) (*url.URL, error)
 	var client HTTPClient
 	proxyURLFunc = http.ProxyFromEnvironment
@@ -104,6 +107,8 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 			break
 		}
 	}
+	client.debug = debug
+	client.logger = logger
 	return &client, nil
 }
 
@@ -171,6 +176,11 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 	// currently only relevant on fuzzing
 	if len(opts.ModifiedHeaders) > 0 {
 		for _, h := range opts.ModifiedHeaders {
+			// empty headers are not valid
+			if h.Name == "" {
+				continue
+			}
+
 			if client.noCanonicalizeHeaders {
 				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
 				req.Header[h.Name] = []string{h.Value}
@@ -193,6 +203,14 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 		req.SetBasicAuth(opts.UpdatedBasicAuthUsername, opts.UpdatedBasicAuthPassword)
 	} else if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)
+	}
+
+	if client.debug {
+		dump, err := httputil.DumpRequestOut(req, false)
+		if err != nil {
+			return nil, err
+		}
+		client.logger.Debugf("%s", dump)
 	}
 
 	resp, err := client.client.Do(req)

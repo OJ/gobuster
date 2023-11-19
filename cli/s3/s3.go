@@ -47,12 +47,13 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	plugin, err := gobusters3.New(&globalOpts, pluginOpts)
+	log := libgobuster.NewLogger(globalOpts.Debug)
+
+	plugin, err := gobusters3.New(&globalOpts, pluginOpts, log)
 	if err != nil {
 		return fmt.Errorf("error on creating gobusters3: %w", err)
 	}
 
-	log := libgobuster.NewLogger(globalOpts.Debug)
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
 		log.Debugf("%#v", err)
 		return fmt.Errorf("error on running gobuster: %w", err)

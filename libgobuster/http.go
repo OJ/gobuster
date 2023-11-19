@@ -176,7 +176,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 	// currently only relevant on fuzzing
 	if len(opts.ModifiedHeaders) > 0 {
 		for _, h := range opts.ModifiedHeaders {
-			// empty headers are not valid
+			// empty headers are not valid (happens when fuzzing the host header for example because the slice is intialized with the provided header length)
 			if h.Name == "" {
 				continue
 			}

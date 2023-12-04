@@ -6,7 +6,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.4.0
 	github.com/pin/tftp/v3 v3.1.0
-	github.com/urfave/cli/v2 v2.25.7
+	github.com/urfave/cli/v2 v2.26.0
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/term v0.15.0
 	software.sslmate.com/src/go-pkcs12 v0.4.0

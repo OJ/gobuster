@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "Go",
-	"image": "mcr.microsoft.com/devcontainers/go:1-1-bullseye",
+	"image": "mcr.microsoft.com/devcontainers/go",
 	"features": {
 		"ghcr.io/guiyomh/features/golangci-lint:0": {}
 	},

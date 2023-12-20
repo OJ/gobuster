@@ -7,3 +7,4 @@
 gobuster
 .git/
 mitm*
+.idea/

@@ -112,7 +112,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	if !d.options.NoFQDN && !strings.HasSuffix(subdomain, ".") {
-		// add a . to indicate this is the full domain and we do not want to traverse the search domains on the system
+		// add a . to indicate this is the full domain, and we do not want to traverse the search domains on the system
 		subdomain = fmt.Sprintf("%s.", subdomain)
 	}
 
@@ -159,7 +159,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 	return nil
 }
 
-func (d *GobusterDNS) AdditionalWords(word string) []string {
+func (d *GobusterDNS) AdditionalWords(_ string) []string {
 	return []string{}
 }
 

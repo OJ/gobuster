@@ -80,7 +80,7 @@ func (v *GobusterVhost) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL, "/") {
 		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
@@ -174,7 +174,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
@@ -206,7 +206,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	return nil
 }
 
-func (v *GobusterVhost) AdditionalWords(word string) []string {
+func (v *GobusterVhost) AdditionalWords(_ string) []string {
 	return []string{}
 }
 

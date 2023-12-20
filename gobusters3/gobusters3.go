@@ -73,7 +73,7 @@ func (s *GobusterS3) Name() string {
 }
 
 // PreRun is the pre run implementation of GobusterS3
-func (s *GobusterS3) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (s *GobusterS3) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 	return nil
 }
 
@@ -111,7 +111,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
@@ -189,7 +189,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	return nil
 }
 
-func (d *GobusterS3) AdditionalWords(word string) []string {
+func (s *GobusterS3) AdditionalWords(_ string) []string {
 	return []string{}
 }
 

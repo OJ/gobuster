@@ -110,7 +110,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	return &client, nil
 }
 
-// Request makes an http request and returns the status, the content length, the headers, the body and an error
+// Request makes a http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
 func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(ctx, fullURL, opts)
@@ -156,7 +156,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 		req.Header.Set("Cookie", client.cookies)
 	}
 
-	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
+	// Use host for VHOST mode on a per-request basis, otherwise the one provided from headers
 	if opts.Host != "" {
 		req.Host = opts.Host
 	} else if client.host != "" {
@@ -174,7 +174,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 	// currently only relevant on fuzzing
 	if len(opts.ModifiedHeaders) > 0 {
 		for _, h := range opts.ModifiedHeaders {
-			// empty headers are not valid (happens when fuzzing the host header for example because the slice is intialized with the provided header length)
+			// empty headers are not valid (happens when fuzzing the host header for example because the slice is initialized with the provided header length)
 			if h.Name == "" {
 				continue
 			}

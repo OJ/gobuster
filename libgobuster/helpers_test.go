@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -167,9 +168,9 @@ func TestLineCounter(t *testing.T) {
 		{"3 Lines", "TestString\nTest\n1234", 3},
 		{"Trailing newline", "TestString\nTest\n1234\n", 3},
 		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
-		{"Empty", "", 1},       // these are wrong but I've found no good way to handle those
-		{"Empty 2", "\n", 1},   // these are wrong but I've found no good way to handle those
-		{"Empty 3", "\r\n", 1}, // these are wrong but I've found no good way to handle those
+		{"Empty", "", 1},       // these are wrong, but I've found no good way to handle those
+		{"Empty 2", "\n", 1},   // these are wrong, but I've found no good way to handle those
+		{"Empty 3", "\r\n", 1}, // these are wrong, but I've found no good way to handle those
 	}
 	for _, x := range tt {
 		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
@@ -207,7 +208,7 @@ func TestLineCounterSlow(t *testing.T) {
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			r := strings.NewReader(x.s)
-			l, err := lineCounter_slow(r)
+			l, err := lineCounterSlow(r)
 			if err != nil {
 				t.Fatalf("Got error: %v", err)
 			}
@@ -219,12 +220,16 @@ func TestLineCounterSlow(t *testing.T) {
 }
 
 func BenchmarkLineCounter(b *testing.B) {
+	r, err := os.Open("../rockyou.txt")
+	if err != nil {
+		b.Fatalf("Got error: %v", err)
+	}
+	defer r.Close()
 	for i := 0; i < b.N; i++ {
-		r, err := os.Open("../rockyou.txt")
+		_, err := r.Seek(0, io.SeekStart)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
 		}
-		defer r.Close()
 		c, err := lineCounter(r)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
@@ -236,13 +241,17 @@ func BenchmarkLineCounter(b *testing.B) {
 }
 
 func BenchmarkLineCounterSlow(b *testing.B) {
+	r, err := os.Open("../rockyou.txt")
+	if err != nil {
+		b.Fatalf("Got error: %v", err)
+	}
+	defer r.Close()
 	for i := 0; i < b.N; i++ {
-		r, err := os.Open("../rockyou.txt")
+		_, err := r.Seek(0, io.SeekStart)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
 		}
-		defer r.Close()
-		c, err := lineCounter_slow(r)
+		c, err := lineCounterSlow(r)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
 		}

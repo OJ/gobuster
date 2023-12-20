@@ -25,7 +25,7 @@ type Result struct {
 	Size       int64
 }
 
-// ResultToString converts the Result to it's textual representation
+// ResultToString converts the Result to its textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 	if _, err := buf.WriteString(r.Path); err != nil {
@@ -33,18 +33,18 @@ func (r Result) ResultToString() (string, error) {
 	}
 
 	if r.StatusCode >= 0 {
-		color := white
+		textColor := white
 		if r.StatusCode == 200 {
-			color = green
+			textColor = green
 		} else if r.StatusCode >= 300 && r.StatusCode < 400 {
-			color = cyan
+			textColor = cyan
 		} else if r.StatusCode >= 400 && r.StatusCode < 500 {
-			color = yellow
+			textColor = yellow
 		} else if r.StatusCode >= 500 && r.StatusCode < 600 {
-			color = red
+			textColor = red
 		}
 
-		color(buf, " (Status: %d)", r.StatusCode)
+		textColor(buf, " (Status: %d)", r.StatusCode)
 	}
 
 	if r.Size >= 0 {

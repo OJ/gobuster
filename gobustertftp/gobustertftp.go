@@ -42,7 +42,7 @@ func (d *GobusterTFTP) Name() string {
 }
 
 // PreRun is the pre run implementation of gobustertftp
-func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (d *GobusterTFTP) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 	_, err := tftp.NewClient(d.options.Server)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progres
 }
 
 // ProcessWord is the process implementation of gobustertftp
-func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *libgobuster.Progress) error {
 	// add some debug output
 	if d.globalopts.Debug {
 		progress.MessageChan <- libgobuster.Message{
@@ -80,7 +80,7 @@ func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *l
 	return nil
 }
 
-func (d *GobusterTFTP) AdditionalWords(word string) []string {
+func (d *GobusterTFTP) AdditionalWords(_ string) []string {
 	return []string{}
 }
 

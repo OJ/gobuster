@@ -86,7 +86,7 @@ func (d *GobusterFuzz) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterfuzz
-func (d *GobusterFuzz) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (d *GobusterFuzz) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 	return nil
 }
 
@@ -150,7 +150,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
@@ -194,7 +194,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	return nil
 }
 
-func (d *GobusterFuzz) AdditionalWords(word string) []string {
+func (d *GobusterFuzz) AdditionalWords(_ string) []string {
 	return []string{}
 }
 

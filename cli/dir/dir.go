@@ -79,7 +79,7 @@ func run(c *cli.Context) error {
 	pluginOpts.StatusCodesBlacklistParsed = ret3
 
 	if pluginOpts.StatusCodes != "" && pluginOpts.StatusCodesBlacklist != "" {
-		return fmt.Errorf("status-codes (%q) and status-codes-blacklist (%q) are both set - please set only one. status-codes-blacklist is set by default so you might want to disable it by supplying an empty string.",
+		return fmt.Errorf("status-codes (%q) and status-codes-blacklist (%q) are both set - please set only one. status-codes-blacklist is set by default so you might want to disable it by supplying an empty string",
 			pluginOpts.StatusCodes, pluginOpts.StatusCodesBlacklist)
 	}
 

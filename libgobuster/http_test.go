@@ -14,7 +14,9 @@ import (
 func httpServerB(b *testing.B, content string) *httptest.Server {
 	b.Helper()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, content)
+		if _, err := fmt.Fprint(w, content); err != nil {
+			b.Fatalf("%v", err)
+		}
 	}))
 	return ts
 }
@@ -22,7 +24,9 @@ func httpServerB(b *testing.B, content string) *httptest.Server {
 func httpServerT(t *testing.T, content string) *httptest.Server {
 	t.Helper()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, content)
+		if _, err := fmt.Fprint(w, content); err != nil {
+			t.Fatalf("%v", err)
+		}
 	}))
 	return ts
 }

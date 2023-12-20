@@ -17,7 +17,9 @@ import (
 func httpServer(b *testing.B, content string) *httptest.Server {
 	b.Helper()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, content)
+		if _, err := fmt.Fprint(w, content); err != nil {
+			b.Fatalf("%v", err)
+		}
 	}))
 	return ts
 }
@@ -51,7 +53,9 @@ func BenchmarkDirMode(b *testing.B) {
 	for w := 0; w < 1000; w++ {
 		_, _ = wordlist.WriteString(fmt.Sprintf("%d\n", w))
 	}
-	wordlist.Close()
+	if err := wordlist.Close(); err != nil {
+		b.Fatalf("%v", err)
+	}
 
 	globalopts := libgobuster.Options{
 		Threads:    10,

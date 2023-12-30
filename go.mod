@@ -1,6 +1,6 @@
 module github.com/OJ/gobuster/v3
 
-go 1.19
+go 1.21
 
 require (
 	github.com/fatih/color v1.15.0

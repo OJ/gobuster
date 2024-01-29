@@ -232,6 +232,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	}
 
 	if c.Bool("no-color") {
+		opts.NoColor = true
 		color.NoColor = true
 	}
 

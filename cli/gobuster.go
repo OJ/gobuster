@@ -36,7 +36,11 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		}
 		if s != "" {
 			s = strings.TrimSpace(s)
-			_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
+			if(g.Opts.NoColor){
+				_, _ = fmt.Printf("\r%s\n", s)
+			} else {
+				_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
+			}
 			if f != nil {
 				err = writeToFile(f, s)
 				if err != nil {

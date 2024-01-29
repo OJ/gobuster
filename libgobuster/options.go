@@ -14,6 +14,7 @@ type Options struct {
 	NoStatus       bool
 	NoProgress     bool
 	NoError        bool
+	NoColor        bool
 	Quiet          bool
 	Delay          time.Duration
 }

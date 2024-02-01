@@ -36,7 +36,12 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		}
 		if s != "" {
 			s = strings.TrimSpace(s)
-			_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
+			if g.Opts.NoProgress {
+				_, _ = fmt.Printf("%s\n", s)
+			} else {
+				// only print the clear line when progress output is enabled
+				_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
+			}
 			if f != nil {
 				err = writeToFile(f, s)
 				if err != nil {

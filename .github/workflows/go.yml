@@ -13,6 +13,9 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      - name: Install Task
+        uses: arduino/setup-task@v1
+
       - name: Check out code
         uses: actions/checkout@v4
 
@@ -29,10 +32,10 @@ jobs:
           go get -v -t -d ./...
 
       - name: Build linux
-        run: make linux
+        run: task linux
 
       - name: Build windows
-        run: make windows
+        run: task windows
 
       - name: Test
-        run: make test
+        run: task test

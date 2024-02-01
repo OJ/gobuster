@@ -11,7 +11,6 @@ type Options struct {
 	PatternFile    string
 	Patterns       []string
 	OutputFilename string
-	NoStatus       bool
 	NoProgress     bool
 	NoError        bool
 	Quiet          bool

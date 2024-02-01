@@ -168,6 +168,15 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 		log.Println(ruler)
 	}
 
+	fi, err := os.Stdout.Stat()
+	if err != nil {
+		return err
+	}
+	// check if we are not in a terminal. If so, disable output
+	if (fi.Mode() & os.ModeCharDevice) != os.ModeCharDevice {
+		opts.NoProgress = true
+	}
+
 	// our waitgroup for all goroutines
 	// this ensures all goroutines are finished
 	// when we call wg.Wait()

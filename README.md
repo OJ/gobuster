@@ -125,17 +125,29 @@ docker pull ghcr.io/oj/gobuster:latest
 
 ### Using `go install`
 
-If you have a [Go](https://golang.org/) environment ready to go (at least go 1.19), it's as easy as:
+If you have a [Go](https://golang.org/) environment ready to go (at least go 1.21), it's as easy as:
 
 ```bash
 go install github.com/OJ/gobuster/v3@latest
 ```
 
-PS: You need at least go 1.19 to compile gobuster.
+PS: You need at least go 1.21 to compile gobuster.
+
+#### Complete manual install steps
+
+- Remove possible golang packages from your package distribution (eg `apt remove golang`)
+- Download the latest golang source from [https://go.dev/dl](https://go.dev/dl)
+- Install according to [https://go.dev/doc/install](https://go.dev/doc/install) (don't forget to add it to your PATH)
+- Set your GOPATH environment variable `export GOPATH=$HOME/go`
+- Add `$HOME/go/bin` to your PATH variable (`go install` will install to this location)
+- Make sure all environment variables are persisted across your terminals and survive a reboot
+- Verify `go version` shows the downloaded version and works
+- `go install github.com/OJ/gobuster/v3@latest`
+- verify you can run `gobuster`
 
 ### Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.19 to compile gobuster.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.21 to compile gobuster.
 
 ### Compiling
 

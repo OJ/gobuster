@@ -10,11 +10,11 @@ tasks:
       - go mod tidy -v
 
   build:
-    aliases: [default, linux]
+    aliases: [default]
     cmds:
       - go fmt ./...
       - go vet ./...
-      - go build -o {{.PROGRAM}}
+      - go build -o {{.OUTPUT_FILE | default .PROGRAM}}
     env:
       CGO_ENABLED: 0
 
@@ -29,6 +29,8 @@ tasks:
   windows:
     cmds:
       - task: build
+        vars:
+          OUTPUT_FILE: "{{.PROGRAM}}.exe"
     env:
       CGO_ENABLED: 0
       GOOS: windows

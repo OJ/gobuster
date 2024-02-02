@@ -36,7 +36,7 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		}
 		if s != "" {
 			s = strings.TrimSpace(s)
-			if g.Opts.NoProgress {
+			if g.Opts.NoProgress || g.Opts.Quiet {
 				_, _ = fmt.Printf("%s\n", s)
 			} else {
 				// only print the clear line when progress output is enabled
@@ -89,17 +89,15 @@ func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 }
 
 func printProgress(g *libgobuster.Gobuster) {
-	if !g.Opts.Quiet && !g.Opts.NoProgress {
-		requestsIssued := g.Progress.RequestsIssued()
-		requestsExpected := g.Progress.RequestsExpected()
-		if g.Opts.Wordlist == "-" {
-			s := fmt.Sprintf("%sProgress: %d", TERMINAL_CLEAR_LINE, requestsIssued)
-			_, _ = fmt.Fprint(os.Stderr, s)
-			// only print status if we already read in the wordlist
-		} else if requestsExpected > 0 {
-			s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
-			_, _ = fmt.Fprint(os.Stderr, s)
-		}
+	requestsIssued := g.Progress.RequestsIssued()
+	requestsExpected := g.Progress.RequestsExpected()
+	if g.Opts.Wordlist == "-" {
+		s := fmt.Sprintf("%sProgress: %d", TERMINAL_CLEAR_LINE, requestsIssued)
+		_, _ = fmt.Fprint(os.Stderr, s)
+		// only print status if we already read in the wordlist
+	} else if requestsExpected > 0 {
+		s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
+		_, _ = fmt.Fprint(os.Stderr, s)
 	}
 }
 

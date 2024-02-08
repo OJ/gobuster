@@ -20,7 +20,9 @@ import (
 )
 
 func init() {
-	maxprocs.Set()
+	if _, err := maxprocs.Set(); err != nil {
+		fmt.Printf("Error on gomaxprocs: %v\n", err)
+	}
 }
 
 func main() {

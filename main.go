@@ -16,8 +16,12 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/urfave/cli/v2"
 
-	_ "go.uber.org/automaxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 )
+
+func init() {
+	maxprocs.Set()
+}
 
 func main() {
 	cli.VersionPrinter = func(cCtx *cli.Context) {

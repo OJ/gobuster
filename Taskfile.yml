@@ -17,24 +17,23 @@ tasks:
       - go build -o {{.OUTPUT_FILE | default .PROGRAM}}
     env:
       CGO_ENABLED: 0
+      GOOS: '{{.GOOS | default "linux"}}'
+      GOARCH: '{{.GOARCH | default "amd64"}}'
 
   linux:
     cmds:
       - task: build
-    env:
-      CGO_ENABLED: 0
-      GOOS: linux
-      GOARCH: amd64
+        vars:
+          GOOS: linux
+          GOARCH: amd64
 
   windows:
     cmds:
       - task: build
         vars:
           OUTPUT_FILE: "{{.PROGRAM}}.exe"
-    env:
-      CGO_ENABLED: 0
-      GOOS: windows
-      GOARCH: amd64
+          GOOS: windows
+          GOARCH: amd64
 
   test:
     env:

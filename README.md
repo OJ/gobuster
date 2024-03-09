@@ -42,6 +42,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - allow fuzzing of Host header in fuzz mode
 - automatically disable progress output when output is redirected
 - fix extra special characters when run with `--no-progress`
+- warn when using vhost mode with a proxy and http based urls as this might not work as expected
 
 ## 3.6
 

@@ -2,6 +2,7 @@ package vhost
 
 import (
 	"fmt"
+	"strings"
 
 	internalcli "github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobustervhost"
@@ -28,6 +29,7 @@ func getFlags() []cli.Flag {
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths. You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 		&cli.StringFlag{Name: "exclude-status", Aliases: []string{"xs"}, Usage: "exclude the following status codes. Can also handle ranges like 200,300-400,404.", Value: ""},
 		&cli.StringFlag{Name: "domain", Aliases: []string{"do"}, Usage: "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted"},
+		&cli.BoolFlag{Name: "force", Value: false, Usage: "Force execution even when result is not guaranteed."},
 	}...)
 
 	return flags
@@ -62,6 +64,13 @@ func run(c *cli.Context) error {
 	globalOpts, err := internalcli.ParseGlobalOptions(c)
 	if err != nil {
 		return err
+	}
+
+	force := c.Bool("force")
+	if !force &&
+		(strings.HasPrefix(pluginOpts.Proxy, "http://") || strings.HasPrefix(pluginOpts.Proxy, "https://")) &&
+		strings.HasPrefix(pluginOpts.URL, "http://") {
+		return fmt.Errorf("VHOST mode does not work with a http proxy when using plain text http urls as golang strictly adheres to the http standard. This results in always sending the requests to the IP of the VHOST domain instead of the specified target. See https://github.com/golang/go/issues/30775 for example. You need to either disable the proxy, use a https based url or use the --force switch to continue. When using --force you may need to do some rewrites in your proxy to get the expected result.")
 	}
 
 	log := libgobuster.NewLogger(globalOpts.Debug)

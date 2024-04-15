@@ -17,7 +17,7 @@ type Set[T comparable] struct {
 	Set map[T]bool
 }
 
-// NewSSet creates a new initialized Set
+// NewSet creates a new initialized Set
 func NewSet[T comparable]() Set[T] {
 	return Set[T]{Set: map[T]bool{}}
 }

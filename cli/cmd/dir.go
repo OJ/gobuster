@@ -117,7 +117,7 @@ func parseDirOptions() (*libgobuster.Options, *gobusterdir.OptionsDir, error) {
 	}
 
 	if pluginOpts.StatusCodes == "" && pluginOpts.StatusCodesBlacklist == "" {
-		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both not set, please set one")
+		return nil, nil, errors.New("status-codes and status-codes-blacklist are both not set, please set one")
 	}
 
 	pluginOpts.UseSlash, err = cmdDir.Flags().GetBool("add-slash")

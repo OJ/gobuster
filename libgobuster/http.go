@@ -48,7 +48,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 	proxyURLFunc = http.ProxyFromEnvironment
 
 	if opt == nil {
-		return nil, fmt.Errorf("options is nil")
+		return nil, errors.New("options is nil")
 	}
 
 	if opt.Proxy != "" {

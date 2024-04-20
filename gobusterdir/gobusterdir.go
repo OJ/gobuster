@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -43,11 +44,11 @@ type GobusterDir struct {
 // NewGobusterDir creates a new initialized GobusterDir
 func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterDir{
@@ -127,7 +128,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
 		}
 	} else {
-		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 	}
 
 	return nil
@@ -228,7 +229,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				resultStatus = true
 			}
 		} else {
-			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+			return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if (resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size))) || d.globalopts.Verbose {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,11 +27,11 @@ type GobusterGCS struct {
 // NewGobusterGCS creates a new initialized GobusterGCS
 func NewGobusterGCS(globalopts *libgobuster.Options, opts *OptionsGCS) (*GobusterGCS, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterGCS{

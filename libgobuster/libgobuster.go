@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -93,7 +94,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	}
 
 	if lines-g.Opts.WordlistOffset <= 0 {
-		return nil, fmt.Errorf("offset is greater than the number of lines in the wordlist")
+		return nil, errors.New("offset is greater than the number of lines in the wordlist")
 	}
 
 	// calcutate expected requests
@@ -125,7 +126,7 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 			if err := wordlistScanner.Err(); err != nil {
 				return nil, fmt.Errorf("failed to skip lines in wordlist: %w", err)
 			}
-			return nil, fmt.Errorf("failed to skip lines in wordlist")
+			return nil, errors.New("failed to skip lines in wordlist")
 		}
 	}
 

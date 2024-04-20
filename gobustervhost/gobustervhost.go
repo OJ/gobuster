@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -28,11 +29,11 @@ type GobusterVhost struct {
 // NewGobusterVhost creates a new initialized GobusterDir
 func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterVhost{

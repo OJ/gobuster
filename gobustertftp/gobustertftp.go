@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"text/tabwriter"
@@ -22,11 +23,11 @@ type GobusterTFTP struct {
 // NewGobusterTFTP creates a new initialized NewGobusterTFTP
 func NewGobusterTFTP(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterTFTP{

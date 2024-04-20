@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/tls"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -113,7 +114,7 @@ func parseBasicHTTPOptions(cmd *cobra.Command) (libgobuster.BasicHTTPOptions, er
 	}
 
 	if pemFile != "" && p12File != "" {
-		return options, fmt.Errorf("please supply either a pem or a p12, not both")
+		return options, errors.New("please supply either a pem or a p12, not both")
 	}
 
 	if pemFile != "" {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,11 +27,11 @@ type GobusterS3 struct {
 // NewGobusterS3 creates a new initialized GobusterS3
 func NewGobusterS3(globalopts *libgobuster.Options, opts *OptionsS3) (*GobusterS3, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterS3{

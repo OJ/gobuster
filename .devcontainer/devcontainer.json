@@ -23,7 +23,8 @@
         "IBM.output-colorizer",
         "task.vscode-task",
         "github.vscode-github-actions",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "usernamehw.errorlens"
       ]
     }
   }

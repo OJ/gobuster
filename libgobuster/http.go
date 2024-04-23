@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -79,15 +80,28 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 		tlsConfig.Certificates = []tls.Certificate{*opt.TLSCertificate}
 	}
 
+	transport := &http.Transport{
+		Proxy:               proxyURLFunc,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+		TLSClientConfig:     &tlsConfig,
+	}
+
+	// set specific network interface
+	if opt.LocalAddr != nil {
+		dialer := &net.Dialer{
+			Timeout:   opt.Timeout,
+			LocalAddr: opt.LocalAddr,
+		}
+		transport.DialContext = dialer.DialContext
+	}
+
 	client.client = &http.Client{
 		Timeout:       opt.Timeout,
 		CheckRedirect: redirectFunc,
-		Transport: &http.Transport{
-			Proxy:               proxyURLFunc,
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 100,
-			TLSClientConfig:     &tlsConfig,
-		}}
+		Transport:     transport,
+	}
+
 	client.username = opt.Username
 	client.password = opt.Password
 	client.userAgent = opt.UserAgent

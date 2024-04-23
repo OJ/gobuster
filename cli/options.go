@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"os"
 	"regexp"
 	"strconv"
@@ -31,6 +32,8 @@ func BasicHTTPOptions() []cli.Flag {
 		&cli.StringFlag{Name: "client-cert-pem-key", Aliases: []string{"ccpk"}, Usage: "private key in PEM format for optional TLS client certificates (this key needs to have no password)"},
 		&cli.StringFlag{Name: "client-cert-p12", Aliases: []string{"ccp12"}, Usage: "a p12 file to use for options TLS client certificates"},
 		&cli.StringFlag{Name: "client-cert-p12-password", Aliases: []string{"ccp12p"}, Usage: "the password to the p12 file"},
+		&cli.StringFlag{Name: "interface", Aliases: []string{"iface"}, Usage: "specify network interface to use. Can't be used with local-ip"},
+		&cli.StringFlag{Name: "local-ip", Usage: "specify local ip of network interface to use. Can't be used with interface"},
 	}
 }
 
@@ -79,6 +82,27 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 			Certificate: [][]byte{pubKey.Raw},
 			PrivateKey:  privKey,
 		}
+	}
+
+	iface := c.String("interface")
+	localIP := c.String("local-ip")
+	if iface != "" && localIP != "" {
+		return opts, fmt.Errorf("can not set both interface and local-ip")
+	}
+
+	switch {
+	case iface != "":
+		a, err := getLocalAddrFromInterface(iface)
+		if err != nil {
+			return opts, err
+		}
+		opts.LocalAddr = a
+	case localIP != "":
+		a, err := net.ResolveIPAddr("ip", localIP)
+		if err != nil {
+			return opts, err
+		}
+		opts.LocalAddr = a
 	}
 
 	return opts, nil
@@ -237,4 +261,29 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.Debug = c.Bool("debug")
 	return opts, nil
+}
+
+func getLocalAddrFromInterface(iface string) (net.Addr, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, fmt.Errorf("could not get interfaces: %w", err)
+	}
+
+	for _, i := range ifaces {
+		if i.Name == iface {
+			addrs, err := i.Addrs()
+			if err != nil {
+				return nil, fmt.Errorf("could not get local addrs for iface %s: %w", i.Name, err)
+			}
+			for _, a := range addrs {
+				switch v := a.(type) {
+				case *net.IPAddr:
+					return v, nil
+				case *net.IPNet:
+					return v, nil
+				}
+			}
+		}
+	}
+	return nil, fmt.Errorf("could not find ip for interface %s", iface)
 }

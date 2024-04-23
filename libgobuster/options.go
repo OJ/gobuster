@@ -1,6 +1,8 @@
 package libgobuster
 
-import "time"
+import (
+	"time"
+)
 
 // Options holds all options that can be passed to libgobuster
 type Options struct {

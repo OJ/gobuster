@@ -98,7 +98,7 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 		}
 		opts.LocalAddr = a
 	case localIP != "":
-		a, err := net.ResolveIPAddr("ip", localIP)
+		a, err := net.ResolveTCPAddr("ip", localIP)
 		if err != nil {
 			return opts, err
 		}
@@ -263,27 +263,22 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	return opts, nil
 }
 
-func getLocalAddrFromInterface(iface string) (net.Addr, error) {
-	ifaces, err := net.Interfaces()
+func getLocalAddrFromInterface(iface string) (*net.TCPAddr, error) {
+	i, err := net.InterfaceByName(iface)
 	if err != nil {
-		return nil, fmt.Errorf("could not get interfaces: %w", err)
+		return nil, fmt.Errorf("could not get interface %s: %v", iface, err)
+	}
+	addrs, err := i.Addrs()
+	if err != nil {
+		return nil, fmt.Errorf("could not get local addrs for iface %s: %w", i.Name, err)
 	}
 
-	for _, i := range ifaces {
-		if i.Name == iface {
-			addrs, err := i.Addrs()
-			if err != nil {
-				return nil, fmt.Errorf("could not get local addrs for iface %s: %w", i.Name, err)
-			}
-			for _, a := range addrs {
-				switch v := a.(type) {
-				case *net.IPAddr:
-					return v, nil
-				case *net.IPNet:
-					return v, nil
-				}
-			}
-		}
+	if len(addrs) == 0 {
+		return nil, fmt.Errorf("no ip adresses on interface %s", iface)
 	}
-	return nil, fmt.Errorf("could not find ip for interface %s", iface)
+
+	tcpAddr := &net.TCPAddr{
+		IP: addrs[0].(*net.IPNet).IP,
+	}
+	return tcpAddr, err
 }

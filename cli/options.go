@@ -98,7 +98,10 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 		}
 		opts.LocalAddr = a
 	case localIP != "":
-		a, err := net.ResolveTCPAddr("ip", localIP)
+		if !strings.Contains(localIP, ":") {
+			localIP = fmt.Sprintf("%s:0", localIP)
+		}
+		a, err := net.ResolveTCPAddr("tcp", localIP)
 		if err != nil {
 			return opts, err
 		}

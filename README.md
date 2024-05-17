@@ -44,6 +44,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - fix extra special characters when run with `--no-progress`
 - warn when using vhost mode with a proxy and http based urls as this might not work as expected
 - add `interface` and `local-ip` parameters to specify the interface for http requests
+- add support for tls renegotiation
 
 ## 3.6
 

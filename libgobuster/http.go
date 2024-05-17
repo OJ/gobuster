@@ -79,6 +79,9 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	if opt.TLSCertificate != nil {
 		tlsConfig.Certificates = []tls.Certificate{*opt.TLSCertificate}
 	}
+	if opt.TLSRenegotiation {
+		tlsConfig.Renegotiation = tls.RenegotiateOnceAsClient
+	}
 
 	transport := &http.Transport{
 		Proxy:               proxyURLFunc,

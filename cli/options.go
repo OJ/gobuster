@@ -32,6 +32,7 @@ func BasicHTTPOptions() []cli.Flag {
 		&cli.StringFlag{Name: "client-cert-pem-key", Aliases: []string{"ccpk"}, Usage: "private key in PEM format for optional TLS client certificates (this key needs to have no password)"},
 		&cli.StringFlag{Name: "client-cert-p12", Aliases: []string{"ccp12"}, Usage: "a p12 file to use for options TLS client certificates"},
 		&cli.StringFlag{Name: "client-cert-p12-password", Aliases: []string{"ccp12p"}, Usage: "the password to the p12 file"},
+		&cli.BoolFlag{Name: "tls-renegotiation", Value: false, Usage: "Enable TLS renegotiation"},
 		&cli.StringFlag{Name: "interface", Aliases: []string{"iface"}, Usage: "specify network interface to use. Can't be used with local-ip"},
 		&cli.StringFlag{Name: "local-ip", Usage: "specify local ip of network interface to use. Can't be used with interface"},
 	}
@@ -83,6 +84,8 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 			PrivateKey:  privKey,
 		}
 	}
+
+	opts.TLSRenegotiation = c.Bool("tls-renegotiation")
 
 	iface := c.String("interface")
 	localIP := c.String("local-ip")

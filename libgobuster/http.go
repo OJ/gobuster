@@ -70,6 +70,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 
 	tlsConfig := tls.Config{
 		InsecureSkipVerify: opt.NoTLSValidation,
+		Renegotiation:      tls.RenegotiateOnceAsClient,
 		// enable TLS1.0 and TLS1.1 support
 		MinVersion: tls.VersionTLS10,
 	}

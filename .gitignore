@@ -29,3 +29,4 @@ config.json
 .vscode/
 gobuster
 *.txt
+dist/

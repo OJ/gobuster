@@ -80,6 +80,37 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 		return nil, nil, fmt.Errorf("invalid value for domain: %w", err)
 	}
 
+	// parse normal status codes
+	pluginOpts.StatusCodes, err = cmdVhost.Flags().GetString("status-codes")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
+	}
+	ret2, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.StatusCodes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes: %w", err)
+	}
+	pluginOpts.StatusCodesParsed = ret2
+
+	// blacklist will override the normal status codes
+	pluginOpts.StatusCodesBlacklist, err = cmdVhost.Flags().GetString("status-codes-blacklist")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
+	}
+	ret3, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.StatusCodesBlacklist)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for status-codes-blacklist: %w", err)
+	}
+	pluginOpts.StatusCodesBlacklistParsed = ret3
+
+	if pluginOpts.StatusCodes != "" && pluginOpts.StatusCodesBlacklist != "" {
+		return nil, nil, fmt.Errorf("status-codes (%q) and status-codes-blacklist (%q) are both set - please set only one. status-codes-blacklist is set by default so you might want to disable it by supplying an empty string.",
+			pluginOpts.StatusCodes, pluginOpts.StatusCodesBlacklist)
+	}
+
+	if pluginOpts.StatusCodes == "" && pluginOpts.StatusCodesBlacklist == "" {
+		return nil, nil, fmt.Errorf("status-codes and status-codes-blacklist are both not set, please set one")
+	}
+
 	return globalopts, pluginOpts, nil
 }
 
@@ -93,6 +124,8 @@ func init() {
 	if err := addCommonHTTPOptions(cmdVhost); err != nil {
 		log.Fatalf("%v", err)
 	}
+	cmdVhost.Flags().StringP("status-codes", "s", "", "Positive status codes (will be overwritten with status-codes-blacklist if set). Can also handle ranges like 200,300-400,404.")
+	cmdVhost.Flags().StringP("status-codes-blacklist", "b", "404", "Negative status codes (will override status-codes if set). Can also handle ranges like 200,300-400,404.")
 	cmdVhost.Flags().BoolP("append-domain", "", false, "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.")
 	cmdVhost.Flags().String("exclude-length", "", "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206")
 	cmdVhost.Flags().String("domain", "", "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted")

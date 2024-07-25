@@ -155,6 +155,17 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		resultStatus := false
 		if found {
 			resultStatus = true
+			if v.options.StatusCodesBlacklistParsed.Length() > 0 {
+				if v.options.StatusCodesBlacklistParsed.Contains(statusCode) {
+					return nil
+				}
+			} else if v.options.StatusCodesParsed.Length() > 0 {
+				if !v.options.StatusCodesParsed.Contains(statusCode) {
+					return nil
+				}
+			} else {
+				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+			}
 		}
 		progress.ResultChan <- Result{
 			Found:      resultStatus,
@@ -205,6 +216,16 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if v.globalopts.PatternFile != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", v.globalopts.PatternFile, len(v.globalopts.Patterns)); err != nil {
+			return "", err
+		}
+	}
+
+	if o.StatusCodesBlacklistParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Negative Status codes:\t%s\n", o.StatusCodesBlacklistParsed.Stringify()); err != nil {
+			return "", err
+		}
+	} else if o.StatusCodesParsed.Length() > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Status codes:\t%s\n", o.StatusCodesParsed.Stringify()); err != nil {
 			return "", err
 		}
 	}

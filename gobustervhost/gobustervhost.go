@@ -163,8 +163,6 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 				if !v.options.StatusCodesParsed.Contains(statusCode) {
 					return nil
 				}
-			} else {
-				return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 			}
 		}
 		progress.ResultChan <- Result{

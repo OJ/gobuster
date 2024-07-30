@@ -11,6 +11,8 @@ type OptionsVhost struct {
 	ExcludeLength       string
 	ExcludeLengthParsed libgobuster.Set[int]
 	Domain              string
+	ExcludeCode string
+	ExcludeCodeParsed int
 }
 
 // NewOptionsVhost returns a new initialized OptionsVhost

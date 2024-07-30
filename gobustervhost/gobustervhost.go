@@ -148,10 +148,10 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		break
 	}
 
-	// subdomain must not match default vhost and non existent vhost
-	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
+	code := false
+	if (found && v.options.ExcludeCodeParsed != statusCode) || v.globalopts.Verbose {
+		code = true
 		resultStatus := false
 		if found {
 			resultStatus = true
@@ -164,6 +164,25 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			Header:     header,
 		}
 	}
+	// subdomain must not match default vhost and non existent vhost
+	// or verbose mode is enabled
+	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
+		resultStatus := false
+		if found {
+			resultStatus = true
+		}
+		if(code || v.globalopts.Verbose){
+		progress.ResultChan <- Result{
+			Found:      resultStatus,
+			Vhost:      subdomain,
+			StatusCode: statusCode,
+			Size:       size,
+			Header:     header,
+		}
+	}
+	}
+
+
 	return nil
 }
 

@@ -15,6 +15,9 @@ import (
 var cmdVhost *cobra.Command
 
 func parseStatusCode(s string) (int, error) {
+	if s == "" {
+		return 1, nil
+	}
     num, err := strconv.Atoi(s)
     if err != nil {
         return 0, err

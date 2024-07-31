@@ -25,6 +25,7 @@ type GobusterVhost struct {
 	abnormalBody []byte
 }
 
+
 // NewGobusterVhost creates a new initialized GobusterDir
 func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
 	if globalopts == nil {
@@ -150,18 +151,11 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
 	code := false
+	show := false
 	if (found && v.options.ExcludeCodeParsed != statusCode) || v.globalopts.Verbose {
 		code = true
-		resultStatus := false
-		if found {
-			resultStatus = true
-		}
-		progress.ResultChan <- Result{
-			Found:      resultStatus,
-			Vhost:      subdomain,
-			StatusCode: statusCode,
-			Size:       size,
-			Header:     header,
+		if v.options.ExcludeCodeParsed != 1{ //caso seja diferente, é pq tá ativo entao ele manda a req 
+			show = true
 		}
 	}
 	// subdomain must not match default vhost and non existent vhost
@@ -172,6 +166,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			resultStatus = true
 		}
 		if(code || v.globalopts.Verbose){
+		show = false
 		progress.ResultChan <- Result{
 			Found:      resultStatus,
 			Vhost:      subdomain,
@@ -180,7 +175,18 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			Header:     header,
 		}
 	}
+	if show{
+		progress.ResultChan <- Result{
+			Found:      resultStatus,
+			Vhost:      subdomain,
+			StatusCode: statusCode,
+			Size:       size,
+			Header:     header,
+		}
 	}
+
+
+}
 
 
 	return nil

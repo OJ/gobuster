@@ -4,16 +4,29 @@ vars:
   PROGRAM: gobuster
 
 tasks:
+  deps:
+    cmds:
+      - go mod tidy -v
+
   update:
     cmds:
       - go get -u
       - go mod tidy -v
 
-  build:
-    aliases: [default]
+  check:
     cmds:
       - go fmt ./...
+      - gofumpt -l -w .
       - go vet ./...
+
+  setup:
+    cmds:
+      - go install mvdan.cc/gofumpt@latest
+
+  build:
+    aliases: [default]
+    deps: [deps, check]
+    cmds:
       - go build -o {{.OUTPUT_FILE | default .PROGRAM}}
     env:
       CGO_ENABLED: 0
@@ -36,6 +49,7 @@ tasks:
           GOARCH: amd64
 
   test:
+    deps: [deps, check]
     env:
       CGO_ENABLED: 1 # required by -race
     cmds:

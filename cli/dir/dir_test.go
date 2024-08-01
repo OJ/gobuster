@@ -23,6 +23,7 @@ func httpServer(b *testing.B, content string) *httptest.Server {
 	}))
 	return ts
 }
+
 func BenchmarkDirMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()

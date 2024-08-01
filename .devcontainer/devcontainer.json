@@ -3,26 +3,23 @@
 {
   "name": "Go",
   "image": "mcr.microsoft.com/devcontainers/go",
+  // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/guiyomh/features/golangci-lint:0": {},
-    "ghcr.io/devcontainers-contrib/features/go-task:1": {}
+    "ghcr.io/devcontainers-contrib/features/go-task:1": {},
   },
-  "postCreateCommand": "go mod download",
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "go version",
-  // Configure tool-specific properties.
+  "postCreateCommand": {
+    "install dependencies": "task setup",
+    "install required modules": "go mod download"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
         "golang.go",
         "shardulm94.trailing-spaces",
         "IBM.output-colorizer",
-        "task.vscode-task",
         "github.vscode-github-actions",
+        "task.vscode-task",
         "redhat.vscode-yaml",
         "usernamehw.errorlens"
       ]

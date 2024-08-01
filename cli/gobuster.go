@@ -11,8 +11,10 @@ import (
 	"github.com/OJ/gobuster/v3/libgobuster"
 )
 
-const ruler = "==============================================================="
-const cliProgressUpdate = 500 * time.Millisecond
+const (
+	ruler             = "==============================================================="
+	cliProgressUpdate = 500 * time.Millisecond
+)
 
 // resultWorker outputs the results as they come in. This needs to be a range and should not handle
 // the context so the channel always has a receiver and libgobuster will not block.

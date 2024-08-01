@@ -159,7 +159,7 @@ func TestSetStringify(t *testing.T) {
 
 func TestLineCounter(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		testName string
 		s        string
 		expected int
@@ -190,7 +190,7 @@ func TestLineCounter(t *testing.T) {
 
 func TestLineCounterSlow(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		testName string
 		s        string
 		expected int
@@ -272,7 +272,7 @@ func TestLineCounterError(t *testing.T) {
 
 func TestParseExtensions(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		testName           string
 		extensions         string
 		expectedExtensions Set[string]
@@ -303,7 +303,7 @@ func TestParseExtensions(t *testing.T) {
 
 func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		stringCodes   string
 		expectedCodes []int
 		expectedError string
@@ -351,7 +351,7 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 }
 
 func BenchmarkParseExtensions(b *testing.B) {
-	var tt = []struct {
+	tt := []struct {
 		testName           string
 		extensions         string
 		expectedExtensions Set[string]
@@ -375,7 +375,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 }
 
 func BenchmarkParseCommaSeparatedInt(b *testing.B) {
-	var tt = []struct {
+	tt := []struct {
 		testName      string
 		stringCodes   string
 		expectedCodes Set[int]

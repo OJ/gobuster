@@ -6,9 +6,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var (
-	green = color.New(color.FgGreen).FprintfFunc()
-)
+var green = color.New(color.FgGreen).FprintfFunc()
 
 // Result represents a single result
 type Result struct {

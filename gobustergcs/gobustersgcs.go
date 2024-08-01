@@ -160,7 +160,6 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 		// get status
 		var result map[string]interface{}
 		err := json.Unmarshal(body, &result)
-
 		if err != nil {
 			return fmt.Errorf("could not parse response json: %w", err)
 		}

@@ -32,7 +32,7 @@ func httpServerT(t *testing.T, content string) *httptest.Server {
 }
 
 func randomString(length int) (string, error) {
-	var letter = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	letter := []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	letterLen := len(letter)
 
 	b := make([]byte, length)

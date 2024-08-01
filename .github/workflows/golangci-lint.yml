@@ -1,5 +1,5 @@
 name: golangci-lint
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   golangci:
     name: lint
@@ -15,3 +15,4 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
+          args: --timeout=5m

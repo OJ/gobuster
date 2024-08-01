@@ -36,7 +36,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
 - comments in wordlists (strings starting with #) are no longer ignored
 - warn in vhost mode if the --append-domain switch might have been forgotten
-- allow to exclude status code in vhost mode
+- allow to exclude status code and length in vhost mode
 - added automaxprocs for use in docker with cpu limits
 - log http requests with debug enabled
 - allow fuzzing of Host header in fuzz mode

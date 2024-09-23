@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/pin/tftp/v3 v3.1.0
 	github.com/urfave/cli/v2 v2.27.4
-	go.uber.org/automaxprocs v1.5.3
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/term v0.24.0
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )

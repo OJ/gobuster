@@ -26,7 +26,7 @@ jobs:
           go-version: "stable"
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6.0.0
+        uses: goreleaser/goreleaser-action@v6.1.0
         with:
           distribution: goreleaser
           version: latest

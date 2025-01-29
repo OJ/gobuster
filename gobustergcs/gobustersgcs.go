@@ -79,10 +79,10 @@ func (s *GobusterGCS) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 }
 
 // ProcessWord is the process implementation of GobusterS3
-func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
-		return nil
+		return nil, nil
 	}
 
 	bucketURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o?maxResults=%d", word, s.options.MaxFilesToList)
@@ -118,20 +118,20 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 				continue
 			} else {
 				if errors.Is(err, io.EOF) {
-					return libgobuster.ErrorEOF
+					return nil, libgobuster.ErrorEOF
 				} else if os.IsTimeout(err) {
-					return libgobuster.ErrorTimeout
+					return nil, libgobuster.ErrorTimeout
 				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return libgobuster.ErrorConnectionRefused
+					return nil, libgobuster.ErrorConnectionRefused
 				}
-				return err
+				return nil, err
 			}
 		}
 		break
 	}
 
 	if statusCode == 0 || body == nil {
-		return nil
+		return nil, nil
 	}
 
 	// looks like 401, 403, and 404 are the only negative status codes
@@ -152,7 +152,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 	// nothing found, bail out
 	// may add the result later if we want to enable verbose output
 	if !found {
-		return nil
+		return nil, nil
 	}
 
 	extraStr := ""
@@ -161,7 +161,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 		var result map[string]interface{}
 		err := json.Unmarshal(body, &result)
 		if err != nil {
-			return fmt.Errorf("could not parse response json: %w", err)
+			return nil, fmt.Errorf("could not parse response json: %w", err)
 		}
 
 		if _, exist := result["error"]; exist {
@@ -169,7 +169,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			gcsError := GCSError{}
 			err := json.Unmarshal(body, &gcsError)
 			if err != nil {
-				return fmt.Errorf("could not parse error json: %w", err)
+				return nil, fmt.Errorf("could not parse error json: %w", err)
 			}
 			extraStr = fmt.Sprintf("Error: %s (%d)", gcsError.Error.Message, gcsError.Error.Code)
 		} else if v, exist := result["kind"]; exist && v == "storage#objects" {
@@ -178,7 +178,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			gcsListing := GCSListing{}
 			err := json.Unmarshal(body, &gcsListing)
 			if err != nil {
-				return fmt.Errorf("could not parse result json: %w", err)
+				return nil, fmt.Errorf("could not parse result json: %w", err)
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range gcsListing.Items {
@@ -188,13 +188,13 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 		}
 	}
 
-	progress.ResultChan <- Result{
+	r := Result{
 		Found:      found,
 		BucketName: word,
 		Status:     extraStr,
 	}
 
-	return nil
+	return r, nil
 }
 
 func (s *GobusterGCS) AdditionalWordsLen() int {
@@ -202,6 +202,10 @@ func (s *GobusterGCS) AdditionalWordsLen() int {
 }
 
 func (s *GobusterGCS) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (s *GobusterGCS) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

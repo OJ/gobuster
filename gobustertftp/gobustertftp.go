@@ -51,7 +51,7 @@ func (d *GobusterTFTP) PreRun(_ context.Context, _ *libgobuster.Progress) error 
 }
 
 // ProcessWord is the process implementation of gobustertftp
-func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	// add some debug output
 	if d.globalopts.Debug {
 		progress.MessageChan <- libgobuster.Message{
@@ -62,13 +62,13 @@ func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *lib
 
 	c, err := tftp.NewClient(d.options.Server)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	c.SetTimeout(d.options.Timeout)
 	wt, err := c.Receive(word, "octet")
 	if err != nil {
 		// file not found
-		return nil
+		return nil, nil
 	}
 	result := Result{
 		Filename: word,
@@ -76,8 +76,7 @@ func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *lib
 	if n, ok := wt.(tftp.IncomingTransfer).Size(); ok {
 		result.Size = n
 	}
-	progress.ResultChan <- result
-	return nil
+	return result, nil
 }
 
 func (d *GobusterTFTP) AdditionalWordsLen() int {
@@ -85,6 +84,10 @@ func (d *GobusterTFTP) AdditionalWordsLen() int {
 }
 
 func (d *GobusterTFTP) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterTFTP) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

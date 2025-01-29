@@ -411,7 +411,7 @@ OPTIONS:
    --no-status, -n                                          Don't print status codes (default: false)
    --hide-length, --hl                                      Hide the length of the body in the output (default: false)
    --add-slash, -f                                          Append / to each request (default: false)
-   --discover-backup, --db                                  Also search for backup files by appending multiple backup extensions (default: false)
+   --discover-backup, --db                                  Upon finding a file search for backup files by appending multiple backup extensions (default: false)
    --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
    --help, -h                                               show help
 ```

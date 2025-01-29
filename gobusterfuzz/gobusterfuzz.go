@@ -91,7 +91,7 @@ func (d *GobusterFuzz) PreRun(_ context.Context, _ *libgobuster.Progress) error 
 }
 
 // ProcessWord is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	url := strings.ReplaceAll(d.options.URL, FuzzKeyword, word)
 
 	requestOptions := libgobuster.RequestOptions{}
@@ -156,13 +156,13 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				continue
 			} else {
 				if errors.Is(err, io.EOF) {
-					return libgobuster.ErrorEOF
+					return nil, libgobuster.ErrorEOF
 				} else if os.IsTimeout(err) {
-					return libgobuster.ErrorTimeout
+					return nil, libgobuster.ErrorTimeout
 				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return libgobuster.ErrorConnectionRefused
+					return nil, libgobuster.ErrorConnectionRefused
 				}
-				return err
+				return nil, err
 			}
 		}
 		break
@@ -182,16 +182,17 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		}
 
 		if resultStatus {
-			progress.ResultChan <- Result{
+			r := Result{
 				Path:       url,
 				StatusCode: statusCode,
 				Size:       size,
 				Word:       word,
 				Header:     responseHeaders,
 			}
+			return r, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (d *GobusterFuzz) AdditionalWordsLen() int {
@@ -199,6 +200,10 @@ func (d *GobusterFuzz) AdditionalWordsLen() int {
 }
 
 func (d *GobusterFuzz) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterFuzz) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

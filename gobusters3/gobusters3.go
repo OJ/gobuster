@@ -78,10 +78,10 @@ func (s *GobusterS3) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 }
 
 // ProcessWord is the process implementation of GobusterS3
-func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
-		return nil
+		return nil, nil
 	}
 
 	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
@@ -117,20 +117,20 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 				continue
 			} else {
 				if errors.Is(err, io.EOF) {
-					return libgobuster.ErrorEOF
+					return nil, libgobuster.ErrorEOF
 				} else if os.IsTimeout(err) {
-					return libgobuster.ErrorTimeout
+					return nil, libgobuster.ErrorTimeout
 				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return libgobuster.ErrorConnectionRefused
+					return nil, libgobuster.ErrorConnectionRefused
 				}
-				return err
+				return nil, err
 			}
 		}
 		break
 	}
 
 	if statusCode == 0 || body == nil {
-		return nil
+		return nil, nil
 	}
 
 	// looks like 404 and 400 are the only negative status codes
@@ -151,7 +151,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	// nothing found, bail out
 	// may add the result later if we want to enable verbose output
 	if !found {
-		return nil
+		return nil, nil
 	}
 
 	extraStr := ""
@@ -161,7 +161,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			awsError := AWSError{}
 			err := xml.Unmarshal(body, &awsError)
 			if err != nil {
-				return fmt.Errorf("could not parse error xml: %w", err)
+				return nil, fmt.Errorf("could not parse error xml: %w", err)
 			}
 			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
 			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
@@ -170,7 +170,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			awsListing := AWSListing{}
 			err := xml.Unmarshal(body, &awsListing)
 			if err != nil {
-				return fmt.Errorf("could not parse result xml: %w", err)
+				return nil, fmt.Errorf("could not parse result xml: %w", err)
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range awsListing.Contents {
@@ -180,13 +180,13 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		}
 	}
 
-	progress.ResultChan <- Result{
+	r := Result{
 		Found:      found,
 		BucketName: word,
 		Status:     extraStr,
 	}
 
-	return nil
+	return r, nil
 }
 
 func (s *GobusterS3) AdditionalWordsLen() int {
@@ -194,6 +194,10 @@ func (s *GobusterS3) AdditionalWordsLen() int {
 }
 
 func (s *GobusterS3) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (s *GobusterS3) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

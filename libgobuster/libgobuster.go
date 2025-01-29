@@ -41,38 +41,86 @@ func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuste
 	return &g, nil
 }
 
-func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, wg *sync.WaitGroup) {
+func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, moreWordsChan chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case word, ok := <-wordChan:
-			// worker finished
-			if !ok {
-				return
-			}
-			g.Progress.incrementRequests()
+		case word := <-wordChan:
 
 			wordCleaned := strings.TrimSpace(word)
 			// Skip empty lines
 			if len(wordCleaned) == 0 {
+				g.Progress.incrementRequests()
 				break
 			}
 
 			// Mode-specific processing
-			err := g.plugin.ProcessWord(ctx, wordCleaned, g.Progress)
+			res, err := g.plugin.ProcessWord(ctx, wordCleaned, g.Progress)
 			if err != nil {
 				// do not exit and continue
 				g.Progress.ErrorChan <- fmt.Errorf("error on word %s: %w", wordCleaned, err)
-				continue
 			}
+
+			if res != nil {
+				g.Progress.ResultChan <- res
+				select {
+				case <-ctx.Done():
+					return
+				case moreWordsChan <- wordCleaned:
+				}
+			}
+
+			g.Progress.incrementRequests()
 
 			select {
 			case <-ctx.Done():
 			case <-time.After(g.Opts.Delay):
 			}
 		}
+	}
+}
+
+func feed(ctx context.Context, wordChan chan<- string, words []string) {
+	for _, w := range words {
+		select {
+		// need to check here too otherwise wordChan will block
+		case <-ctx.Done():
+			return
+		case wordChan <- w:
+		}
+	}
+}
+
+func (g *Gobuster) feeder(ctx context.Context, wordChan chan<- string, words []string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	feed(ctx, wordChan, words)
+}
+
+func (g *Gobuster) feedScanner(ctx context.Context, wordChan chan<- string, scanner *bufio.Scanner, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for scanner.Scan() {
+		word := scanner.Text()
+		// add the original word
+		select {
+		case <-ctx.Done():
+			return
+		case wordChan <- word:
+		}
+		// now create perms
+		for _, w := range g.processPatterns(word) {
+			select {
+			case <-ctx.Done():
+				return
+			case wordChan <- w:
+			}
+
+			feed(ctx, wordChan, g.plugin.AdditionalWords(w))
+		}
+		feed(ctx, wordChan, g.plugin.AdditionalWords(word))
 	}
 }
 
@@ -136,62 +184,65 @@ func (g *Gobuster) Run(ctx context.Context) error {
 		return err
 	}
 
-	var workerGroup sync.WaitGroup
+	workerCtx, workerCancel := context.WithCancel(ctx)
+	defer workerCancel()
+	feederCtx, feederCancel := context.WithCancel(ctx)
+	defer feederCancel()
+
+	var workerGroup, feederGroup sync.WaitGroup
 	workerGroup.Add(g.Opts.Threads)
 
-	wordChan := make(chan string, g.Opts.Threads)
-
-	// Create goroutines for each of the number of threads
-	// specified.
-	for i := 0; i < g.Opts.Threads; i++ {
-		go g.worker(ctx, wordChan, &workerGroup)
-	}
+	wordChan := make(chan string, g.Opts.Threads*3)
+	moreWordsChan := make(chan string)
 
 	scanner, err := g.getWordlist()
 	if err != nil {
 		return err
 	}
 
-Scan:
-	for scanner.Scan() {
+	// Create goroutines for each of the number of threads
+	// specified.
+	for i := 0; i < g.Opts.Threads; i++ {
+		go g.worker(workerCtx, wordChan, moreWordsChan, &workerGroup)
+	}
+
+	feederGroup.Add(1)
+	go g.feedScanner(feederCtx, wordChan, scanner, &feederGroup)
+
+ListenForMore:
+	for {
 		select {
 		case <-ctx.Done():
-			break Scan
-		default:
-			word := scanner.Text()
-			perms := g.processPatterns(word)
-			// add the original word
-			wordChan <- word
-			// now create perms
-			for _, w := range perms {
-				select {
-				// need to check here too otherwise wordChan will block
-				case <-ctx.Done():
-					break Scan
-				case wordChan <- w:
-				}
-
-				for _, w := range g.plugin.AdditionalWords(w) {
-					select {
-					// need to check here too otherwise wordChan will block
-					case <-ctx.Done():
-						break Scan
-					case wordChan <- w:
-					}
-				}
+			break ListenForMore
+		case successWord := <-moreWordsChan:
+			// Add more guesses based on the results of previous attempts
+			// TODO: limit guess recursion depth somehow
+			//  (eg index.html -> index.html~ -> index.html~~ -> index.html~~~ ...)
+			// TODO: add the option for arbitrary patterns based on successful finds
+			additionalWords := g.plugin.AdditionalSuccessWords(successWord)
+			if len(additionalWords) > 0 {
+				g.Progress.IncrementTotalRequests(len(additionalWords))
+				feederGroup.Add(1)
+				go g.feeder(feederCtx, wordChan, additionalWords, &feederGroup)
 			}
-
-			for _, w := range g.plugin.AdditionalWords(word) {
-				select {
-				// need to check here too otherwise wordChan will block
-				case <-ctx.Done():
-					break Scan
-				case wordChan <- w:
-				}
+		case <-time.After(200 * time.Millisecond):
+			// With requests issued only after the results are synchronously
+			// reported, this is well ordered without the timeout, however it would
+			// exert a lot of lock pressure during the run to keep doing this in a
+			// hot loop
+			if g.Progress.RequestsExpected() == g.Progress.RequestsIssued() {
+				// All the expected requests have completed, there is no pending or
+				// in-progress work. If moreWordsChan was buffered we would need to
+				// check it again here to ensure no pending work was added while we
+				// acquired the locks
+				break ListenForMore
 			}
 		}
 	}
-	close(wordChan)
+
+	feederCancel()
+	workerCancel()
+	feederGroup.Wait()
 	workerGroup.Wait()
 
 	if err := scanner.Err(); err != nil {

@@ -206,6 +206,10 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	return nil
 }
 
+func (v *GobusterVhost) AdditionalWordsLen() int {
+	return 0
+}
+
 func (v *GobusterVhost) AdditionalWords(_ string) []string {
 	return []string{}
 }

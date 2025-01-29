@@ -80,6 +80,10 @@ func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *lib
 	return nil
 }
 
+func (d *GobusterTFTP) AdditionalWordsLen() int {
+	return 0
+}
+
 func (d *GobusterTFTP) AdditionalWords(_ string) []string {
 	return []string{}
 }

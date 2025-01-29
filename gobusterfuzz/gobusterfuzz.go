@@ -194,6 +194,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	return nil
 }
 
+func (d *GobusterFuzz) AdditionalWordsLen() int {
+	return 0
+}
+
 func (d *GobusterFuzz) AdditionalWords(_ string) []string {
 	return []string{}
 }

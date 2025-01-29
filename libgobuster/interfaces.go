@@ -8,6 +8,7 @@ type GobusterPlugin interface {
 	PreRun(context.Context, *Progress) error
 	ProcessWord(context.Context, string, *Progress) error
 	AdditionalWords(string) []string
+	AdditionalWordsLen() int
 	GetConfigString() (string, error)
 }
 

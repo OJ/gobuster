@@ -197,6 +197,10 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 	return nil
 }
 
+func (s *GobusterGCS) AdditionalWordsLen() int {
+	return 0
+}
+
 func (s *GobusterGCS) AdditionalWords(_ string) []string {
 	return []string{}
 }

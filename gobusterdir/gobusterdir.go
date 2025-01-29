@@ -172,8 +172,17 @@ func getBackupFilenames(word string) []string {
 	return ret
 }
 
+func (d *GobusterDir) AdditionalWordsLen() int {
+	n := len(d.options.ExtensionsParsed.Set)
+	if d.options.DiscoverBackup {
+		n += (n + 1) * (len(backupExtensions) + len(backupDotExtensions))
+	}
+
+	return n
+}
+
 func (d *GobusterDir) AdditionalWords(word string) []string {
-	var words []string
+	words := make([]string, 0, d.AdditionalWordsLen())
 	// build list of urls to check
 	//   1: No extension
 	//   2: With extension

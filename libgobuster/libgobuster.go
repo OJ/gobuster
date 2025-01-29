@@ -97,19 +97,12 @@ func (g *Gobuster) getWordlist() (*bufio.Scanner, error) {
 	}
 
 	// calcutate expected requests
-	g.Progress.IncrementTotalRequests(lines)
+	nPats := 1 + len(g.Opts.Patterns)
+	requestsPerLine := nPats + nPats*g.plugin.AdditionalWordsLen()
+	g.Progress.IncrementTotalRequests(lines * requestsPerLine)
 
 	// add offset if needed (offset defaults to 0)
-	g.Progress.incrementRequestsIssues(g.Opts.WordlistOffset)
-
-	// call the function once with a dummy entry to receive the number
-	// of custom words per wordlist word
-	customWordsLen := len(g.plugin.AdditionalWords("dummy"))
-	if customWordsLen > 0 {
-		origExpected := g.Progress.RequestsExpected()
-		inc := origExpected * customWordsLen
-		g.Progress.IncrementTotalRequests(inc)
-	}
+	g.Progress.incrementRequestsIssues(g.Opts.WordlistOffset * requestsPerLine)
 
 	// rewind wordlist
 	_, err = wordlist.Seek(0, 0)
@@ -176,6 +169,15 @@ Scan:
 				case <-ctx.Done():
 					break Scan
 				case wordChan <- w:
+				}
+
+				for _, w := range g.plugin.AdditionalWords(w) {
+					select {
+					// need to check here too otherwise wordChan will block
+					case <-ctx.Done():
+						break Scan
+					case wordChan <- w:
+					}
 				}
 			}
 

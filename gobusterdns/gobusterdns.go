@@ -159,6 +159,10 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 	return nil
 }
 
+func (d *GobusterDNS) AdditionalWordsLen() int {
+	return 0
+}
+
 func (d *GobusterDNS) AdditionalWords(_ string) []string {
 	return []string{}
 }

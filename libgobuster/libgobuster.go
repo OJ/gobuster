@@ -44,6 +44,12 @@ func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuste
 func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, moreWordsChan chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
+		// Prioritize stopping when the context is done
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 		select {
 		case <-ctx.Done():
 			return
@@ -84,6 +90,12 @@ func (g *Gobuster) worker(ctx context.Context, wordChan <-chan string, moreWords
 
 func feed(ctx context.Context, wordChan chan<- string, words []string) {
 	for _, w := range words {
+		// Prioritize stopping when the context is done
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 		select {
 		// need to check here too otherwise wordChan will block
 		case <-ctx.Done():
@@ -103,6 +115,13 @@ func (g *Gobuster) feedScanner(ctx context.Context, wordChan chan<- string, scan
 	defer wg.Done()
 
 	for scanner.Scan() {
+		// Prioritize stopping when the context is done
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		word := scanner.Text()
 		// add the original word
 		select {
@@ -211,6 +230,13 @@ func (g *Gobuster) Run(ctx context.Context) error {
 
 ListenForMore:
 	for {
+		// Prioritize stopping when the context is done
+		select {
+		case <-ctx.Done():
+			break ListenForMore
+		default:
+		}
+
 		select {
 		case <-ctx.Done():
 			break ListenForMore

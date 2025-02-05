@@ -213,7 +213,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.BoolFlag{Name: "no-progress", Aliases: []string{"np"}, Value: false, Usage: "Don't display progress"},
 		&cli.BoolFlag{Name: "no-error", Aliases: []string{"ne"}, Value: false, Usage: "Don't display errors"},
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
-		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns for successful guesses"},
+		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}

@@ -185,25 +185,26 @@ USAGE:
    gobuster dns [command options] [arguments...]
 
 OPTIONS:
-   --domain value, --do value           The target domain
-   --show-ips, -i                       Show IP addresses of found domains (default: false)
-   --check-cname, -c                    Also check CNAME records (default: false)
-   --timeout value, --to value          DNS resolver timeout (default: 1s)
-   --wildcard, --wc                     Force continued operation when wildcard found (default: false)
-   --no-fqdn, --nf                      Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain (default: false)
-   --resolver value                     Use custom DNS server (format server.com or server.com:port)
-   --wordlist value, -w value           Path to the wordlist. Set to - to use STDIN.
-   --delay value, -d value              Time each thread waits between requests (e.g. 1500ms) (default: 0s)
-   --threads value, -t value            Number of concurrent threads (default: 10)
-   --wordlist-offset value, --wo value  Resume from a given position in the wordlist (default: 0)
-   --output value, -o value             Output file to write results to (defaults to stdout)
-   --quiet, -q                          Don't print the banner and other noise (default: false)
-   --no-progress, --np                  Don't display progress (default: false)
-   --no-error, --ne                     Don't display errors (default: false)
-   --pattern value, -p value            File containing replacement patterns
-   --no-color, --nc                     Disable color output (default: false)
-   --debug                              enable debug output (default: false)
-   --help, -h                           show help
+   --domain value, --do value            The target domain
+   --show-ips, -i                        Show IP addresses of found domains (default: false)
+   --check-cname, -c                     Also check CNAME records (default: false)
+   --timeout value, --to value           DNS resolver timeout (default: 1s)
+   --wildcard, --wc                      Force continued operation when wildcard found (default: false)
+   --no-fqdn, --nf                       Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain (default: false)
+   --resolver value                      Use custom DNS server (format server.com or server.com:port)
+   --wordlist value, -w value            Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value               Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value             Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value   Resume from a given position in the wordlist (default: 0)
+   --output value, -o value              Output file to write results to (defaults to stdout)
+   --quiet, -q                           Don't print the banner and other noise (default: false)
+   --no-progress, --np                   Don't display progress (default: false)
+   --no-error, --ne                      Don't display errors (default: false)
+   --pattern value, -p value             File containing replacement patterns
+   --discover-pattern value, --pd value  File containing replacement patterns applied to successful guesses
+   --no-color, --nc                      Disable color output (default: false)
+   --debug                               enable debug output (default: false)
+   --help, -h                            show help
 ```
 
 ### Examples
@@ -401,6 +402,7 @@ OPTIONS:
    --no-progress, --np                                      Don't display progress (default: false)
    --no-error, --ne                                         Don't display errors (default: false)
    --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
    --no-color, --nc                                         Disable color output (default: false)
    --debug                                                  enable debug output (default: false)
    --status-codes value, -s value                           Positive status codes (will be overwritten with status-codes-blacklist if set). Can also handle ranges like 200,300-400,404
@@ -589,6 +591,7 @@ OPTIONS:
    --no-progress, --np                                      Don't display progress (default: false)
    --no-error, --ne                                         Don't display errors (default: false)
    --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
    --no-color, --nc                                         Disable color output (default: false)
    --debug                                                  enable debug output (default: false)
    --append-domain, --ad                                    Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist. (default: false)
@@ -669,6 +672,7 @@ OPTIONS:
    --no-progress, --np                                      Don't display progress (default: false)
    --no-error, --ne                                         Don't display errors (default: false)
    --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
    --no-color, --nc                                         Disable color output (default: false)
    --debug                                                  enable debug output (default: false)
    --exclude-statuscodes value, -b value                    Excluded status codes. Can also handle ranges like 200,300-400,404.
@@ -706,6 +710,7 @@ OPTIONS:
    --no-progress, --np                               Don't display progress (default: false)
    --no-error, --ne                                  Don't display errors (default: false)
    --pattern value, -p value                         File containing replacement patterns
+   --discover-pattern value, --pd value              File containing replacement patterns applied to successful guesses
    --no-color, --nc                                  Disable color output (default: false)
    --debug                                           enable debug output (default: false)
    --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
@@ -751,6 +756,7 @@ OPTIONS:
    --no-progress, --np                               Don't display progress (default: false)
    --no-error, --ne                                  Don't display errors (default: false)
    --pattern value, -p value                         File containing replacement patterns
+   --discover-pattern value, --pd value              File containing replacement patterns applied to successful guesses
    --no-color, --nc                                  Disable color output (default: false)
    --debug                                           enable debug output (default: false)
    --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
@@ -785,20 +791,21 @@ USAGE:
    gobuster tftp [command options] [arguments...]
 
 OPTIONS:
-   --server value, -s value             The target TFTP server
-   --timeout value, --to value          TFTP timeout (default: 1s)
-   --wordlist value, -w value           Path to the wordlist. Set to - to use STDIN.
-   --delay value, -d value              Time each thread waits between requests (e.g. 1500ms) (default: 0s)
-   --threads value, -t value            Number of concurrent threads (default: 10)
-   --wordlist-offset value, --wo value  Resume from a given position in the wordlist (default: 0)
-   --output value, -o value             Output file to write results to (defaults to stdout)
-   --quiet, -q                          Don't print the banner and other noise (default: false)
-   --no-progress, --np                  Don't display progress (default: false)
-   --no-error, --ne                     Don't display errors (default: false)
-   --pattern value, -p value            File containing replacement patterns
-   --no-color, --nc                     Disable color output (default: false)
-   --debug                              enable debug output (default: false)
-   --help, -h                           show help
+   --server value, -s value              The target TFTP server
+   --timeout value, --to value           TFTP timeout (default: 1s)
+   --wordlist value, -w value            Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value               Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value             Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value   Resume from a given position in the wordlist (default: 0)
+   --output value, -o value              Output file to write results to (defaults to stdout)
+   --quiet, -q                           Don't print the banner and other noise (default: false)
+   --no-progress, --np                   Don't display progress (default: false)
+   --no-error, --ne                      Don't display errors (default: false)
+   --pattern value, -p value             File containing replacement patterns
+   --discover-pattern value, --pd value  File containing replacement patterns applied to successful guesses
+   --no-color, --nc                      Disable color output (default: false)
+   --debug                               enable debug output (default: false)
+   --help, -h                            show help
 ```
 
 ### Examples
@@ -823,6 +830,7 @@ Note: If the `-w` option is specified at the same time as piping from STDIN, an 
 You can supply pattern files that will be applied to every word from the wordlist.
 Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
 This feature is also handy in s3 mode to pre- or postfix certain patterns.
+When supplying patterns, words from the wordlist will not be tried by themselves. If you wish to have patterns and plain words from the wordlist, place `{GOBUSTER}` on a line by itself in the pattern file.
 
 **Caution:** Using a big pattern file can cause a lot of request as every pattern is applied to every word in the wordlist.
 

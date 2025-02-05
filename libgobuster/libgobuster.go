@@ -266,13 +266,19 @@ ListenForMore:
 			break ListenForMore
 		case successGuess := <-successChan:
 			// Add more guesses based on the results of previous attempts
-			// TODO: add the option for arbitrary patterns based on successful finds
 			if successGuess.discoverOnSuccess {
-				additionalWords := g.plugin.AdditionalSuccessWords(successGuess.word)
-				if len(additionalWords) > 0 {
-					g.Progress.IncrementTotalRequests(len(additionalWords))
+				discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
+				if len(discoverWords) > 0 {
+					g.Progress.IncrementTotalRequests(len(discoverWords))
 					feederGroup.Add(1)
-					go g.feeder(feederCtx, guessChan, additionalWords, false, &feederGroup)
+					go g.feeder(feederCtx, guessChan, discoverWords, false, &feederGroup)
+				}
+
+				patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
+				if len(patternDiscoverWords) > 0 {
+					g.Progress.IncrementTotalRequests(len(patternDiscoverWords))
+					feederGroup.Add(1)
+					go g.feeder(feederCtx, guessChan, patternDiscoverWords, false, &feederGroup)
 				}
 			}
 		case <-time.After(200 * time.Millisecond):
@@ -312,11 +318,21 @@ func (g *Gobuster) processPatterns(word string) []string {
 		return nil
 	}
 
-	//nolint:prealloc
-	var pat []string
-	for _, x := range g.Opts.Patterns {
-		repl := strings.ReplaceAll(x, PATTERN, word)
-		pat = append(pat, repl)
+	return g.applyPatterns(word, g.Opts.Patterns)
+}
+
+func (g *Gobuster) processDiscoverPatterns(word string) []string {
+	if g.Opts.DiscoverPatternFile == "" {
+		return nil
+	}
+
+	return g.applyPatterns(word, g.Opts.DiscoverPatterns)
+}
+
+func (g *Gobuster) applyPatterns(word string, patterns []string) []string {
+	pat := make([]string, len(patterns))
+	for i, x := range patterns {
+		pat[i] = strings.ReplaceAll(x, PATTERN, word)
 	}
 	return pat
 }

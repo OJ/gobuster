@@ -143,33 +143,40 @@ func (g *Gobuster) feedWordlist(ctx context.Context, guessChan chan<- *Guess, wo
 			continue
 		}
 
-		guess := &Guess{word: word, discoverOnSuccess: true}
+		if len(g.Opts.Patterns) > 0 {
+			for _, w := range g.processPatterns(word) {
+				guess := &Guess{word: w, discoverOnSuccess: true}
+				select {
+				case <-ctx.Done():
+					return
+				case guessChan <- guess:
+				}
 
-		// add the original word
-		select {
-		case <-ctx.Done():
-			return
-		case guessChan <- guess:
-		}
-		// now create perms
-		for _, w := range g.processPatterns(word) {
-			guess := &Guess{word: w, discoverOnSuccess: true}
+				feed(ctx, guessChan, g.plugin.AdditionalWords(w), true)
+			}
+		} else {
+			guess := &Guess{word: word, discoverOnSuccess: true}
+
 			select {
 			case <-ctx.Done():
 				return
 			case guessChan <- guess:
 			}
 
-			feed(ctx, guessChan, g.plugin.AdditionalWords(w), true)
+			feed(ctx, guessChan, g.plugin.AdditionalWords(word), true)
 		}
-		feed(ctx, guessChan, g.plugin.AdditionalWords(word), true)
 	}
 }
 
 func (g *Gobuster) getWordlist() (*Wordlist, error) {
-	// calcutate expected requests
-	nPats := 1 + len(g.Opts.Patterns)
-	guessesPerLine := nPats + nPats*g.plugin.AdditionalWordsLen()
+	// calculate expected requests
+	var guessesPerLine int
+	if len(g.Opts.Patterns) > 0 {
+		nPats := len(g.Opts.Patterns)
+		guessesPerLine = nPats + nPats*g.plugin.AdditionalWordsLen()
+	} else {
+		guessesPerLine = 1 + g.plugin.AdditionalWordsLen()
+	}
 
 	if g.Opts.Wordlist == "-" {
 		// Read directly from stdin

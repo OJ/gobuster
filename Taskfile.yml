@@ -11,17 +11,14 @@ tasks:
   update:
     cmds:
       - go get -u
+      - go get -u tool
       - go mod tidy -v
 
   check:
     cmds:
       - go fmt ./...
-      - gofumpt -l -w .
+      - go tool gofumpt -l -w .
       - go vet ./...
-
-  setup:
-    cmds:
-      - go install mvdan.cc/gofumpt@latest
 
   build:
     aliases: [default]

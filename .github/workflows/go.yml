@@ -21,9 +21,6 @@ jobs:
       - name: Get dependencies
         run: task deps
 
-      - name: Install dependencies
-        run: task setup
-
       - name: Build linux
         run: task linux
 

@@ -109,7 +109,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 }
 
 // ProcessWord is the process implementation of gobusterdns
-func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	if !d.options.NoFQDN && !strings.HasSuffix(subdomain, ".") {
 		// add a . to indicate this is the full domain, and we do not want to traverse the search domains on the system
@@ -129,9 +129,9 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 		var wErr *net.DNSError
 		if errors.As(err, &wErr) && wErr.IsNotFound {
 			// host not found is the expected error here
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 
 	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
@@ -154,12 +154,20 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 				}
 			}
 		}
-		progress.ResultChan <- result
+		return result, nil
 	}
-	return nil
+	return nil, nil
+}
+
+func (d *GobusterDNS) AdditionalWordsLen() int {
+	return 0
 }
 
 func (d *GobusterDNS) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterDNS) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

@@ -157,42 +157,43 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 	return nil
 }
 
-func getBackupFilenames(word string) []string {
-	ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
-	i := 0
-	for _, b := range backupExtensions {
-		ret[i] = fmt.Sprintf("%s%s", word, b)
-		i++
-	}
-	for _, b := range backupDotExtensions {
-		ret[i] = fmt.Sprintf(".%s%s", word, b)
-		i++
+func (d *GobusterDir) AdditionalSuccessWords(word string) []string {
+	if d.options.DiscoverBackup {
+		ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
+		i := 0
+		for _, b := range backupExtensions {
+			ret[i] = fmt.Sprintf("%s%s", word, b)
+			i++
+		}
+		for _, b := range backupDotExtensions {
+			ret[i] = fmt.Sprintf(".%s%s", word, b)
+			i++
+		}
+
+		return ret
 	}
 
-	return ret
+	return []string{}
+}
+
+func (d *GobusterDir) AdditionalWordsLen() int {
+	return len(d.options.ExtensionsParsed.Set)
 }
 
 func (d *GobusterDir) AdditionalWords(word string) []string {
-	var words []string
+	words := make([]string, 0, d.AdditionalWordsLen())
 	// build list of urls to check
 	//   1: No extension
 	//   2: With extension
-	//   3: backupextension
-	if d.options.DiscoverBackup {
-		words = append(words, getBackupFilenames(word)...)
-	}
 	for ext := range d.options.ExtensionsParsed.Set {
 		filename := fmt.Sprintf("%s.%s", word, ext)
 		words = append(words, filename)
-		if d.options.DiscoverBackup {
-			words = append(words, getBackupFilenames(filename)...)
-		}
 	}
 	return words
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
@@ -243,13 +244,13 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				continue
 			} else {
 				if errors.Is(err, io.EOF) {
-					return libgobuster.ErrorEOF
+					return nil, libgobuster.ErrorEOF
 				} else if os.IsTimeout(err) {
-					return libgobuster.ErrorTimeout
+					return nil, libgobuster.ErrorTimeout
 				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return libgobuster.ErrorConnectionRefused
+					return nil, libgobuster.ErrorConnectionRefused
 				}
-				return err
+				return nil, err
 			}
 		}
 		break
@@ -267,7 +268,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				resultStatus = true
 			}
 		} else {
-			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
@@ -289,11 +290,11 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			if !d.options.HideLength {
 				r.Size = size
 			}
-			progress.ResultChan <- r
+			return r, nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetConfigString returns the string representation of the current config

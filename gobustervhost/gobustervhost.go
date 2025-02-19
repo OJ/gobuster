@@ -128,7 +128,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
@@ -180,13 +180,13 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 				continue
 			} else {
 				if errors.Is(err, io.EOF) {
-					return libgobuster.ErrorEOF
+					return nil, libgobuster.ErrorEOF
 				} else if os.IsTimeout(err) {
-					return libgobuster.ErrorTimeout
+					return nil, libgobuster.ErrorTimeout
 				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return libgobuster.ErrorConnectionRefused
+					return nil, libgobuster.ErrorConnectionRefused
 				}
-				return err
+				return nil, err
 			}
 		}
 		break
@@ -196,17 +196,26 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
 	if found && !v.options.ExcludeLengthParsed.Contains(int(size)) && !v.options.ExcludeStatusParsed.Contains(statusCode) {
-		progress.ResultChan <- Result{
+		r := Result{
 			Vhost:      subdomain,
 			StatusCode: statusCode,
 			Size:       size,
 			Header:     header,
 		}
+		return r, nil
 	}
-	return nil
+	return nil, nil
+}
+
+func (v *GobusterVhost) AdditionalWordsLen() int {
+	return 0
 }
 
 func (v *GobusterVhost) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (v *GobusterVhost) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 

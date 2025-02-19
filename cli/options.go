@@ -213,6 +213,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.BoolFlag{Name: "no-progress", Aliases: []string{"np"}, Value: false, Usage: "Don't display progress"},
 		&cli.BoolFlag{Name: "no-error", Aliases: []string{"ne"}, Value: false, Usage: "Don't display errors"},
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
+		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}
@@ -258,6 +259,26 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 		}
 		if err := scanner.Err(); err != nil {
 			return opts, fmt.Errorf("could not read pattern file %q: %w", opts.PatternFile, err)
+		}
+	}
+
+	opts.DiscoverPatternFile = c.String("discover-pattern")
+	if opts.DiscoverPatternFile != "" {
+		if _, err := os.Stat(opts.PatternFile); os.IsNotExist(err) {
+			return opts, fmt.Errorf("discover pattern file %q does not exist: %w", opts.DiscoverPatternFile, err)
+		}
+		discoverPatternFile, err := os.Open(opts.DiscoverPatternFile)
+		if err != nil {
+			return opts, fmt.Errorf("could not open discover pattern file %q: %w", opts.DiscoverPatternFile, err)
+		}
+		defer discoverPatternFile.Close()
+
+		scanner := bufio.NewScanner(discoverPatternFile)
+		for scanner.Scan() {
+			opts.DiscoverPatterns = append(opts.DiscoverPatterns, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			return opts, fmt.Errorf("could not read discover pattern file %q: %w", opts.DiscoverPatternFile, err)
 		}
 	}
 

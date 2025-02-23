@@ -1,8 +1,14 @@
 name: golangci-lint
 on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write # needed for annotations
+
 jobs:
   golangci:
     name: lint
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

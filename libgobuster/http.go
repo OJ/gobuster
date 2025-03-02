@@ -92,6 +92,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 
 	// set specific network interface
 	if opt.LocalAddr != nil {
+		logger.Debugf("Setting local address to %s", opt.LocalAddr.String())
 		dialer := &net.Dialer{
 			Timeout:   opt.Timeout,
 			LocalAddr: opt.LocalAddr,

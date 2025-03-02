@@ -13,7 +13,6 @@ Gobuster is a tool used to brute-force:
 
 [![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
-
 ## Love this tool? Back it!
 
 If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
@@ -27,11 +26,11 @@ All funds that are donated to this project will be donated to charity. A full lo
 ## 3.7
 
 - use new cli library that does not rely on global variables
-- a lot more short options
+- a lot more short options due to the new cli library
 - More user friendly error messages
 - Clean up DNS mode
 - renamed `show-cname` to `check-cname` in dns mode
-- get rid of `verbose` flag and introduced `debug` instead
+- got rid of `verbose` flag and introduced `debug` instead
 - the version command now also shows some build variables for more info
 - switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
 - comments in wordlists (strings starting with #) are no longer ignored
@@ -43,7 +42,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - automatically disable progress output when output is redirected
 - fix extra special characters when run with `--no-progress`
 - warn when using vhost mode with a proxy and http based urls as this might not work as expected
-- add `interface` and `local-ip` parameters to specify the interface for http requests
+- add `interface` and `local-ip` parameters to specify the outgoing interface for http requests
 - add support for tls renegotiation
 - fix progress with patterns by @acammack
 - fix backup discovery by @acammack
@@ -210,7 +209,6 @@ OPTIONS:
 ```
 
 ### Examples
-
 
 ```text
 gobuster dns -d mysite.com -t 50 -w common-names.txt
@@ -604,7 +602,6 @@ OPTIONS:
 
 ### Examples
 
-
 ```text
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
 ```
@@ -815,7 +812,6 @@ OPTIONS:
 ```text
 gobuster tftp -s tftp.example.com -w common-filenames.txt
 ```
-
 
 ## Wordlists via STDIN
 

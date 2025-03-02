@@ -19,16 +19,23 @@ func TestAdditionalWordsLen(t *testing.T) {
 
 	globalOpts := libgobuster.Options{}
 	for _, x := range tt {
-		opts := OptionsDir{}
-		opts.ExtensionsParsed.Set = x.extensions
+		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
 
-		d, _ := New(&globalOpts, &opts, nil)
+			opts := OptionsDir{}
+			opts.ExtensionsParsed.Set = x.extensions
 
-		calculatedLen := d.AdditionalWordsLen()
-		wordsLen := len(d.AdditionalWords("dummy"))
+			d, err := New(&globalOpts, &opts, nil)
+			if err != nil {
+				t.Fatalf("got error creating gobusterdir: %v", err)
+			}
 
-		if calculatedLen != wordsLen {
-			t.Fatalf("Mismatched additional words length: %d got %d generated words %v", calculatedLen, wordsLen, d.AdditionalWords("dummy"))
-		}
+			calculatedLen := d.AdditionalWordsLen()
+			wordsLen := len(d.AdditionalWords("dummy"))
+
+			if calculatedLen != wordsLen {
+				t.Fatalf("Mismatched additional words length: %d got %d generated words %v", calculatedLen, wordsLen, d.AdditionalWords("dummy"))
+			}
+		})
 	}
 }

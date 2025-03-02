@@ -96,7 +96,7 @@ func printProgress(g *libgobuster.Gobuster) {
 	requestsExpected := g.Progress.RequestsExpected()
 	percent := float32(requestsIssued) * 100.0 / float32(requestsExpected)
 	if math.IsNaN(float64(percent)) {
-		percent = float32(0)
+		percent = 0.0
 	}
 	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, percent)
 	_, _ = fmt.Fprint(os.Stderr, s)

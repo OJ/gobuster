@@ -18,9 +18,11 @@
         "shardulm94.trailing-spaces",
         "IBM.output-colorizer",
         "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker",
         "task.vscode-task",
         "redhat.vscode-yaml",
-        "usernamehw.errorlens"
+        "usernamehw.errorlens",
+        "Gruntfuggly.todo-tree"
       ]
     }
   }

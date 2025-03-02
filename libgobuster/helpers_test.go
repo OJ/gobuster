@@ -173,7 +173,6 @@ func TestLineCounter(t *testing.T) {
 		{"Empty 3", "\r\n", 1}, // these are wrong, but I've found no good way to handle those
 	}
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			r := strings.NewReader(x.s)
@@ -204,7 +203,6 @@ func TestLineCounterSlow(t *testing.T) {
 		{"Empty 3", "\r\n", 0},
 	}
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			r := strings.NewReader(x.s)
@@ -286,7 +284,6 @@ func TestParseExtensions(t *testing.T) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			ret, err := ParseExtensions(x.extensions)
@@ -333,7 +330,6 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.stringCodes, func(t *testing.T) {
 			t.Parallel()
 			want := NewSet[int]()
@@ -365,7 +361,6 @@ func BenchmarkParseExtensions(b *testing.B) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
 				_, _ = ParseExtensions(x.extensions)
@@ -390,7 +385,6 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
 			for y := 0; y < b2.N; y++ {
 				_, _ = ParseCommaSeparatedInt(x.stringCodes)

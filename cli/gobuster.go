@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"sync"
@@ -93,7 +94,11 @@ func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 func printProgress(g *libgobuster.Gobuster) {
 	requestsIssued := g.Progress.RequestsIssued()
 	requestsExpected := g.Progress.RequestsExpected()
-	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, float32(requestsIssued)*100.0/float32(requestsExpected))
+	percent := float32(requestsIssued) * 100.0 / float32(requestsExpected)
+	if math.IsNaN(float64(percent)) {
+		percent = float32(0)
+	}
+	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, percent)
 	_, _ = fmt.Fprint(os.Stderr, s)
 }
 

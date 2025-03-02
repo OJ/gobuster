@@ -16,7 +16,7 @@ type BasicHTTPOptions struct {
 	RetryAttempts    int
 	TLSCertificate   *tls.Certificate
 	TLSRenegotiation bool
-	LocalAddr        net.Addr
+	LocalAddr        *net.TCPAddr
 }
 
 // HTTPOptions is the struct to pass in all http options to Gobuster

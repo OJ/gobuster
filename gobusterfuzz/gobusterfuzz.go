@@ -275,8 +275,8 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.BasicHTTPOptions.LocalAddr != nil {
-		if _, err := fmt.Fprintf(tw, "[+] Local IP:\t%s\n", o.BasicHTTPOptions.LocalAddr); err != nil {
+	if o.LocalAddr != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Local IP:\t%s\n", o.LocalAddr); err != nil {
 			return "", err
 		}
 	}

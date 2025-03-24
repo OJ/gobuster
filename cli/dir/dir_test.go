@@ -52,7 +52,7 @@ func BenchmarkDirMode(b *testing.B) {
 	}
 	defer os.Remove(wordlist.Name())
 	for w := 0; w < 1000; w++ {
-		_, _ = wordlist.WriteString(fmt.Sprintf("%d\n", w))
+		_, _ = fmt.Fprintf(wordlist, "%d\n", w)
 	}
 	if err := wordlist.Close(); err != nil {
 		b.Fatalf("%v", err)

@@ -123,7 +123,7 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 }
 
 func writeToFile(f *os.File, output string) error {
-	_, err := f.WriteString(fmt.Sprintf("%s\n", output))
+	_, err := fmt.Fprintf(f, "%s\n", output)
 	if err != nil {
 		return fmt.Errorf("[!] Unable to write to file %w", err)
 	}

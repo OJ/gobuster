@@ -29,11 +29,11 @@ type GobusterS3 struct {
 // New creates a new initialized GobusterS3
 func New(globalopts *libgobuster.Options, opts *OptionsS3, logger *libgobuster.Logger) (*GobusterS3, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterS3{
@@ -81,7 +81,7 @@ func (s *GobusterS3) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
@@ -115,22 +115,23 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				if errors.Is(err, io.EOF) {
-					return nil, libgobuster.ErrorEOF
-				} else if os.IsTimeout(err) {
-					return nil, libgobuster.ErrorTimeout
-				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return nil, libgobuster.ErrorConnectionRefused
-				}
-				return nil, err
 			}
+
+			switch {
+			case errors.Is(err, io.EOF):
+				return nil, libgobuster.ErrEOF
+			case os.IsTimeout(err):
+				return nil, libgobuster.ErrTimeout
+			case errors.Is(err, syscall.ECONNREFUSED):
+				return nil, libgobuster.ErrConnectionRefused
+			}
+			return nil, err
 		}
 		break
 	}
 
 	if statusCode == 0 || body == nil {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	// looks like 404 and 400 are the only negative status codes
@@ -151,7 +152,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	// nothing found, bail out
 	// may add the result later if we want to enable verbose output
 	if !found {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	extraStr := ""

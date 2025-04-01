@@ -1,7 +1,6 @@
 package dir
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +15,7 @@ import (
 
 func httpServer(b *testing.B, content string) *httptest.Server {
 	b.Helper()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := fmt.Fprint(w, content); err != nil {
 			b.Fatalf("%v", err)
 		}
@@ -46,12 +45,12 @@ func BenchmarkDirMode(b *testing.B) {
 	}
 	pluginopts.StatusCodesParsed = tmpStat
 
-	wordlist, err := os.CreateTemp("", "")
+	wordlist, err := os.CreateTemp(b.TempDir(), "")
 	if err != nil {
 		b.Fatalf("could not create tempfile: %v", err)
 	}
 	defer os.Remove(wordlist.Name())
-	for w := 0; w < 1000; w++ {
+	for w := range 1000 {
 		_, _ = fmt.Fprintf(wordlist, "%d\n", w)
 	}
 	if err := wordlist.Close(); err != nil {
@@ -64,7 +63,7 @@ func BenchmarkDirMode(b *testing.B) {
 		NoProgress: true,
 	}
 
-	ctx := context.Background()
+	ctx := b.Context()
 	oldStdout := os.Stdout
 	oldStderr := os.Stderr
 	defer func(out, err *os.File) { os.Stdout = out; os.Stderr = err }(oldStdout, oldStderr)
@@ -76,7 +75,7 @@ func BenchmarkDirMode(b *testing.B) {
 	log := libgobuster.NewLogger(false)
 
 	// Run the real benchmark
-	for x := 0; x < b.N; x++ {
+	for b.Loop() {
 		os.Stdout = devnull
 		os.Stderr = devnull
 		plugin, err := gobusterdir.New(&globalopts, pluginopts, log)

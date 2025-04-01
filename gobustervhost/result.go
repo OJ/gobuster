@@ -27,13 +27,14 @@ type Result struct {
 // ResultToString converts the Result to its textual representation
 func (r Result) ResultToString() (string, error) {
 	statusCodeColor := white
-	if r.StatusCode == 200 {
+	switch {
+	case r.StatusCode == http.StatusOK:
 		statusCodeColor = green
-	} else if r.StatusCode >= 300 && r.StatusCode < 400 {
+	case r.StatusCode >= 300 && r.StatusCode < 400:
 		statusCodeColor = cyan
-	} else if r.StatusCode >= 400 && r.StatusCode < 500 {
+	case r.StatusCode >= 400 && r.StatusCode < 500:
 		statusCodeColor = yellow
-	} else if r.StatusCode >= 500 && r.StatusCode < 600 {
+	case r.StatusCode >= 500 && r.StatusCode < 600:
 		statusCodeColor = red
 	}
 

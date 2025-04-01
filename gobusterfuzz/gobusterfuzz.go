@@ -18,14 +18,14 @@ import (
 
 const FuzzKeyword = "FUZZ"
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	url        string
 	statusCode int
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
+func (e *WildcardError) Error() string {
 	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d. Please exclude the response length or the status code or set the wildcard option.", e.url, e.statusCode)
 }
 
@@ -39,11 +39,11 @@ type GobusterFuzz struct {
 // New creates a new initialized GobusterFuzz
 func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster.Logger) (*GobusterFuzz, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterFuzz{
@@ -147,20 +147,22 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if os.IsTimeout(err) && i != tries {
+			switch {
+			case os.IsTimeout(err) && i != tries:
 				continue
-			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+			case strings.Contains(err.Error(), "invalid control character in URL"):
 				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				if errors.Is(err, io.EOF) {
-					return nil, libgobuster.ErrorEOF
-				} else if os.IsTimeout(err) {
-					return nil, libgobuster.ErrorTimeout
-				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return nil, libgobuster.ErrorConnectionRefused
+			default:
+				switch {
+				case errors.Is(err, io.EOF):
+					return nil, libgobuster.ErrEOF
+				case os.IsTimeout(err):
+					return nil, libgobuster.ErrTimeout
+				case errors.Is(err, syscall.ECONNREFUSED):
+					return nil, libgobuster.ErrConnectionRefused
 				}
 				return nil, err
 			}
@@ -192,7 +194,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 			return r, nil
 		}
 	}
-	return nil, nil
+	return nil, nil // nolint:nilnil
 }
 
 func (d *GobusterFuzz) AdditionalWordsLen() int {

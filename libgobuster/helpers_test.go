@@ -2,10 +2,10 @@ package libgobuster
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -151,7 +151,7 @@ func TestSetStringify(t *testing.T) {
 	z = y.Stringify()
 	// order is random
 	for _, i := range v2 {
-		if !strings.Contains(z, fmt.Sprint(i)) {
+		if !strings.Contains(z, strconv.Itoa(i)) {
 			t.Fatalf("Did not find value %q in %q", i, z)
 		}
 	}
@@ -223,7 +223,7 @@ func BenchmarkLineCounter(b *testing.B) {
 		b.Fatalf("Got error: %v", err)
 	}
 	defer r.Close()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := r.Seek(0, io.SeekStart)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
@@ -244,7 +244,7 @@ func BenchmarkLineCounterSlow(b *testing.B) {
 		b.Fatalf("Got error: %v", err)
 	}
 	defer r.Close()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := r.Seek(0, io.SeekStart)
 		if err != nil {
 			b.Fatalf("Got error: %v", err)
@@ -362,7 +362,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 
 	for _, x := range tt {
 		b.Run(x.testName, func(b2 *testing.B) {
-			for y := 0; y < b2.N; y++ {
+			for b2.Loop() {
 				_, _ = ParseExtensions(x.extensions)
 			}
 		})
@@ -386,7 +386,7 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 
 	for _, x := range tt {
 		b.Run(x.testName, func(b2 *testing.B) {
-			for y := 0; y < b2.N; y++ {
+			for b2.Loop() {
 				_, _ = ParseCommaSeparatedInt(x.stringCodes)
 			}
 		})

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -40,10 +41,10 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 		if s != "" {
 			s = strings.TrimSpace(s)
 			if g.Opts.NoProgress || g.Opts.Quiet {
-				_, _ = fmt.Printf("%s\n", s)
+				_, _ = fmt.Printf("%s\n", s) // nolint forbidigo
 			} else {
 				// only print the clear line when progress output is enabled
-				_, _ = fmt.Printf("%s%s\n", TERMINAL_CLEAR_LINE, s)
+				_, _ = fmt.Printf("%s%s\n", TerminalClearLine, s) // nolint forbidigo
 			}
 			if f != nil {
 				err = writeToFile(f, s)
@@ -98,7 +99,7 @@ func printProgress(g *libgobuster.Gobuster) {
 	if math.IsNaN(float64(percent)) {
 		percent = 0.0
 	}
-	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TERMINAL_CLEAR_LINE, requestsIssued, requestsExpected, percent)
+	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TerminalClearLine, requestsIssued, requestsExpected, percent)
 	_, _ = fmt.Fprint(os.Stderr, s)
 }
 
@@ -116,7 +117,7 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 		case <-ctx.Done():
 			// print the final progress so we end at 100%
 			printProgress(g)
-			fmt.Println()
+			fmt.Println() // nolint:forbidigo
 			return
 		}
 	}
@@ -134,11 +135,11 @@ func writeToFile(f *os.File, output string) error {
 func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster.GobusterPlugin, log *libgobuster.Logger) error {
 	// Sanity checks
 	if opts == nil {
-		return fmt.Errorf("please provide valid options")
+		return errors.New("please provide valid options")
 	}
 
 	if plugin == nil {
-		return fmt.Errorf("please provide a valid plugin")
+		return errors.New("please provide a valid plugin")
 	}
 
 	ctxCancel, cancel := context.WithCancel(ctx)

@@ -29,11 +29,11 @@ type GobusterGCS struct {
 // New creates a new initialized GobusterGCS
 func New(globalopts *libgobuster.Options, opts *OptionsGCS, logger *libgobuster.Logger) (*GobusterGCS, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterGCS{
@@ -82,7 +82,7 @@ func (s *GobusterGCS) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	// only check for valid bucket names
 	if !s.isValidBucketName(word) {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	bucketURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o?maxResults=%d", word, s.options.MaxFilesToList)
@@ -109,20 +109,22 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if os.IsTimeout(err) && i != tries {
+			switch {
+			case os.IsTimeout(err) && i != tries:
 				continue
-			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+			case strings.Contains(err.Error(), "invalid control character in URL"):
 				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				if errors.Is(err, io.EOF) {
-					return nil, libgobuster.ErrorEOF
-				} else if os.IsTimeout(err) {
-					return nil, libgobuster.ErrorTimeout
-				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return nil, libgobuster.ErrorConnectionRefused
+			default:
+				switch {
+				case errors.Is(err, io.EOF):
+					return nil, libgobuster.ErrEOF
+				case os.IsTimeout(err):
+					return nil, libgobuster.ErrTimeout
+				case errors.Is(err, syscall.ECONNREFUSED):
+					return nil, libgobuster.ErrConnectionRefused
 				}
 				return nil, err
 			}
@@ -131,11 +133,11 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 	}
 
 	if statusCode == 0 || body == nil {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	// looks like 401, 403, and 404 are the only negative status codes
-	found := false
+	var found bool
 	switch statusCode {
 	case http.StatusUnauthorized,
 		http.StatusForbidden,
@@ -152,7 +154,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 	// nothing found, bail out
 	// may add the result later if we want to enable verbose output
 	if !found {
-		return nil, nil
+		return nil, nil // nolint:nilnil
 	}
 
 	extraStr := ""

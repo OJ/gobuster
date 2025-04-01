@@ -19,18 +19,16 @@ import (
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
-func init() {
-	if _, err := maxprocs.Set(); err != nil {
-		fmt.Printf("Error on gomaxprocs: %v\n", err)
-	}
-}
-
 func main() {
-	cli.VersionPrinter = func(cCtx *cli.Context) {
-		fmt.Printf("gobuster version %s\n", libgobuster.VERSION)
+	if _, err := maxprocs.Set(); err != nil {
+		fmt.Printf("Error on gomaxprocs: %v\n", err) // nolint forbidigo
+	}
+
+	cli.VersionPrinter = func(_ *cli.Context) {
+		fmt.Printf("gobuster version %s\n", libgobuster.VERSION) // nolint:forbidigo
 		if info, ok := debug.ReadBuildInfo(); ok {
-			fmt.Printf("Build info:\n")
-			fmt.Printf("%s", info)
+			fmt.Printf("Build info:\n") // nolint forbidigo
+			fmt.Printf("%s", info)      // nolint forbidigo
 		}
 	}
 

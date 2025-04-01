@@ -1,7 +1,7 @@
 package libgobuster
 
 import (
-	"log"
+	"log" // nolint:depguard
 	"os"
 
 	"github.com/fatih/color"

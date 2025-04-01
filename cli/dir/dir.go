@@ -84,7 +84,7 @@ func run(c *cli.Context) error {
 	}
 
 	if pluginOpts.StatusCodes == "" && pluginOpts.StatusCodesBlacklist == "" {
-		return fmt.Errorf("status-codes and status-codes-blacklist are both not set, please set one")
+		return errors.New("status-codes and status-codes-blacklist are both not set, please set one")
 	}
 
 	pluginOpts.UseSlash = c.Bool("add-slash")
@@ -112,7 +112,7 @@ func run(c *cli.Context) error {
 	}
 
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
-		var wErr *gobusterdir.ErrWildcard
+		var wErr *gobusterdir.WildcardError
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}

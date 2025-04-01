@@ -33,11 +33,11 @@ type GobusterVhost struct {
 // New creates a new initialized GobusterDir
 func New(globalopts *libgobuster.Options, opts *OptionsVhost, logger *libgobuster.Logger) (*GobusterVhost, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterVhost{
@@ -99,12 +99,13 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 	// request default vhost for normalBody
 	_, _, _, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return libgobuster.ErrorEOF
-		} else if os.IsTimeout(err) {
-			return libgobuster.ErrorTimeout
-		} else if errors.Is(err, syscall.ECONNREFUSED) {
-			return libgobuster.ErrorConnectionRefused
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
 		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -114,12 +115,13 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
 	_, _, _, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return libgobuster.ErrorEOF
-		} else if os.IsTimeout(err) {
-			return libgobuster.ErrorTimeout
-		} else if errors.Is(err, syscall.ECONNREFUSED) {
-			return libgobuster.ErrorConnectionRefused
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
 		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
@@ -171,20 +173,22 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if os.IsTimeout(err) && i != tries {
+			switch {
+			case os.IsTimeout(err) && i != tries:
 				continue
-			} else if strings.Contains(err.Error(), "invalid control character in URL") {
+			case strings.Contains(err.Error(), "invalid control character in URL"):
 				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				if errors.Is(err, io.EOF) {
-					return nil, libgobuster.ErrorEOF
-				} else if os.IsTimeout(err) {
-					return nil, libgobuster.ErrorTimeout
-				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return nil, libgobuster.ErrorConnectionRefused
+			default:
+				switch {
+				case errors.Is(err, io.EOF):
+					return nil, libgobuster.ErrEOF
+				case os.IsTimeout(err):
+					return nil, libgobuster.ErrTimeout
+				case errors.Is(err, syscall.ECONNREFUSED):
+					return nil, libgobuster.ErrConnectionRefused
 				}
 				return nil, err
 			}
@@ -204,7 +208,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		}
 		return r, nil
 	}
-	return nil, nil
+	return nil, nil // nolint:nilnil
 }
 
 func (v *GobusterVhost) AdditionalWordsLen() int {

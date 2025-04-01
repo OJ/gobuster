@@ -91,7 +91,7 @@ func lineCounter(r io.Reader) (int, error) {
 		case errors.Is(err, io.EOF):
 			// account for trailing new line
 			if lastChar == '\n' {
-				count = count - 1
+				count--
 			}
 			return count, nil
 

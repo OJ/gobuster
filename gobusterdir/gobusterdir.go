@@ -24,8 +24,8 @@ var (
 	backupDotExtensions = []string{".swp"}
 )
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	url        string
 	location   string
 	statusCode int
@@ -33,8 +33,8 @@ type ErrWildcard struct {
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
-	addInfo := ""
+func (e *WildcardError) Error() string {
+	var addInfo string
 	if e.location != "" {
 		addInfo = fmt.Sprintf("%s => %d (redirect to %s) (Length: %d)", e.url, e.statusCode, e.location, e.length)
 	} else {
@@ -53,11 +53,11 @@ type GobusterDir struct {
 // New creates a new initialized GobusterDir
 func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.Logger) (*GobusterDir, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterDir{
@@ -111,12 +111,13 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 
 	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return libgobuster.ErrorEOF
-		} else if os.IsTimeout(err) {
-			return libgobuster.ErrorTimeout
-		} else if errors.Is(err, syscall.ECONNREFUSED) {
-			return libgobuster.ErrorConnectionRefused
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
 		}
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
@@ -129,12 +130,13 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 
 	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return libgobuster.ErrorEOF
-		} else if os.IsTimeout(err) {
-			return libgobuster.ErrorTimeout
-		} else if errors.Is(err, syscall.ECONNREFUSED) {
-			return libgobuster.ErrorConnectionRefused
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
 		}
 		return err
 	}
@@ -144,16 +146,17 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 		return nil
 	}
 
-	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+	switch {
+	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			return &WildcardError{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
-	} else if d.options.StatusCodesParsed.Length() > 0 {
+	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			return &WildcardError{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
-	} else {
-		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+	default:
+		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 	}
 
 	return nil
@@ -244,16 +247,17 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				if errors.Is(err, io.EOF) {
-					return nil, libgobuster.ErrorEOF
-				} else if os.IsTimeout(err) {
-					return nil, libgobuster.ErrorTimeout
-				} else if errors.Is(err, syscall.ECONNREFUSED) {
-					return nil, libgobuster.ErrorConnectionRefused
-				}
-				return nil, err
 			}
+
+			switch {
+			case errors.Is(err, io.EOF):
+				return nil, libgobuster.ErrEOF
+			case os.IsTimeout(err):
+				return nil, libgobuster.ErrTimeout
+			case errors.Is(err, syscall.ECONNREFUSED):
+				return nil, libgobuster.ErrConnectionRefused
+			}
+			return nil, err
 		}
 		break
 	}
@@ -261,16 +265,17 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	if statusCode != 0 {
 		resultStatus := false
 
-		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+		switch {
+		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
 				resultStatus = true
 			}
-		} else if d.options.StatusCodesParsed.Length() > 0 {
+		case d.options.StatusCodesParsed.Length() > 0:
 			if d.options.StatusCodesParsed.Contains(statusCode) {
 				resultStatus = true
 			}
-		} else {
-			return nil, fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		default:
+			return nil, errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
@@ -296,7 +301,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		}
 	}
 
-	return nil, nil
+	return nil, nil // nolint:nilnil
 }
 
 // GetConfigString returns the string representation of the current config

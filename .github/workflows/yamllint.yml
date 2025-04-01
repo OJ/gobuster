@@ -1,0 +1,19 @@
+name: yamllint
+on:
+  push:
+    paths:
+      - "**.yml"
+      - "**.yaml"
+  pull_request:
+  workflow_dispatch:
+jobs:
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: karancode/yamllint-github-action@master
+        with:
+          # fail on warnings and errors
+          yamllint_strict: true
+          yamllint_config_filepath: ".yamllint.yml"

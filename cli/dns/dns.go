@@ -49,7 +49,7 @@ func run(c *cli.Context) error {
 	pluginOpts.Resolver = c.String("resolver")
 
 	if pluginOpts.Resolver != "" && runtime.GOOS == "windows" {
-		return fmt.Errorf("currently can not set custom dns resolver on windows. See https://golang.org/pkg/net/#hdr-Name_Resolution")
+		return errors.New("currently can not set custom dns resolver on windows. See https://golang.org/pkg/net/#hdr-Name_Resolution")
 	}
 
 	globalOpts, err := internalcli.ParseGlobalOptions(c)
@@ -64,7 +64,7 @@ func run(c *cli.Context) error {
 
 	log := libgobuster.NewLogger(globalOpts.Debug)
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
-		var wErr *gobusterdns.ErrWildcard
+		var wErr *gobusterdns.WildcardError
 		if errors.As(err, &wErr) {
 			return fmt.Errorf("%w. To force processing of Wildcard DNS, specify the '--wildcard' switch", wErr)
 		}

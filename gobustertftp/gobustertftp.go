@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"text/tabwriter"
@@ -22,11 +23,11 @@ type GobusterTFTP struct {
 // New creates a new initialized NewGobusterTFTP
 func New(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterTFTP{
@@ -68,12 +69,16 @@ func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *lib
 	wt, err := c.Receive(word, "octet")
 	if err != nil {
 		// file not found
-		return nil, nil
+		return nil, nil // nolint:nilerr,nilnil
 	}
 	result := Result{
 		Filename: word,
 	}
-	if n, ok := wt.(tftp.IncomingTransfer).Size(); ok {
+	wt2, ok := wt.(tftp.IncomingTransfer)
+	if !ok {
+		return nil, errors.New("could not cast to IncomingTransfer")
+	}
+	if n, ok := wt2.Size(); ok {
 		result.Size = n
 	}
 	return result, nil

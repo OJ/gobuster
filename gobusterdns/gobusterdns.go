@@ -15,13 +15,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	wildcardIps libgobuster.Set[netip.Addr]
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
+func (e *WildcardError) Error() string {
 	return fmt.Sprintf("the DNS Server returned the same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
 }
 
@@ -35,7 +35,7 @@ type GobusterDNS struct {
 }
 
 func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
-	return func(ctx context.Context, network, address string) (net.Conn, error) {
+	return func(ctx context.Context, _, _ string) (net.Conn, error) {
 		d := net.Dialer{}
 		if !strings.Contains(server, ":") {
 			server = fmt.Sprintf("%s:53", server)
@@ -47,11 +47,11 @@ func newCustomDialer(server string) func(ctx context.Context, network, address s
 // New creates a new initialized GobusterDNS
 func New(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	resolver := net.DefaultResolver
@@ -85,7 +85,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 		d.isWildcard = true
 		d.wildcardIps.AddRange(wildcardIps)
 		if !d.options.WildcardForced {
-			return &ErrWildcard{wildcardIps: d.wildcardIps}
+			return &WildcardError{wildcardIps: d.wildcardIps}
 		}
 	}
 
@@ -129,7 +129,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 		var wErr *net.DNSError
 		if errors.As(err, &wErr) && wErr.IsNotFound {
 			// host not found is the expected error here
-			return nil, nil
+			return nil, nil // nolint:nilnil
 		}
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 		}
 		return result, nil
 	}
-	return nil, nil
+	return nil, nil // nolint:nilnil
 }
 
 func (d *GobusterDNS) AdditionalWordsLen() int {

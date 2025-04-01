@@ -2,7 +2,6 @@ package libgobuster
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -13,7 +12,7 @@ import (
 
 func httpServerB(b *testing.B, content string) *httptest.Server {
 	b.Helper()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := fmt.Fprint(w, content); err != nil {
 			b.Fatalf("%v", err)
 		}
@@ -23,7 +22,7 @@ func httpServerB(b *testing.B, content string) *httptest.Server {
 
 func httpServerT(t *testing.T, content string) *httptest.Server {
 	t.Helper()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := fmt.Fprint(w, content); err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -60,7 +59,7 @@ func TestRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	status, length, _, body, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
+	status, length, _, body, err := c.Request(t.Context(), h.URL, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -88,8 +87,8 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
-	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: false})
+	for b.Loop() {
+		_, _, _, _, err := c.Request(b.Context(), h.URL, RequestOptions{ReturnBody: false})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -109,8 +108,8 @@ func BenchmarkRequestWitBody(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
-	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
+	for b.Loop() {
+		_, _, _, _, err := c.Request(b.Context(), h.URL, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -126,7 +125,7 @@ func BenchmarkNewHTTPClient(b *testing.B) {
 	defer h.Close()
 	var o HTTPOptions
 	log := NewLogger(false)
-	for x := 0; x < b.N; x++ {
+	for b.Loop() {
 		_, err := NewHTTPClient(&o, log)
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)

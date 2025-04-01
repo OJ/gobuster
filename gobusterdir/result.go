@@ -34,13 +34,14 @@ func (r Result) ResultToString() (string, error) {
 
 	if r.StatusCode >= 0 {
 		textColor := white
-		if r.StatusCode == 200 {
+		switch {
+		case r.StatusCode == http.StatusOK:
 			textColor = green
-		} else if r.StatusCode >= 300 && r.StatusCode < 400 {
+		case r.StatusCode >= 300 && r.StatusCode < 400:
 			textColor = cyan
-		} else if r.StatusCode >= 400 && r.StatusCode < 500 {
+		case r.StatusCode >= 400 && r.StatusCode < 500:
 			textColor = yellow
-		} else if r.StatusCode >= 500 && r.StatusCode < 600 {
+		case r.StatusCode >= 500 && r.StatusCode < 600:
 			textColor = red
 		}
 

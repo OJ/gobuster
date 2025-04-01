@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
   pull-requests: read
-  checks: write # needed for annotations
+  checks: write
 
 jobs:
   golangci:

@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -131,13 +132,14 @@ func (g *Gobuster) feedWordlist(ctx context.Context, guessChan chan<- *Guess, wo
 
 		word := strings.TrimSpace(wordlist.scanner.Text())
 
-		if wordlist.isStream && len(word) != 0 {
+		switch {
+		case wordlist.isStream && len(word) != 0:
 			// Increment to keep track of expected work
 			g.Progress.IncrementTotalRequests(wordlist.guessesPerLine)
-		} else if wordlist.isStream && len(word) == 0 {
+		case wordlist.isStream && len(word) == 0:
 			// Skip empty lines without incrementing
 			continue
-		} else if len(word) == 0 {
+		case len(word) == 0:
 			// Skip empty lines removing expected work
 			g.Progress.IncrementTotalRequests(-1 * wordlist.guessesPerLine)
 			continue
@@ -194,7 +196,7 @@ func (g *Gobuster) getWordlist() (*Wordlist, error) {
 	}
 
 	if lines-g.Opts.WordlistOffset <= 0 {
-		return nil, fmt.Errorf("offset is greater than the number of lines in the wordlist")
+		return nil, errors.New("offset is greater than the number of lines in the wordlist")
 	}
 
 	g.Progress.IncrementTotalRequests(lines * guessesPerLine)
@@ -211,12 +213,12 @@ func (g *Gobuster) getWordlist() (*Wordlist, error) {
 	wordlistScanner := bufio.NewScanner(wordlist)
 
 	// skip lines
-	for i := 0; i < g.Opts.WordlistOffset; i++ {
+	for range g.Opts.WordlistOffset {
 		if !wordlistScanner.Scan() {
 			if err := wordlistScanner.Err(); err != nil {
 				return nil, fmt.Errorf("failed to skip lines in wordlist: %w", err)
 			}
-			return nil, fmt.Errorf("failed to skip lines in wordlist")
+			return nil, errors.New("failed to skip lines in wordlist")
 		}
 	}
 
@@ -252,7 +254,7 @@ func (g *Gobuster) Run(ctx context.Context) error {
 
 	// Create goroutines for each of the number of threads
 	// specified.
-	for i := 0; i < g.Opts.Threads; i++ {
+	for range g.Opts.Threads {
 		go g.worker(workerCtx, guessChan, successChan, &workerGroup)
 	}
 

@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -61,7 +62,7 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 	p12Pass := c.String("client-cert-p12-password")
 
 	if pemFile != "" && p12File != "" {
-		return opts, fmt.Errorf("please supply either a pem or a p12, not both")
+		return opts, errors.New("please supply either a pem or a p12, not both")
 	}
 
 	if pemFile != "" {
@@ -90,7 +91,7 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 	iface := c.String("interface")
 	localIP := c.String("local-ip")
 	if iface != "" && localIP != "" {
-		return opts, fmt.Errorf("can not set both interface and local-ip")
+		return opts, errors.New("can not set both interface and local-ip")
 	}
 
 	switch {
@@ -152,11 +153,12 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 			opts.URL = fmt.Sprintf("http://%s", opts.URL)
 		} else {
 			port, err2 := strconv.Atoi(match[1])
-			if err2 != nil || (port != 80 && port != 443) {
-				return opts, fmt.Errorf("url scheme not specified")
-			} else if port == 80 {
+			switch {
+			case err2 != nil || (port != 80 && port != 443):
+				return opts, errors.New("url scheme not specified")
+			case port == 80:
 				opts.URL = fmt.Sprintf("http://%s", opts.URL)
-			} else {
+			default:
 				opts.URL = fmt.Sprintf("https://%s", opts.URL)
 			}
 		}
@@ -168,20 +170,20 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 
 	// Prompt for PW if not provided
 	if opts.Username != "" && opts.Password == "" {
-		fmt.Printf("[?] Auth Password: ")
+		fmt.Printf("[?] Auth Password: ") // nolint:forbidigo
 		// please don't remove the int cast here as it is sadly needed on windows :/
 		passBytes, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
 		// print a newline to simulate the newline that was entered
 		// this means that formatting/printing after doesn't look bad.
-		fmt.Println("")
+		fmt.Println("") // nolint:forbidigo
 		if err != nil {
-			return opts, fmt.Errorf("username given but reading of password failed")
+			return opts, errors.New("username given but reading of password failed")
 		}
 		opts.Password = string(passBytes)
 	}
 	// if it's still empty bail out
 	if opts.Username != "" && opts.Password == "" {
-		return opts, fmt.Errorf("username was provided but password is missing")
+		return opts, errors.New("username was provided but password is missing")
 	}
 
 	opts.FollowRedirect = c.Bool("follow-redirect")
@@ -226,7 +228,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	var opts libgobuster.Options
 
 	opts.Wordlist = c.String("wordlist")
-	if opts.Wordlist == "-" {
+	if opts.Wordlist == "-" { // nolint:revive
 		// STDIN
 	} else if _, err := os.Stat(opts.Wordlist); os.IsNotExist(err) {
 		return opts, fmt.Errorf("wordlist file %q does not exist: %w", opts.Wordlist, err)
@@ -236,9 +238,9 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	opts.Threads = c.Int("threads")
 	opts.WordlistOffset = c.Int("wordlist-offset")
 	if opts.Wordlist == "-" && opts.WordlistOffset > 0 {
-		return opts, fmt.Errorf("wordlist-offset is not supported when reading from STDIN")
+		return opts, errors.New("wordlist-offset is not supported when reading from STDIN")
 	} else if opts.WordlistOffset < 0 {
-		return opts, fmt.Errorf("wordlist-offset must be bigger or equal to 0")
+		return opts, errors.New("wordlist-offset must be bigger or equal to 0")
 	}
 
 	opts.OutputFilename = c.String("output")
@@ -296,7 +298,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 func getLocalAddrFromInterface(iface string) (*net.TCPAddr, error) {
 	i, err := net.InterfaceByName(iface)
 	if err != nil {
-		return nil, fmt.Errorf("could not get interface %s: %v", iface, err)
+		return nil, fmt.Errorf("could not get interface %s: %w", iface, err)
 	}
 	addrs, err := i.Addrs()
 	if err != nil {
@@ -307,8 +309,13 @@ func getLocalAddrFromInterface(iface string) (*net.TCPAddr, error) {
 		return nil, fmt.Errorf("no ip adresses on interface %s", iface)
 	}
 
+	tmp, ok := addrs[0].(*net.IPNet)
+	if !ok {
+		return nil, fmt.Errorf("could not get ipnet address from interface %s", iface)
+	}
+
 	tcpAddr := &net.TCPAddr{
-		IP: addrs[0].(*net.IPNet).IP,
+		IP: tmp.IP,
 	}
 	return tcpAddr, err
 }

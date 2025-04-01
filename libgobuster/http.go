@@ -51,7 +51,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	proxyURLFunc = http.ProxyFromEnvironment
 
 	if opt == nil {
-		return nil, fmt.Errorf("options is nil")
+		return nil, errors.New("options is nil")
 	}
 
 	if opt.Proxy != "" {
@@ -64,7 +64,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 
 	var redirectFunc func(req *http.Request, via []*http.Request) error
 	if !opt.FollowRedirect {
-		redirectFunc = func(req *http.Request, via []*http.Request) error {
+		redirectFunc = func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
 	} else {
@@ -72,7 +72,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	}
 
 	tlsConfig := tls.Config{
-		InsecureSkipVerify: opt.NoTLSValidation,
+		InsecureSkipVerify: opt.NoTLSValidation, // nolint:gosec
 		// enable TLS1.0 and TLS1.1 support
 		MinVersion: tls.VersionTLS10,
 	}

@@ -2,7 +2,7 @@ name: Auto-merge dependabot updates
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   pull-requests: write

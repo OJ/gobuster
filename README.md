@@ -25,10 +25,10 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 ## 3.7
 
-- use new cli library that does not rely on global variables
+- use new cli library
 - a lot more short options due to the new cli library
-- More user friendly error messages
-- Clean up DNS mode
+- more user friendly error messages
+- clean up DNS mode
 - renamed `show-cname` to `check-cname` in dns mode
 - got rid of `verbose` flag and introduced `debug` instead
 - the version command now also shows some build variables for more info

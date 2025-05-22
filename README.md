@@ -46,6 +46,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - add support for tls renegotiation
 - fix progress with patterns by @acammack
 - fix backup discovery by @acammack
+- support tcp protocol on dns servers
 
 ## 3.6
 

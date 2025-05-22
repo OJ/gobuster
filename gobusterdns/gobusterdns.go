@@ -34,13 +34,13 @@ type GobusterDNS struct {
 	wildcardIps libgobuster.Set[netip.Addr]
 }
 
-func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
+func newCustomDialer(server string, protocol string) func(ctx context.Context, network, address string) (net.Conn, error) {
 	return func(ctx context.Context, _, _ string) (net.Conn, error) {
 		d := net.Dialer{}
 		if !strings.Contains(server, ":") {
 			server = fmt.Sprintf("%s:53", server)
 		}
-		return d.DialContext(ctx, "udp", server)
+		return d.DialContext(ctx, protocol, server)
 	}
 }
 
@@ -58,7 +58,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error
 	if opts.Resolver != "" {
 		resolver = &net.Resolver{
 			PreferGo: true,
-			Dial:     newCustomDialer(opts.Resolver),
+			Dial:     newCustomDialer(opts.Resolver, opts.Protocol),
 		}
 	}
 

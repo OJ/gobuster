@@ -32,6 +32,7 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "wildcard", Aliases: []string{"wc"}, Value: false, Usage: "Force continued operation when wildcard found"},
 		&cli.BoolFlag{Name: "no-fqdn", Aliases: []string{"nf"}, Value: false, Usage: "Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain"},
 		&cli.StringFlag{Name: "resolver", Usage: "Use custom DNS server (format server.com or server.com:port)"},
+		&cli.StringFlag{Name: "protocol", Value: "udp", Usage: "Use either 'udp' or 'tcp' as protocol on the custom resolver"},
 	}...)
 	flags = append(flags, internalcli.GlobalOptions()...)
 	return flags
@@ -47,9 +48,18 @@ func run(c *cli.Context) error {
 	pluginOpts.WildcardForced = c.Bool("wildcard")
 	pluginOpts.NoFQDN = c.Bool("no-fqdn")
 	pluginOpts.Resolver = c.String("resolver")
+	pluginOpts.Protocol = c.String("protocol")
 
 	if pluginOpts.Resolver != "" && runtime.GOOS == "windows" {
 		return errors.New("currently can not set custom dns resolver on windows. See https://golang.org/pkg/net/#hdr-Name_Resolution")
+	}
+
+	if pluginOpts.Protocol != "udp" && pluginOpts.Protocol != "tcp" {
+		return errors.New("protocol must be either 'udp' or 'tcp'")
+	}
+
+	if pluginOpts.Protocol != "" && pluginOpts.Resolver == "" {
+		return errors.New("protocol can only be set if a custom resolver is set")
 	}
 
 	globalOpts, err := internalcli.ParseGlobalOptions(c)

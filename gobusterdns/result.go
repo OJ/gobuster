@@ -31,7 +31,7 @@ func (r Result) ResultToString() (string, error) {
 		for i := range r.IPs {
 			ips[i] = r.IPs[i].String()
 		}
-		green(buf, " IPs: %s", strings.Join(ips, ","))
+		green(buf, " %s", strings.Join(ips, ","))
 	}
 
 	if r.CNAME != "" {

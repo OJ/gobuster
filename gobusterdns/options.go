@@ -7,7 +7,6 @@ import (
 // OptionsDNS holds all options for the dns plugin
 type OptionsDNS struct {
 	Domain         string
-	ShowIPs        bool
 	CheckCNAME     bool
 	WildcardForced bool
 	Resolver       string

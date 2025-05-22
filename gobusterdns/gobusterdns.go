@@ -139,9 +139,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 			Subdomain: strings.TrimSuffix(subdomain, "."),
 		}
 
-		if d.options.ShowIPs {
-			result.IPs = ips
-		}
+		result.IPs = ips
 		if d.options.CheckCNAME {
 			cname, err := d.dnsLookupCname(ctx, subdomain)
 			if err == nil {
@@ -200,12 +198,6 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 
 	if o.CheckCNAME {
 		if _, err := fmt.Fprintf(tw, "[+] Check CNAME:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if o.ShowIPs {
-		if _, err := fmt.Fprintf(tw, "[+] Show IPs:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

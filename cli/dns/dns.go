@@ -26,7 +26,6 @@ func getFlags() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, []cli.Flag{
 		&cli.StringFlag{Name: "domain", Aliases: []string{"do"}, Usage: "The target domain", Required: true},
-		&cli.BoolFlag{Name: "show-ips", Aliases: []string{"i"}, Value: false, Usage: "Show IP addresses of found domains"},
 		&cli.BoolFlag{Name: "check-cname", Aliases: []string{"c"}, Value: false, Usage: "Also check CNAME records"},
 		&cli.DurationFlag{Name: "timeout", Aliases: []string{"to"}, Value: 1 * time.Second, Usage: "DNS resolver timeout"},
 		&cli.BoolFlag{Name: "wildcard", Aliases: []string{"wc"}, Value: false, Usage: "Force continued operation when wildcard found"},
@@ -42,7 +41,6 @@ func run(c *cli.Context) error {
 	pluginOpts := gobusterdns.NewOptions()
 
 	pluginOpts.Domain = c.String("domain")
-	pluginOpts.ShowIPs = c.Bool("show-ips")
 	pluginOpts.CheckCNAME = c.Bool("check-cname")
 	pluginOpts.Timeout = c.Duration("timeout")
 	pluginOpts.WildcardForced = c.Bool("wildcard")

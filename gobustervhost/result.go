@@ -18,28 +18,23 @@ var (
 
 // Result represents a single result
 type Result struct {
-	Found      bool
 	Vhost      string
 	StatusCode int
 	Size       int64
 	Header     http.Header
 }
 
-// ResultToString converts the Result to it's textual representation
+// ResultToString converts the Result to its textual representation
 func (r Result) ResultToString() (string, error) {
-	statusText := yellow("Missed")
-	if r.Found {
-		statusText = green("Found")
-	}
-
 	statusCodeColor := white
-	if r.StatusCode == 200 {
+	switch {
+	case r.StatusCode == http.StatusOK:
 		statusCodeColor = green
-	} else if r.StatusCode >= 300 && r.StatusCode < 400 {
+	case r.StatusCode >= 300 && r.StatusCode < 400:
 		statusCodeColor = cyan
-	} else if r.StatusCode >= 400 && r.StatusCode < 500 {
+	case r.StatusCode >= 400 && r.StatusCode < 500:
 		statusCodeColor = yellow
-	} else if r.StatusCode >= 500 && r.StatusCode < 600 {
+	case r.StatusCode >= 500 && r.StatusCode < 600:
 		statusCodeColor = red
 	}
 
@@ -51,5 +46,5 @@ func (r Result) ResultToString() (string, error) {
 		locationString = blue(fmt.Sprintf(" [--> %s]", location))
 	}
 
-	return fmt.Sprintf("%s: %s %s [Size: %d]%s\n", statusText, r.Vhost, statusCode, r.Size, locationString), nil
+	return fmt.Sprintf("%s %s [Size: %d]%s\n", r.Vhost, statusCode, r.Size, locationString), nil
 }

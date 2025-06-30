@@ -1,0 +1,74 @@
+version: "3"
+
+vars:
+  PROGRAM: gobuster
+
+tasks:
+  deps:
+    cmds:
+      - go mod tidy -v
+
+  update:
+    cmds:
+      - go get -u
+      - go get -u tool
+      - go mod tidy -v
+
+  check:
+    cmds:
+      - go fmt ./...
+      - go tool gofumpt -l -w .
+      - go vet ./...
+
+  build:
+    aliases: [default]
+    deps: [deps, check]
+    cmds:
+      - go build -o {{.OUTPUT_FILE | default .PROGRAM}}
+    env:
+      CGO_ENABLED: 0
+      GOOS: '{{.GOOS | default "linux"}}'
+      GOARCH: '{{.GOARCH | default "amd64"}}'
+
+  linux:
+    cmds:
+      - task: build
+        vars:
+          GOOS: linux
+          GOARCH: amd64
+
+  windows:
+    cmds:
+      - task: build
+        vars:
+          OUTPUT_FILE: "{{.PROGRAM}}.exe"
+          GOOS: windows
+          GOARCH: amd64
+
+  test:
+    deps: [deps, check]
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - go test -race -cover ./...
+
+  lint:
+    cmds:
+      - golangci-lint run ./... --timeout=30m
+      - go mod tidy
+
+  lint-update:
+    cmds:
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b {{ .GOPATH }}/bin
+      - golangci-lint --version
+    vars:
+      GOPATH:
+        sh: go env GOPATH
+
+  tag:
+    cmds:
+      - git tag -a "${TAG}" -m "${TAG}"
+      - git push origin "${TAG}"
+    preconditions:
+      - sh: '[[ -n "${TAG}" ]]'
+        msg: "Please set the TAG environment variable"

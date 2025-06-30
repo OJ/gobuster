@@ -15,5 +15,16 @@ updates:
     directory: "/"
     target-branch: "dev"
     schedule:
-      # Check for updates to GitHub Actions every weekday
+      interval: "daily"
+
+  - package-ecosystem: docker
+    directory: "/"
+    target-branch: "dev"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    target-branch: "dev"
+    schedule:
       interval: "daily"

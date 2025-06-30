@@ -1,38 +1,33 @@
 name: Go
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: ["1.18", "1.19", "stable"]
     steps:
-      - name: Set up Go ${{ matrix.go }}
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ matrix.go }}
-
       - name: Check out code
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v4
 
-      - name: build cache
-        uses: actions/cache@v3
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          go-version: "stable"
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
+        run: task deps
 
       - name: Build linux
-        run: make linux
+        run: task linux
 
       - name: Build windows
-        run: make windows
+        run: task windows
 
       - name: Test
-        run: make test
+        run: task test

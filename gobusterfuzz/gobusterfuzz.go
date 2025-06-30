@@ -4,9 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"net"
+	"io"
+	"net/http"
+	"os"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
@@ -14,15 +18,15 @@ import (
 
 const FuzzKeyword = "FUZZ"
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	url        string
 	statusCode int
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d", e.url, e.statusCode)
+func (e *WildcardError) Error() string {
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d. Please exclude the response length or the status code or set the wildcard option.", e.url, e.statusCode)
 }
 
 // GobusterFuzz is the main type to implement the interface
@@ -32,14 +36,14 @@ type GobusterFuzz struct {
 	http       *libgobuster.HTTPClient
 }
 
-// NewGobusterFuzz creates a new initialized GobusterFuzz
-func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*GobusterFuzz, error) {
+// New creates a new initialized GobusterFuzz
+func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster.Logger) (*GobusterFuzz, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterFuzz{
@@ -68,7 +72,7 @@ func NewGobusterFuzz(globalopts *libgobuster.Options, opts *OptionsFuzz) (*Gobus
 		Method:                opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -82,19 +86,34 @@ func (d *GobusterFuzz) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterfuzz
-func (d *GobusterFuzz) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (d *GobusterFuzz) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 	return nil
 }
 
 // ProcessWord is the process implementation of gobusterfuzz
-func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
-	url := strings.ReplaceAll(d.options.URL, FuzzKeyword, word)
+func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
+	url := *d.options.URL
+	url.Fragment = strings.ReplaceAll(url.Fragment, FuzzKeyword, word)
+	url.Host = strings.ReplaceAll(url.Host, FuzzKeyword, word)
+	url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
+	url.Scheme = strings.ReplaceAll(url.Scheme, FuzzKeyword, word)
+	for key, value := range url.Query() {
+		for i, v := range value {
+			url.Query()[key][i] = strings.ReplaceAll(v, FuzzKeyword, word)
+		}
+	}
 
 	requestOptions := libgobuster.RequestOptions{}
 
 	if len(d.options.Headers) > 0 {
 		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
 		for i := range d.options.Headers {
+			// Host header can't be set via Headers, needs to be a separate field
+			if http.CanonicalHeaderKey(d.options.Headers[i].Name) == "Host" {
+				requestOptions.Host = strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word)
+				continue
+			}
+
 			requestOptions.ModifiedHeaders[i] = libgobuster.HTTPHeader{
 				Name:  strings.ReplaceAll(d.options.Headers[i].Name, FuzzKeyword, word),
 				Value: strings.ReplaceAll(d.options.Headers[i].Value, FuzzKeyword, word),
@@ -114,6 +133,14 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		requestOptions.UpdatedBasicAuthPassword = strings.ReplaceAll(d.options.Password, FuzzKeyword, word)
 	}
 
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying word %s", word),
+		}
+	}
+
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
 		// add it so it will be the overall max requests
@@ -122,21 +149,31 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 
 	var statusCode int
 	var size int64
+	var responseHeaders http.Header
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, _, _, err = d.http.Request(ctx, url, requestOptions)
+		statusCode, size, responseHeaders, _, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+			switch {
+			case os.IsTimeout(err) && i != tries:
 				continue
-			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+			case strings.Contains(err.Error(), "invalid control character in URL"):
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				return err
+			default:
+				switch {
+				case errors.Is(err, io.EOF):
+					return nil, libgobuster.ErrEOF
+				case os.IsTimeout(err):
+					return nil, libgobuster.ErrTimeout
+				case errors.Is(err, syscall.ECONNREFUSED):
+					return nil, libgobuster.ErrConnectionRefused
+				}
+				return nil, err
 			}
 		}
 		break
@@ -155,21 +192,29 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 			}
 		}
 
-		if resultStatus || d.globalopts.Verbose {
-			progress.ResultChan <- Result{
-				Verbose:    d.globalopts.Verbose,
-				Found:      resultStatus,
-				Path:       url,
+		if resultStatus {
+			r := Result{
+				Path:       url.String(),
 				StatusCode: statusCode,
 				Size:       size,
 				Word:       word,
+				Header:     responseHeaders,
 			}
+			return r, nil
 		}
 	}
-	return nil
+	return nil, nil // nolint:nilnil
 }
 
-func (d *GobusterFuzz) AdditionalWords(word string) []string {
+func (d *GobusterFuzz) AdditionalWordsLen() int {
+	return 0
+}
+
+func (d *GobusterFuzz) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterFuzz) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 
@@ -241,6 +286,12 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 		}
 	}
 
+	if o.LocalAddr != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Local IP:\t%s\n", o.LocalAddr); err != nil {
+			return "", err
+		}
+	}
+
 	if o.Username != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
 			return "", err
@@ -249,12 +300,6 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 
 	if o.FollowRedirect {
 		if _, err := fmt.Fprintf(tw, "[+] Follow Redirect:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

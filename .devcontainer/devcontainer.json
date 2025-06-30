@@ -1,0 +1,29 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+  "name": "Go",
+  "image": "mcr.microsoft.com/devcontainers/go",
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/guiyomh/features/golangci-lint:0": {},
+    "ghcr.io/devcontainers-contrib/features/go-task:1": {}
+  },
+  "postCreateCommand": {
+    "install dependencies": "task deps"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "shardulm94.trailing-spaces",
+        "IBM.output-colorizer",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker",
+        "task.vscode-task",
+        "redhat.vscode-yaml",
+        "usernamehw.errorlens",
+        "Gruntfuggly.todo-tree"
+      ]
+    }
+  }
+}

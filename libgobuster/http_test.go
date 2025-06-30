@@ -2,33 +2,37 @@ package libgobuster
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
 func httpServerB(b *testing.B, content string) *httptest.Server {
 	b.Helper()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, content)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := fmt.Fprint(w, content); err != nil {
+			b.Fatalf("%v", err)
+		}
 	}))
 	return ts
 }
 
 func httpServerT(t *testing.T, content string) *httptest.Server {
 	t.Helper()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, content)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := fmt.Fprint(w, content); err != nil {
+			t.Fatalf("%v", err)
+		}
 	}))
 	return ts
 }
 
 func randomString(length int) (string, error) {
-	var letter = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	letter := []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	letterLen := len(letter)
 
 	b := make([]byte, length)
@@ -51,11 +55,16 @@ func TestRequest(t *testing.T) {
 	h := httpServerT(t, ret)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, log)
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	status, length, _, body, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		t.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
+	status, length, _, body, err := c.Request(t.Context(), *u, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -78,12 +87,17 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, log)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
-	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: false})
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
+	for b.Loop() {
+		_, _, _, _, err := c.Request(b.Context(), *u, RequestOptions{ReturnBody: false})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -98,12 +112,17 @@ func BenchmarkRequestWitBody(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	c, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	c, err := NewHTTPClient(&o, log)
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
-	for x := 0; x < b.N; x++ {
-		_, _, _, _, err := c.Request(context.Background(), h.URL, RequestOptions{ReturnBody: true})
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
+	for b.Loop() {
+		_, _, _, _, err := c.Request(b.Context(), *u, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -118,8 +137,9 @@ func BenchmarkNewHTTPClient(b *testing.B) {
 	h := httpServerB(b, r)
 	defer h.Close()
 	var o HTTPOptions
-	for x := 0; x < b.N; x++ {
-		_, err := NewHTTPClient(&o)
+	log := NewLogger(false)
+	for b.Loop() {
+		_, err := NewHTTPClient(&o, log)
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}

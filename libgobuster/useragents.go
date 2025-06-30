@@ -4672,5 +4672,5 @@ func GetRandomUserAgent() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return userAgents[n.Int64()], err
+	return userAgents[n.Int64()], nil
 }

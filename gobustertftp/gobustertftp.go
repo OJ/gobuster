@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"text/tabwriter"
@@ -19,14 +20,14 @@ type GobusterTFTP struct {
 	options    *OptionsTFTP
 }
 
-// NewGobusterTFTP creates a new initialized NewGobusterTFTP
-func NewGobusterTFTP(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
+// New creates a new initialized NewGobusterTFTP
+func New(globalopts *libgobuster.Options, opts *OptionsTFTP) (*GobusterTFTP, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterTFTP{
@@ -42,7 +43,7 @@ func (d *GobusterTFTP) Name() string {
 }
 
 // PreRun is the pre run implementation of gobustertftp
-func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (d *GobusterTFTP) PreRun(_ context.Context, _ *libgobuster.Progress) error {
 	_, err := tftp.NewClient(d.options.Server)
 	if err != nil {
 		return err
@@ -51,37 +52,47 @@ func (d *GobusterTFTP) PreRun(ctx context.Context, progress *libgobuster.Progres
 }
 
 // ProcessWord is the process implementation of gobustertftp
-func (d *GobusterTFTP) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterTFTP) ProcessWord(_ context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying word %s", word),
+		}
+	}
+
 	c, err := tftp.NewClient(d.options.Server)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	c.SetTimeout(d.options.Timeout)
 	wt, err := c.Receive(word, "octet")
 	if err != nil {
 		// file not found
-		if d.globalopts.Verbose {
-			progress.ResultChan <- Result{
-				Filename:     word,
-				Found:        false,
-				ErrorMessage: err.Error(),
-			}
-		}
-
-		return nil
+		return nil, nil // nolint:nilerr,nilnil
 	}
 	result := Result{
 		Filename: word,
-		Found:    true,
 	}
-	if n, ok := wt.(tftp.IncomingTransfer).Size(); ok {
+	wt2, ok := wt.(tftp.IncomingTransfer)
+	if !ok {
+		return nil, errors.New("could not cast to IncomingTransfer")
+	}
+	if n, ok := wt2.Size(); ok {
 		result.Size = n
 	}
-	progress.ResultChan <- result
-	return nil
+	return result, nil
 }
 
-func (d *GobusterTFTP) AdditionalWords(word string) []string {
+func (d *GobusterTFTP) AdditionalWordsLen() int {
+	return 0
+}
+
+func (d *GobusterTFTP) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterTFTP) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 
@@ -120,12 +131,6 @@ func (d *GobusterTFTP) GetConfigString() (string, error) {
 
 	if d.globalopts.PatternFile != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Patterns:\t%s (%d entries)\n", d.globalopts.PatternFile, len(d.globalopts.Patterns)); err != nil {
-			return "", err
-		}
-	}
-
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

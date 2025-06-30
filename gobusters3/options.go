@@ -8,9 +8,10 @@ import (
 type OptionsS3 struct {
 	libgobuster.BasicHTTPOptions
 	MaxFilesToList int
+	ShowFiles      bool
 }
 
-// NewOptionsS3 returns a new initialized OptionsS3
-func NewOptionsS3() *OptionsS3 {
+// NewOptions returns a new initialized OptionsS3
+func NewOptions() *OptionsS3 {
 	return &OptionsS3{}
 }

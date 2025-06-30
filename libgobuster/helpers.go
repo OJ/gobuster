@@ -17,7 +17,7 @@ type Set[T comparable] struct {
 	Set map[T]bool
 }
 
-// NewSSet creates a new initialized Set
+// NewSet creates a new initialized Set
 func NewSet[T comparable]() Set[T] {
 	return Set[T]{Set: map[T]bool{}}
 }
@@ -68,23 +68,55 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
+// this method is much faster than lineCounter_slow but has the following errors:
+// - empty files are reported as 1 line
+// - files only containing a newline are reported as 1 line
+// - also counts lines with comments
 func lineCounter(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 1
 	lineSep := []byte{'\n'}
+	var lastChar byte
 
 	for {
 		c, err := r.Read(buf)
 		count += bytes.Count(buf[:c], lineSep)
 
+		// store last character received if we got any bytes
+		if c > 0 {
+			lastChar = buf[c-1]
+		}
+
 		switch {
 		case errors.Is(err, io.EOF):
+			// account for trailing new line
+			if lastChar == '\n' {
+				count--
+			}
 			return count, nil
 
 		case err != nil:
-			return count, err
+			return -1, err
 		}
 	}
+}
+
+func lineCounterSlow(r io.Reader) (int, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanLines)
+	var count int
+	for scanner.Scan() {
+		w := scanner.Text()
+		if w == "" {
+			continue
+		}
+
+		count++
+	}
+	if err := scanner.Err(); err != nil {
+		return -1, err
+	}
+	return count, nil
 }
 
 // DefaultUserAgent returns the default user agent to use in HTTP requests
@@ -122,7 +154,7 @@ func ParseExtensionsFile(file string) ([]string, error) {
 		e := scanner.Text()
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
-		ret = append(ret, (strings.TrimPrefix(e, ".")))
+		ret = append(ret, strings.TrimPrefix(e, "."))
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -174,25 +206,4 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 		}
 	}
 	return ret, nil
-}
-
-// SliceContains checks if an integer slice contains a specific value
-func SliceContains(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
-// JoinIntSlice joins an int slice by ,
-func JoinIntSlice(s []int) string {
-	valuesText := make([]string, len(s))
-	for i, number := range s {
-		text := strconv.Itoa(number)
-		valuesText[i] = text
-	}
-	result := strings.Join(valuesText, ",")
-	return result
 }

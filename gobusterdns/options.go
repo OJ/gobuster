@@ -7,15 +7,15 @@ import (
 // OptionsDNS holds all options for the dns plugin
 type OptionsDNS struct {
 	Domain         string
-	ShowIPs        bool
-	ShowCNAME      bool
+	CheckCNAME     bool
 	WildcardForced bool
 	Resolver       string
+	Protocol       string
 	NoFQDN         bool
 	Timeout        time.Duration
 }
 
-// NewOptionsDNS returns a new initialized OptionsDNS
-func NewOptionsDNS() *OptionsDNS {
+// NewOptions returns a new initialized OptionsDNS
+func NewOptions() *OptionsDNS {
 	return &OptionsDNS{}
 }

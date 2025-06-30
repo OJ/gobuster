@@ -6,9 +6,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var (
-	green = color.New(color.FgGreen).FprintfFunc()
-)
+var green = color.New(color.FgGreen).FprintfFunc()
 
 // Result represents a single result
 type Result struct {
@@ -17,7 +15,7 @@ type Result struct {
 	Status     string
 }
 
-// ResultToString converts the Result to it's textual representation
+// ResultToString converts the Result to its textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 

@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"net"
+	"io"
 	"net/http"
-	"net/url"
+	"os"
 	"strings"
+	"sync"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
@@ -23,16 +26,17 @@ type GobusterVhost struct {
 	domain       string
 	normalBody   []byte
 	abnormalBody []byte
+	once         sync.Once
 }
 
-// NewGobusterVhost creates a new initialized GobusterDir
-func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*GobusterVhost, error) {
+// New creates a new initialized GobusterDir
+func New(globalopts *libgobuster.Options, opts *OptionsVhost, logger *libgobuster.Logger) (*GobusterVhost, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterVhost{
@@ -61,7 +65,7 @@ func NewGobusterVhost(globalopts *libgobuster.Options, opts *OptionsVhost) (*Gob
 		Method:                opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -75,33 +79,45 @@ func (v *GobusterVhost) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
 	// add trailing slash
-	if !strings.HasSuffix(v.options.URL, "/") {
-		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
+	if !strings.HasSuffix(v.options.URL.Path, "/") {
+		v.options.URL.Path = fmt.Sprintf("%s/", v.options.URL.Path)
 	}
 
-	urlParsed, err := url.Parse(v.options.URL)
-	if err != nil {
-		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
-	}
 	if v.options.Domain != "" {
 		v.domain = v.options.Domain
 	} else {
-		v.domain = urlParsed.Host
+		v.domain = v.options.URL.Host
 	}
 
 	// request default vhost for normalBody
-	_, _, _, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	_, _, _, body, err := v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
+		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.normalBody = body
 
 	// request non existent vhost for abnormalBody
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, _, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
+		}
 		return fmt.Errorf("unable to connect to %s: %w", v.options.URL, err)
 	}
 	v.abnormalBody = body
@@ -109,13 +125,31 @@ func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progre
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	var subdomain string
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
 	} else {
 		// wordlist needs to include full domains
 		subdomain = word
+	}
+
+	// warn people when there is no . detected so they might want to use the other options
+	v.once.Do(func() {
+		if !strings.Contains(subdomain, ".") {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelWarn,
+				Message: fmt.Sprintf("the first subdomain to try does not contain a dot (%s). You might want to use the option to append the base domain otherwise the vhost will be tried as is", subdomain),
+			}
+		}
+	})
+
+	// add some debug output
+	if v.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying vhost %s", subdomain),
+		}
 	}
 
 	tries := 1
@@ -130,19 +164,28 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+		statusCode, size, header, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+			switch {
+			case os.IsTimeout(err) && i != tries:
 				continue
-			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+			case strings.Contains(err.Error(), "invalid control character in URL"):
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				return err
+			default:
+				switch {
+				case errors.Is(err, io.EOF):
+					return nil, libgobuster.ErrEOF
+				case os.IsTimeout(err):
+					return nil, libgobuster.ErrTimeout
+				case errors.Is(err, syscall.ECONNREFUSED):
+					return nil, libgobuster.ErrConnectionRefused
+				}
+				return nil, err
 			}
 		}
 		break
@@ -151,23 +194,27 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
-		resultStatus := false
-		if found {
-			resultStatus = true
-		}
-		progress.ResultChan <- Result{
-			Found:      resultStatus,
+	if found && !v.options.ExcludeLengthParsed.Contains(int(size)) && !v.options.ExcludeStatusParsed.Contains(statusCode) {
+		r := Result{
 			Vhost:      subdomain,
 			StatusCode: statusCode,
 			Size:       size,
 			Header:     header,
 		}
+		return r, nil
 	}
-	return nil
+	return nil, nil // nolint:nilnil
 }
 
-func (v *GobusterVhost) AdditionalWords(word string) []string {
+func (v *GobusterVhost) AdditionalWordsLen() int {
+	return 0
+}
+
+func (v *GobusterVhost) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (v *GobusterVhost) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 
@@ -227,14 +274,14 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.Username != "" {
-		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
+	if o.LocalAddr != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Local IP:\t%s\n", o.LocalAddr); err != nil {
 			return "", err
 		}
 	}
 
-	if v.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
+	if o.Username != "" {
+		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
 			return "", err
 		}
 	}

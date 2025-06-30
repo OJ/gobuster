@@ -5,7 +5,7 @@ import "testing"
 func TestNewOptions(t *testing.T) {
 	t.Parallel()
 
-	o := NewOptionsFuzz()
+	o := NewOptions()
 	if o.ExcludedStatusCodesParsed.Set == nil {
 		t.Fatal("StatusCodesParsed not initialized")
 	}

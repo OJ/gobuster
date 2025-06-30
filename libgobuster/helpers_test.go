@@ -2,8 +2,10 @@ package libgobuster
 
 import (
 	"errors"
-	"fmt"
+	"io"
+	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -149,7 +151,7 @@ func TestSetStringify(t *testing.T) {
 	z = y.Stringify()
 	// order is random
 	for _, i := range v2 {
-		if !strings.Contains(z, fmt.Sprint(i)) {
+		if !strings.Contains(z, strconv.Itoa(i)) {
 			t.Fatalf("Did not find value %q in %q", i, z)
 		}
 	}
@@ -157,19 +159,20 @@ func TestSetStringify(t *testing.T) {
 
 func TestLineCounter(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		testName string
 		s        string
 		expected int
 	}{
 		{"One Line", "test", 1},
 		{"3 Lines", "TestString\nTest\n1234", 3},
-		{"Trailing newline", "TestString\nTest\n1234\n", 4},
+		{"Trailing newline", "TestString\nTest\n1234\n", 3},
 		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
-		{"Empty", "", 1},
+		{"Empty", "", 1},       // these are wrong, but I've found no good way to handle those
+		{"Empty 2", "\n", 1},   // these are wrong, but I've found no good way to handle those
+		{"Empty 3", "\r\n", 1}, // these are wrong, but I've found no good way to handle those
 	}
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			r := strings.NewReader(x.s)
@@ -184,6 +187,78 @@ func TestLineCounter(t *testing.T) {
 	}
 }
 
+func TestLineCounterSlow(t *testing.T) {
+	t.Parallel()
+	tt := []struct {
+		testName string
+		s        string
+		expected int
+	}{
+		{"One Line", "test", 1},
+		{"3 Lines", "TestString\nTest\n1234", 3},
+		{"Trailing newline", "TestString\nTest\n1234\n", 3},
+		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
+		{"Empty", "", 0},
+		{"Empty 2", "\n", 0},
+		{"Empty 3", "\r\n", 0},
+	}
+	for _, x := range tt {
+		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
+			r := strings.NewReader(x.s)
+			l, err := lineCounterSlow(r)
+			if err != nil {
+				t.Fatalf("Got error: %v", err)
+			}
+			if l != x.expected {
+				t.Fatalf("wrong line count! Got %d expected %d", l, x.expected)
+			}
+		})
+	}
+}
+
+func BenchmarkLineCounter(b *testing.B) {
+	r, err := os.Open("../rockyou.txt")
+	if err != nil {
+		b.Fatalf("Got error: %v", err)
+	}
+	defer r.Close()
+	for b.Loop() {
+		_, err := r.Seek(0, io.SeekStart)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		c, err := lineCounter(r)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		if c != 14344391 {
+			b.Errorf("invalid count. Expected 14344391, got %d", c)
+		}
+	}
+}
+
+func BenchmarkLineCounterSlow(b *testing.B) {
+	r, err := os.Open("../rockyou.txt")
+	if err != nil {
+		b.Fatalf("Got error: %v", err)
+	}
+	defer r.Close()
+	for b.Loop() {
+		_, err := r.Seek(0, io.SeekStart)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		c, err := lineCounterSlow(r)
+		if err != nil {
+			b.Fatalf("Got error: %v", err)
+		}
+		if c != 14336792 {
+			b.Errorf("invalid count. Expected 14336792, got %d", c)
+		}
+	}
+}
+
 func TestLineCounterError(t *testing.T) {
 	t.Parallel()
 	r := iotest.TimeoutReader(strings.NewReader("test"))
@@ -195,7 +270,7 @@ func TestLineCounterError(t *testing.T) {
 
 func TestParseExtensions(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		testName           string
 		extensions         string
 		expectedExtensions Set[string]
@@ -209,7 +284,6 @@ func TestParseExtensions(t *testing.T) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.testName, func(t *testing.T) {
 			t.Parallel()
 			ret, err := ParseExtensions(x.extensions)
@@ -226,7 +300,7 @@ func TestParseExtensions(t *testing.T) {
 
 func TestParseCommaSeparatedInt(t *testing.T) {
 	t.Parallel()
-	var tt = []struct {
+	tt := []struct {
 		stringCodes   string
 		expectedCodes []int
 		expectedError string
@@ -256,7 +330,6 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		t.Run(x.stringCodes, func(t *testing.T) {
 			t.Parallel()
 			want := NewSet[int]()
@@ -274,7 +347,7 @@ func TestParseCommaSeparatedInt(t *testing.T) {
 }
 
 func BenchmarkParseExtensions(b *testing.B) {
-	var tt = []struct {
+	tt := []struct {
 		testName           string
 		extensions         string
 		expectedExtensions Set[string]
@@ -288,9 +361,8 @@ func BenchmarkParseExtensions(b *testing.B) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
-			for y := 0; y < b2.N; y++ {
+			for b2.Loop() {
 				_, _ = ParseExtensions(x.extensions)
 			}
 		})
@@ -298,7 +370,7 @@ func BenchmarkParseExtensions(b *testing.B) {
 }
 
 func BenchmarkParseCommaSeparatedInt(b *testing.B) {
-	var tt = []struct {
+	tt := []struct {
 		testName      string
 		stringCodes   string
 		expectedCodes Set[int]
@@ -313,9 +385,8 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 	}
 
 	for _, x := range tt {
-		x := x // NOTE: https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 		b.Run(x.testName, func(b2 *testing.B) {
-			for y := 0; y < b2.N; y++ {
+			for b2.Loop() {
 				_, _ = ParseCommaSeparatedInt(x.stringCodes)
 			}
 		})

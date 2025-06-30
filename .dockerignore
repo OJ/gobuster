@@ -1,0 +1,10 @@
+*.exe
+*.out
+*.prof
+*.txt
+*.swp
+.vscode/
+gobuster
+.git/
+mitm*
+.idea/

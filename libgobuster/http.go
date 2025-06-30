@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 )
@@ -29,6 +31,7 @@ type HTTPClient struct {
 	cookies               string
 	method                string
 	host                  string
+	logger                *Logger
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -42,13 +45,13 @@ type RequestOptions struct {
 }
 
 // NewHTTPClient returns a new HTTPClient
-func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
+func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	var proxyURLFunc func(*http.Request) (*url.URL, error)
 	var client HTTPClient
 	proxyURLFunc = http.ProxyFromEnvironment
 
 	if opt == nil {
-		return nil, fmt.Errorf("options is nil")
+		return nil, errors.New("options is nil")
 	}
 
 	if opt.Proxy != "" {
@@ -61,7 +64,7 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 
 	var redirectFunc func(req *http.Request, via []*http.Request) error
 	if !opt.FollowRedirect {
-		redirectFunc = func(req *http.Request, via []*http.Request) error {
+		redirectFunc = func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
 	} else {
@@ -69,23 +72,40 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 	}
 
 	tlsConfig := tls.Config{
-		InsecureSkipVerify: opt.NoTLSValidation,
+		InsecureSkipVerify: opt.NoTLSValidation, // nolint:gosec
 		// enable TLS1.0 and TLS1.1 support
 		MinVersion: tls.VersionTLS10,
 	}
 	if opt.TLSCertificate != nil {
 		tlsConfig.Certificates = []tls.Certificate{*opt.TLSCertificate}
 	}
+	if opt.TLSRenegotiation {
+		tlsConfig.Renegotiation = tls.RenegotiateOnceAsClient
+	}
+
+	transport := &http.Transport{
+		Proxy:               proxyURLFunc,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+		TLSClientConfig:     &tlsConfig,
+	}
+
+	// set specific network interface
+	if opt.LocalAddr != nil {
+		logger.Debugf("Setting local address to %s", opt.LocalAddr.String())
+		dialer := &net.Dialer{
+			Timeout:   opt.Timeout,
+			LocalAddr: opt.LocalAddr,
+		}
+		transport.DialContext = dialer.DialContext
+	}
 
 	client.client = &http.Client{
 		Timeout:       opt.Timeout,
 		CheckRedirect: redirectFunc,
-		Transport: &http.Transport{
-			Proxy:               proxyURLFunc,
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 100,
-			TLSClientConfig:     &tlsConfig,
-		}}
+		Transport:     transport,
+	}
+
 	client.username = opt.Username
 	client.password = opt.Password
 	client.userAgent = opt.UserAgent
@@ -104,12 +124,13 @@ func NewHTTPClient(opt *HTTPOptions) (*HTTPClient, error) {
 			break
 		}
 	}
+	client.logger = logger
 	return &client, nil
 }
 
-// Request makes an http request and returns the status, the content length, the headers, the body and an error
+// Request makes a http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
-func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
+func (client *HTTPClient) Request(ctx context.Context, fullURL url.URL, opts RequestOptions) (int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(ctx, fullURL, opts)
 	if err != nil {
 		// ignore context canceled errors
@@ -140,20 +161,17 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 	return resp.StatusCode, length, resp.Header, body, nil
 }
 
-func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts RequestOptions) (*http.Response, error) {
-	req, err := http.NewRequest(client.method, fullURL, opts.Body)
+func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts RequestOptions) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, client.method, fullURL.String(), opts.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	// add the context so we can easily cancel out
-	req = req.WithContext(ctx)
 
 	if client.cookies != "" {
 		req.Header.Set("Cookie", client.cookies)
 	}
 
-	// Use host for VHOST mode on a per request basis, otherwise the one provided from headers
+	// Use host for VHOST mode on a per-request basis, otherwise the one provided from headers
 	if opts.Host != "" {
 		req.Host = opts.Host
 	} else if client.host != "" {
@@ -171,6 +189,11 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 	// currently only relevant on fuzzing
 	if len(opts.ModifiedHeaders) > 0 {
 		for _, h := range opts.ModifiedHeaders {
+			// empty headers are not valid (happens when fuzzing the host header for example because the slice is initialized with the provided header length)
+			if h.Name == "" {
+				continue
+			}
+
 			if client.noCanonicalizeHeaders {
 				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
 				req.Header[h.Name] = []string{h.Value}
@@ -193,6 +216,14 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts 
 		req.SetBasicAuth(opts.UpdatedBasicAuthUsername, opts.UpdatedBasicAuthPassword)
 	} else if client.username != "" {
 		req.SetBasicAuth(client.username, client.password)
+	}
+
+	if client.logger.debug {
+		dump, err := httputil.DumpRequestOut(req, false)
+		if err != nil {
+			return nil, err
+		}
+		client.logger.Debugf("%s", dump)
 	}
 
 	resp, err := client.client.Do(req)

@@ -10,7 +10,7 @@ type OptionsTFTP struct {
 	Timeout time.Duration
 }
 
-// NewOptionsTFTP returns a new initialized OptionsTFTP
-func NewOptionsTFTP() *OptionsTFTP {
+// NewOptions returns a new initialized OptionsTFTP
+func NewOptions() *OptionsTFTP {
 	return &OptionsTFTP{}
 }

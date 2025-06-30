@@ -4,24 +4,24 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	wildcardIps libgobuster.Set[netip.Addr]
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
+func (e *WildcardError) Error() string {
 	return fmt.Sprintf("the DNS Server returned the same IP for every domain. IP address(es) returned: %s", e.wildcardIps.Stringify())
 }
 
@@ -34,31 +34,31 @@ type GobusterDNS struct {
 	wildcardIps libgobuster.Set[netip.Addr]
 }
 
-func newCustomDialer(server string) func(ctx context.Context, network, address string) (net.Conn, error) {
-	return func(ctx context.Context, network, address string) (net.Conn, error) {
+func newCustomDialer(server string, protocol string) func(ctx context.Context, network, address string) (net.Conn, error) {
+	return func(ctx context.Context, _, _ string) (net.Conn, error) {
 		d := net.Dialer{}
 		if !strings.Contains(server, ":") {
 			server = fmt.Sprintf("%s:53", server)
 		}
-		return d.DialContext(ctx, "udp", server)
+		return d.DialContext(ctx, protocol, server)
 	}
 }
 
-// NewGobusterDNS creates a new initialized GobusterDNS
-func NewGobusterDNS(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
+// New creates a new initialized GobusterDNS
+func New(globalopts *libgobuster.Options, opts *OptionsDNS) (*GobusterDNS, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	resolver := net.DefaultResolver
 	if opts.Resolver != "" {
 		resolver = &net.Resolver{
 			PreferGo: true,
-			Dial:     newCustomDialer(opts.Resolver),
+			Dial:     newCustomDialer(opts.Resolver, opts.Protocol),
 		}
 	}
 
@@ -85,7 +85,7 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 		d.isWildcard = true
 		d.wildcardIps.AddRange(wildcardIps)
 		if !d.options.WildcardForced {
-			return &ErrWildcard{wildcardIps: d.wildcardIps}
+			return &WildcardError{wildcardIps: d.wildcardIps}
 		}
 	}
 
@@ -109,44 +109,63 @@ func (d *GobusterDNS) PreRun(ctx context.Context, progress *libgobuster.Progress
 }
 
 // ProcessWord is the process implementation of gobusterdns
-func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	subdomain := fmt.Sprintf("%s.%s", word, d.options.Domain)
 	if !d.options.NoFQDN && !strings.HasSuffix(subdomain, ".") {
-		// add a . to indicate this is the full domain and we do not want to traverse the search domains on the system
+		// add a . to indicate this is the full domain, and we do not want to traverse the search domains on the system
 		subdomain = fmt.Sprintf("%s.", subdomain)
 	}
-	ips, err := d.dnsLookup(ctx, subdomain)
-	if err == nil {
-		if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
-			result := Result{
-				Subdomain: subdomain,
-				Found:     true,
-				ShowIPs:   d.options.ShowIPs,
-				ShowCNAME: d.options.ShowCNAME,
-				NoFQDN:    d.options.NoFQDN,
-			}
-			if d.options.ShowIPs {
-				result.IPs = ips
-			} else if d.options.ShowCNAME {
-				cname, err := d.dnsLookupCname(ctx, subdomain)
-				if err == nil {
-					result.CNAME = cname
-				}
-			}
-			progress.ResultChan <- result
-		}
-	} else if d.globalopts.Verbose {
-		progress.ResultChan <- Result{
-			Subdomain: subdomain,
-			Found:     false,
-			ShowIPs:   d.options.ShowIPs,
-			ShowCNAME: d.options.ShowCNAME,
+
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying subdomain %s", subdomain),
 		}
 	}
-	return nil
+
+	ips, err := d.dnsLookup(ctx, subdomain)
+	if err != nil {
+		var wErr *net.DNSError
+		if errors.As(err, &wErr) && wErr.IsNotFound {
+			// host not found is the expected error here
+			return nil, nil // nolint:nilnil
+		}
+		return nil, err
+	}
+
+	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
+		result := Result{
+			Subdomain: strings.TrimSuffix(subdomain, "."),
+		}
+
+		result.IPs = ips
+		if d.options.CheckCNAME {
+			cname, err := d.dnsLookupCname(ctx, subdomain)
+			if err == nil {
+				result.CNAME = cname
+			} else {
+				var wErr *net.DNSError
+				if !errors.As(err, &wErr) && !wErr.IsNotFound {
+					// host not found is the expected error here, send all other errors to the error channel
+					progress.ErrorChan <- err
+				}
+			}
+		}
+		return result, nil
+	}
+	return nil, nil // nolint:nilnil
 }
 
-func (d *GobusterDNS) AdditionalWords(word string) []string {
+func (d *GobusterDNS) AdditionalWordsLen() int {
+	return 0
+}
+
+func (d *GobusterDNS) AdditionalWords(_ string) []string {
+	return []string{}
+}
+
+func (d *GobusterDNS) AdditionalSuccessWords(_ string) []string {
 	return []string{}
 }
 
@@ -177,14 +196,8 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.ShowCNAME {
-		if _, err := fmt.Fprintf(tw, "[+] Show CNAME:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if o.ShowIPs {
-		if _, err := fmt.Fprintf(tw, "[+] Show IPs:\ttrue\n"); err != nil {
+	if o.CheckCNAME {
+		if _, err := fmt.Fprintf(tw, "[+] Check CNAME:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}
@@ -213,12 +226,6 @@ func (d *GobusterDNS) GetConfigString() (string, error) {
 		}
 	}
 
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
 	if err := tw.Flush(); err != nil {
 		return "", fmt.Errorf("error on tostring: %w", err)
 	}
@@ -239,6 +246,5 @@ func (d *GobusterDNS) dnsLookup(ctx context.Context, domain string) ([]netip.Add
 func (d *GobusterDNS) dnsLookupCname(ctx context.Context, domain string) (string, error) {
 	ctx2, cancel := context.WithTimeout(ctx, d.options.Timeout)
 	defer cancel()
-	time.Sleep(time.Second)
 	return d.resolver.LookupCNAME(ctx2, domain)
 }

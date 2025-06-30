@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"net"
+	"io"
 	"net/http"
+	"os"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 	"unicode/utf8"
 
@@ -21,16 +24,23 @@ var (
 	backupDotExtensions = []string{".swp"}
 )
 
-// ErrWildcard is returned if a wildcard response is found
-type ErrWildcard struct {
+// WildcardError is returned if a wildcard response is found
+type WildcardError struct {
 	url        string
+	location   string
 	statusCode int
 	length     int64
 }
 
 // Error is the implementation of the error interface
-func (e *ErrWildcard) Error() string {
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s => %d (Length: %d)", e.url, e.statusCode, e.length)
+func (e *WildcardError) Error() string {
+	var addInfo string
+	if e.location != "" {
+		addInfo = fmt.Sprintf("%s => %d (redirect to %s) (Length: %d)", e.url, e.statusCode, e.location, e.length)
+	} else {
+		addInfo = fmt.Sprintf("%s => %d (Length: %d)", e.url, e.statusCode, e.length)
+	}
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s. Please exclude the response length or the status code or set the wildcard option.", addInfo)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -40,14 +50,14 @@ type GobusterDir struct {
 	http       *libgobuster.HTTPClient
 }
 
-// NewGobusterDir creates a new initialized GobusterDir
-func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*GobusterDir, error) {
+// New creates a new initialized GobusterDir
+func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.Logger) (*GobusterDir, error) {
 	if globalopts == nil {
-		return nil, fmt.Errorf("please provide valid global options")
+		return nil, errors.New("please provide valid global options")
 	}
 
 	if opts == nil {
-		return nil, fmt.Errorf("please provide valid plugin options")
+		return nil, errors.New("please provide valid plugin options")
 	}
 
 	g := GobusterDir{
@@ -56,13 +66,15 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		TLSRenegotiation: opts.TLSRenegotiation,
+		LocalAddr:        opts.LocalAddr,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -76,7 +88,7 @@ func NewGobusterDir(globalopts *libgobuster.Options, opts *OptionsDir) (*Gobuste
 		Method:                opts.Method,
 	}
 
-	h, err := libgobuster.NewHTTPClient(&httpOpts)
+	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -91,25 +103,42 @@ func (d *GobusterDir) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress) error {
+func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
 	// add trailing slash
-	if !strings.HasSuffix(d.options.URL, "/") {
-		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
+	if !strings.HasSuffix(d.options.URL.Path, "/") {
+		d.options.URL.Path = fmt.Sprintf("%s/", d.options.URL.Path)
 	}
 
-	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, _, err := d.http.Request(ctx, *d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
+		}
 		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 	}
 
 	guid := uuid.New()
-	url := fmt.Sprintf("%s%s", d.options.URL, guid)
+	url := *d.options.URL
+	url.Path = fmt.Sprintf("%s%s", url.Path, guid)
 	if d.options.UseSlash {
-		url = fmt.Sprintf("%s/", url)
+		url.Path = fmt.Sprintf("%s/", url.Path)
 	}
 
-	wildcardResp, wildcardLength, _, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
+		switch {
+		case errors.Is(err, io.EOF):
+			return libgobuster.ErrEOF
+		case os.IsTimeout(err):
+			return libgobuster.ErrTimeout
+		case errors.Is(err, syscall.ECONNREFUSED):
+			return libgobuster.ErrConnectionRefused
+		}
 		return err
 	}
 
@@ -118,74 +147,81 @@ func (d *GobusterDir) PreRun(ctx context.Context, progress *libgobuster.Progress
 		return nil
 	}
 
-	if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+	switch {
+	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
-	} else if d.options.StatusCodesParsed.Length() > 0 {
+	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
-			return &ErrWildcard{url: url, statusCode: wildcardResp, length: wildcardLength}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
-	} else {
-		return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+	default:
+		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 	}
 
 	return nil
 }
 
-func getBackupFilenames(word string) []string {
-	ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
-	i := 0
-	for _, b := range backupExtensions {
-		ret[i] = fmt.Sprintf("%s%s", word, b)
-		i++
-	}
-	for _, b := range backupDotExtensions {
-		ret[i] = fmt.Sprintf(".%s%s", word, b)
-		i++
+func (d *GobusterDir) AdditionalSuccessWords(word string) []string {
+	if d.options.DiscoverBackup {
+		ret := make([]string, len(backupExtensions)+len(backupDotExtensions))
+		i := 0
+		for _, b := range backupExtensions {
+			ret[i] = fmt.Sprintf("%s%s", word, b)
+			i++
+		}
+		for _, b := range backupDotExtensions {
+			ret[i] = fmt.Sprintf(".%s%s", word, b)
+			i++
+		}
+
+		return ret
 	}
 
-	return ret
+	return []string{}
+}
+
+func (d *GobusterDir) AdditionalWordsLen() int {
+	return len(d.options.ExtensionsParsed.Set)
 }
 
 func (d *GobusterDir) AdditionalWords(word string) []string {
-	var words []string
+	words := make([]string, 0, d.AdditionalWordsLen())
 	// build list of urls to check
 	//   1: No extension
 	//   2: With extension
-	//   3: backupextension
-	if d.options.DiscoverBackup {
-		words = append(words, getBackupFilenames(word)...)
-	}
 	for ext := range d.options.ExtensionsParsed.Set {
 		filename := fmt.Sprintf("%s.%s", word, ext)
 		words = append(words, filename)
-		if d.options.DiscoverBackup {
-			words = append(words, getBackupFilenames(filename)...)
-		}
 	}
 	return words
 }
 
 // ProcessWord is the process implementation of gobusterdir
-func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
+func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	suffix := ""
 	if d.options.UseSlash {
 		suffix = "/"
 	}
 	entity := fmt.Sprintf("%s%s", word, suffix)
 
-	// make sure the url ends with a slash
-	if !strings.HasSuffix(d.options.URL, "/") {
-		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
-	}
 	// prevent double slashes by removing leading /
 	if strings.HasPrefix(entity, "/") {
 		// get size of first rune and trim it
 		_, i := utf8.DecodeRuneInString(entity)
 		entity = entity[i:]
 	}
-	url := fmt.Sprintf("%s%s", d.options.URL, entity)
+	url := *d.options.URL
+	url.Path = fmt.Sprintf("%s%s", url.Path, entity)
+
+	// add some debug output
+	if d.globalopts.Debug {
+		progress.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelDebug,
+			Message: fmt.Sprintf("trying %s", entity),
+		}
+	}
 
 	tries := 1
 	if d.options.RetryOnTimeout && d.options.RetryAttempts > 0 {
@@ -202,16 +238,24 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && i != tries {
+			if os.IsTimeout(err) && i != tries {
 				continue
 			} else if strings.Contains(err.Error(), "invalid control character in URL") {
-				// put error in error chan so it's printed out and ignore it
+				// put error in error chan, so it's printed out and ignore it
 				// so gobuster will not quit
 				progress.ErrorChan <- err
 				continue
-			} else {
-				return err
 			}
+
+			switch {
+			case errors.Is(err, io.EOF):
+				return nil, libgobuster.ErrEOF
+			case os.IsTimeout(err):
+				return nil, libgobuster.ErrTimeout
+			case errors.Is(err, syscall.ECONNREFUSED):
+				return nil, libgobuster.ErrConnectionRefused
+			}
+			return nil, err
 		}
 		break
 	}
@@ -219,35 +263,43 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	if statusCode != 0 {
 		resultStatus := false
 
-		if d.options.StatusCodesBlacklistParsed.Length() > 0 {
+		switch {
+		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
 				resultStatus = true
 			}
-		} else if d.options.StatusCodesParsed.Length() > 0 {
+		case d.options.StatusCodesParsed.Length() > 0:
 			if d.options.StatusCodesParsed.Contains(statusCode) {
 				resultStatus = true
 			}
-		} else {
-			return fmt.Errorf("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
+		default:
+			return nil, errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
-		if (resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size))) || d.globalopts.Verbose {
-			progress.ResultChan <- Result{
-				URL:        d.options.URL,
-				Path:       entity,
-				Verbose:    d.globalopts.Verbose,
-				Expanded:   d.options.Expanded,
-				NoStatus:   d.options.NoStatus,
-				HideLength: d.options.HideLength,
-				Found:      resultStatus,
-				Header:     header,
-				StatusCode: statusCode,
-				Size:       size,
+		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
+			path := "/"
+			if d.options.Expanded {
+				path = url.Path
 			}
+			path = fmt.Sprintf("%s%-20s", path, entity)
+
+			r := Result{
+				Path:       path,
+				Header:     header,
+				StatusCode: -1,
+				Size:       -1,
+			}
+			if !d.options.NoStatus {
+				r.StatusCode = statusCode
+			}
+			if !d.options.HideLength {
+				r.Size = size
+			}
+			return r, nil
 		}
 	}
 
-	return nil
+	return nil, nil // nolint:nilnil
 }
 
 // GetConfigString returns the string representation of the current config
@@ -322,6 +374,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	}
 
+	if o.LocalAddr != nil {
+		if _, err := fmt.Fprintf(tw, "[+] Local IP:\t%s\n", o.LocalAddr); err != nil {
+			return "", err
+		}
+	}
+
 	if o.HideLength {
 		if _, err := fmt.Fprintf(tw, "[+] Show length:\tfalse\n"); err != nil {
 			return "", err
@@ -366,12 +424,6 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
-			return "", err
-		}
-	}
-
-	if d.globalopts.Verbose {
-		if _, err := fmt.Fprintf(tw, "[+] Verbose:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

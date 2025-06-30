@@ -14,8 +14,8 @@ type OptionsFuzz struct {
 	RequestBody               string
 }
 
-// NewOptionsFuzz returns a new initialized OptionsFuzz
-func NewOptionsFuzz() *OptionsFuzz {
+// NewOptions returns a new initialized OptionsFuzz
+func NewOptions() *OptionsFuzz {
 	return &OptionsFuzz{
 		ExcludedStatusCodesParsed: libgobuster.NewSet[int](),
 		ExcludeLengthParsed:       libgobuster.NewSet[int](),

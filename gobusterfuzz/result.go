@@ -2,46 +2,40 @@ package gobusterfuzz
 
 import (
 	"bytes"
+	"fmt"
+	"net/http"
 
 	"github.com/fatih/color"
 )
 
 var (
-	yellow = color.New(color.FgYellow).FprintfFunc()
-	green  = color.New(color.FgGreen).FprintfFunc()
+	green = color.New(color.FgGreen).FprintfFunc()
+	blue  = color.New(color.FgBlue).FprintfFunc()
 )
 
 // Result represents a single result
 type Result struct {
 	Word       string
-	Verbose    bool
-	Found      bool
 	Path       string
 	StatusCode int
 	Size       int64
+	Header     http.Header
 }
 
-// ResultToString converts the Result to it's textual representation
+// ResultToString converts the Result to its textual representation
 func (r Result) ResultToString() (string, error) {
 	buf := &bytes.Buffer{}
 
-	c := green
+	green(buf, "[Status=%d] [Length=%d] [Word=%s] %s", r.StatusCode, r.Size, r.Word, r.Path)
 
-	// Prefix if we're in verbose mode
-	if r.Verbose {
-		if r.Found {
-			c(buf, "Found: ")
-		} else {
-			c = yellow
-			c(buf, "Missed: ")
-		}
-	} else if r.Found {
-		c(buf, "Found: ")
+	location := r.Header.Get("Location")
+	if location != "" {
+		blue(buf, " [--> %s]", location)
 	}
 
-	c(buf, "[Status=%d] [Length=%d] [Word=%s] %s", r.StatusCode, r.Size, r.Word, r.Path)
-	c(buf, "\n")
-
+	if _, err := fmt.Fprintf(buf, "\n"); err != nil {
+		return "", err
+	}
 	s := buf.String()
 	return s, nil
 }

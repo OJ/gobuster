@@ -10,12 +10,15 @@ type OptionsVhost struct {
 	AppendDomain        bool
 	ExcludeLength       string
 	ExcludeLengthParsed libgobuster.Set[int]
+	ExcludeStatus       string
+	ExcludeStatusParsed libgobuster.Set[int]
 	Domain              string
 }
 
-// NewOptionsVhost returns a new initialized OptionsVhost
-func NewOptionsVhost() *OptionsVhost {
+// NewOptions returns a new initialized OptionsVhost
+func NewOptions() *OptionsVhost {
 	return &OptionsVhost{
 		ExcludeLengthParsed: libgobuster.NewSet[int](),
+		ExcludeStatusParsed: libgobuster.NewSet[int](),
 	}
 }

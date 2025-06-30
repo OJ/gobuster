@@ -2,7 +2,7 @@
 
 Gobuster is a tool used to brute-force:
 
-- URIs (directories and files) in web sites.
+- URIs (directories and files) in websites.
 - DNS subdomains (with wildcard support).
 - Virtual Host names on target web servers.
 - Open Amazon S3 buckets
@@ -11,8 +11,7 @@ Gobuster is a tool used to brute-force:
 
 ## Tags, Statuses, etc
 
-[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
-
+[![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
 ## Love this tool? Back it!
 
@@ -23,6 +22,32 @@ If you're backing us already, you rock. If you're not, that's cool too! Want to 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
 
 # Changes
+
+## 3.7
+
+- use new cli library
+- a lot more short options due to the new cli library
+- more user friendly error messages
+- clean up DNS mode
+- renamed `show-cname` to `check-cname` in dns mode
+- got rid of `verbose` flag and introduced `debug` instead
+- the version command now also shows some build variables for more info
+- switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
+- comments in wordlists (strings starting with #) are no longer ignored
+- warn in vhost mode if the --append-domain switch might have been forgotten
+- allow to exclude status code and length in vhost mode
+- added automaxprocs for use in docker with cpu limits
+- log http requests with debug enabled
+- allow fuzzing of Host header in fuzz mode
+- automatically disable progress output when output is redirected
+- fix extra special characters when run with `--no-progress`
+- warn when using vhost mode with a proxy and http based urls as this might not work as expected
+- add `interface` and `local-ip` parameters to specify the outgoing interface for http requests
+- add support for tls renegotiation
+- fix progress with patterns by @acammack
+- fix backup discovery by @acammack
+- support tcp protocol on dns servers
+- add support for URL query parameters
 
 ## 3.6
 
@@ -106,17 +131,29 @@ docker pull ghcr.io/oj/gobuster:latest
 
 ### Using `go install`
 
-If you have a [Go](https://golang.org/) environment ready to go (at least go 1.19), it's as easy as:
+If you have a [Go](https://golang.org/) environment ready to go (at least go 1.23), it's as easy as:
 
 ```bash
 go install github.com/OJ/gobuster/v3@latest
 ```
 
-PS: You need at least go 1.19 to compile gobuster.
+PS: You need at least go 1.23 to compile gobuster.
+
+#### Complete manual install steps
+
+- Remove possible golang packages from your package distribution (eg `apt remove golang`)
+- Download the latest golang source from [https://go.dev/dl](https://go.dev/dl)
+- Install according to [https://go.dev/doc/install](https://go.dev/doc/install) (don't forget to add it to your PATH)
+- Set your GOPATH environment variable `export GOPATH=$HOME/go`
+- Add `$HOME/go/bin` to your PATH variable (`go install` will install to this location)
+- Make sure all environment variables are persisted across your terminals and survive a reboot
+- Verify `go version` shows the downloaded version and works
+- `go install github.com/OJ/gobuster/v3@latest`
+- verify you can run `gobuster`
 
 ### Building From Source
 
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.19 to compile gobuster.
+Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options. You need at least go 1.23 to compile gobuster.
 
 ### Compiling
 
@@ -144,35 +181,36 @@ Help is built-in!
 ### Options
 
 ```text
-Uses DNS subdomain enumeration mode
+NAME:
+   gobuster dns - Uses DNS subdomain enumeration mode
 
-Usage:
-  gobuster dns [flags]
+USAGE:
+   gobuster dns [command options]
 
-Flags:
-  -d, --domain string      The target domain
-  -h, --help               help for dns
-  -r, --resolver string    Use custom DNS server (format server.com or server.com:port)
-  -c, --show-cname         Show CNAME records (cannot be used with '-i' option)
-  -i, --show-ips           Show IP addresses
-      --timeout duration   DNS resolver timeout (default 1s)
-      --wildcard           Force continued operation when wildcard found
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --domain value, --do value            The target domain
+   --check-cname, -c                     Also check CNAME records (default: false)
+   --timeout value, --to value           DNS resolver timeout (default: 1s)
+   --wildcard, --wc                      Force continued operation when wildcard found (default: false)
+   --no-fqdn, --nf                       Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain (default: false)
+   --resolver value                      Use custom DNS server (format server.com or server.com:port)
+   --protocol value                      Use either 'udp' or 'tcp' as protocol on the custom resolver (default: "udp")
+   --wordlist value, -w value            Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value               Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value             Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value   Resume from a given position in the wordlist (default: 0)
+   --output value, -o value              Output file to write results to (defaults to stdout)
+   --quiet, -q                           Don't print the banner and other noise (default: false)
+   --no-progress, --np                   Don't display progress (default: false)
+   --no-error, --ne                      Don't display errors (default: false)
+   --pattern value, -p value             File containing replacement patterns
+   --discover-pattern value, --pd value  File containing replacement patterns applied to successful guesses
+   --no-color, --nc                      Disable color output (default: false)
+   --debug                               enable debug output (default: false)
+   --help, -h                            show help
 ```
 
 ### Examples
-
 
 ```text
 gobuster dns -d mysite.com -t 50 -w common-names.txt
@@ -181,148 +219,38 @@ gobuster dns -d mysite.com -t 50 -w common-names.txt
 Normal sample run goes like this:
 
 ```text
-gobuster dns -d google.com -w ~/wordlists/subdomains.txt
-
+gobuster dns --do google.com -w ~/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
 ===============================================================
-Gobuster v3.2.0
+Gobuster v3.7
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : google.com
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
+[+] Domain:     google.com
+[+] Threads:    10
+[+] Timeout:    1s
+[+] Wordlist:   /home/firefart/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
 ===============================================================
-2019/06/21 11:54:20 Starting gobuster
+Starting gobuster in DNS enumeration mode
 ===============================================================
-Found: chrome.google.com
-Found: ns1.google.com
-Found: admin.google.com
-Found: www.google.com
-Found: m.google.com
-Found: support.google.com
-Found: translate.google.com
-Found: cse.google.com
-Found: news.google.com
-Found: music.google.com
-Found: mail.google.com
-Found: store.google.com
-Found: mobile.google.com
-Found: search.google.com
-Found: wap.google.com
-Found: directory.google.com
-Found: local.google.com
-Found: blog.google.com
+mail.google.com 172.217.20.5,2a00:1450:400d:80a::2005
+www.google.com 142.250.180.196,2a00:1450:400d:804::2004
+smtp.google.com 74.125.143.27,173.194.69.27,74.125.143.26,173.194.69.26,74.125.128.27,2a00:1450:4013:c08::1b,2a00:1450:4013:c08::1a,2a00:1450:4013:c1a::1a,2a00:1450:4013:c07::1a
+ns1.google.com 216.239.32.10,2001:4860:4802:32::a
+ns2.google.com 216.239.34.10,2001:4860:4802:34::a
+ns.google.com 216.239.32.10
+ns3.google.com 216.239.36.10,2001:4860:4802:36::a
+[...]
+www.research.google.com 172.217.20.14,2a00:1450:400d:807::200e
+ns62.google.com 2001:4860:4802:34::a
+www.image.google.com 142.250.201.206,2a00:1450:400d:806::200e
+opt.google.com 172.217.20.14,2a00:1450:400d:807::200e
+www.plus.google.com 142.251.39.46,2a00:1450:400d:80d::200e
+mts.google.com 142.251.208.142,2a00:1450:400d:80a::200e
+workspace.google.com 142.250.180.238,2a00:1450:400d:807::200e
+notebook.google.com 142.251.39.46
+chrome.google.com 172.217.20.14,2a00:1450:400d:807::200e
+Progress: 4989 / 4989 (100.00%)
 ===============================================================
-2019/06/21 11:54:20 Finished
-===============================================================
-```
-
-Show IP sample run goes like this:
-
-```text
-gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : google.com
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 11:54:54 Starting gobuster
-===============================================================
-Found: www.google.com [172.217.25.36, 2404:6800:4006:802::2004]
-Found: admin.google.com [172.217.25.46, 2404:6800:4006:806::200e]
-Found: store.google.com [172.217.167.78, 2404:6800:4006:802::200e]
-Found: mobile.google.com [172.217.25.43, 2404:6800:4006:802::200b]
-Found: ns1.google.com [216.239.32.10, 2001:4860:4802:32::a]
-Found: m.google.com [172.217.25.43, 2404:6800:4006:802::200b]
-Found: cse.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
-Found: chrome.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: search.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: local.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
-Found: news.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: blog.google.com [216.58.199.73, 2404:6800:4006:806::2009]
-Found: support.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: wap.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: directory.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: translate.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: music.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: mail.google.com [172.217.25.37, 2404:6800:4006:802::2005]
-===============================================================
-2019/06/21 11:54:55 Finished
-===============================================================
-```
-
-Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
-
-```text
-gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : yp.to
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 11:56:43 Starting gobuster
-===============================================================
-2019/06/21 11:56:53 [-] Unable to validate base domain: yp.to
-Found: cr.yp.to [131.193.32.108, 131.193.32.109]
-===============================================================
-2019/06/21 11:56:53 Finished
-===============================================================
-```
-
-Wildcard DNS is also detected properly:
-
-```text
-gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : 0.0.1.xip.io
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 12:13:48 Starting gobuster
-===============================================================
-2019/06/21 12:13:48 [-] Wildcard DNS found. IP address(es): 1.0.0.0
-2019/06/21 12:13:48 [!] To force processing of Wildcard DNS, specify the '--wildcard' switch.
-===============================================================
-2019/06/21 12:13:48 Finished
-===============================================================
-```
-
-If the user wants to force processing of a domain that has wildcard entries, use `--wildcard`:
-
-```text
-gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : 0.0.1.xip.io
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 12:13:51 Starting gobuster
-===============================================================
-2019/06/21 12:13:51 [-] Wildcard DNS found. IP address(es): 1.0.0.0
-Found: 127.0.0.1.xip.io
-Found: test.127.0.0.1.xip.io
-===============================================================
-2019/06/21 12:13:53 Finished
+Finished
 ===============================================================
 ```
 
@@ -331,48 +259,58 @@ Found: test.127.0.0.1.xip.io
 ### Options
 
 ```text
-Uses directory/file enumeration mode
+NAME:
+   gobuster dir - Uses directory/file enumeration mode
 
-Usage:
-  gobuster dir [flags]
+USAGE:
+   gobuster dir [command options]
 
-Flags:
-  -f, --add-slash                       Append / to each request
-  -c, --cookies string                  Cookies to use for the requests
-  -d, --discover-backup                 Also search for backup files by appending multiple backup extensions
-      --exclude-length ints             exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -e, --expanded                        Expanded mode, print full URLs
-  -x, --extensions string               File extension(s) to search for
-  -r, --follow-redirect                 Follow redirects
-  -H, --headers stringArray             Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                            help for dir
-      --hide-length                     Hide the length of the body in the output
-  -m, --method string                   Use the following HTTP method (default "GET")
-  -n, --no-status                       Don't print status codes
-  -k, --no-tls-validation               Skip TLS certificate verification
-  -P, --password string                 Password for Basic Auth
-      --proxy string                    Proxy to use for requests [http(s)://host:port]
-      --random-agent                    Use a random User-Agent string
-      --retry                           Should retry on request timeout
-      --retry-attempts int              Times to retry on request timeout (default 3)
-  -s, --status-codes string             Positive status codes (will be overwritten with status-codes-blacklist if set)
-  -b, --status-codes-blacklist string   Negative status codes (will override status-codes if set) (default "404")
-      --timeout duration                HTTP Timeout (default 10s)
-  -u, --url string                      The target URL
-  -a, --useragent string                Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string                 Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --status-codes value, -s value                           Positive status codes (will be overwritten with status-codes-blacklist if set). Can also handle ranges like 200,300-400,404
+   --status-codes-blacklist value, -b value                 Negative status codes (will override status-codes if set). Can also handle ranges like 200,300-400,404. (default: "404")
+   --extensions value, -x value                             File extension(s) to search for
+   --extensions-file value, -X value                        Read file extension(s) to search from the file
+   --expanded, -e                                           Expanded mode, print full URLs (default: false)
+   --no-status, -n                                          Don't print status codes (default: false)
+   --hide-length, --hl                                      Hide the length of the body in the output (default: false)
+   --add-slash, -f                                          Append / to each request (default: false)
+   --discover-backup, --db                                  Upon finding a file search for backup files by appending multiple backup extensions (default: false)
+   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --help, -h                                               show help
 ```
 
 ### Examples
@@ -513,46 +451,56 @@ https://buffered.io/categories
 ### Options
 
 ```text
-Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
+NAME:
+   gobuster vhost - Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
 
-Usage:
-  gobuster vhost [flags]
+USAGE:
+   gobuster vhost [command options]
 
-Flags:
-      --append-domain         Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.
-  -c, --cookies string        Cookies to use for the requests
-      --domain string         the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
-      --exclude-length ints   exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -r, --follow-redirect       Follow redirects
-  -H, --headers stringArray   Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                  help for vhost
-  -m, --method string         Use the following HTTP method (default "GET")
-  -k, --no-tls-validation     Skip TLS certificate verification
-  -P, --password string       Password for Basic Auth
-      --proxy string          Proxy to use for requests [http(s)://host:port]
-      --random-agent          Use a random User-Agent string
-      --retry                 Should retry on request timeout
-      --retry-attempts int    Times to retry on request timeout (default 3)
-      --timeout duration      HTTP Timeout (default 10s)
-  -u, --url string            The target URL
-  -a, --useragent string      Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string       Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --append-domain, --ad                                    Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist. (default: false)
+   --exclude-length value, --xl value                       exclude the following content lengths. You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --exclude-status value, --xs value                       exclude the following status codes. Can also handle ranges like 200,300-400,404.
+   --domain value, --do value                               the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
+   --force                                                  Force execution even when result is not guaranteed. (default: false)
+   --help, -h                                               show help
 ```
 
 ### Examples
-
 
 ```text
 gobuster vhost -u https://mysite.com -w common-vhosts.txt
@@ -588,41 +536,51 @@ Found: mail.mysite.com
 ### Options
 
 ```text
-Uses fuzzing mode
+NAME:
+   gobuster fuzz - Uses fuzzing mode. Replaces the keyword FUZZ in the URL, Headers and the request body
 
-Usage:
-  gobuster fuzz [flags]
+USAGE:
+   gobuster fuzz [command options]
 
-Flags:
-  -c, --cookies string              Cookies to use for the requests
-      --exclude-length ints         exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
-  -b, --excludestatuscodes string   Negative status codes (will override statuscodes if set)
-  -r, --follow-redirect             Follow redirects
-  -H, --headers stringArray         Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
-  -h, --help                        help for fuzz
-  -m, --method string               Use the following HTTP method (default "GET")
-  -k, --no-tls-validation           Skip TLS certificate verification
-  -P, --password string             Password for Basic Auth
-      --proxy string                Proxy to use for requests [http(s)://host:port]
-      --random-agent                Use a random User-Agent string
-      --retry                       Should retry on request timeout
-      --retry-attempts int          Times to retry on request timeout (default 3)
-      --timeout duration            HTTP Timeout (default 10s)
-  -u, --url string                  The target URL
-  -a, --useragent string            Set the User-Agent string (default "gobuster/3.2.0")
-  -U, --username string             Username for Basic Auth
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --url value, -u value                                    The target URL
+   --cookies value, -c value                                Cookies to use for the requests
+   --username value, -U value                               Username for Basic Auth
+   --password value, -P value                               Password for Basic Auth
+   --follow-redirect, -r                                    Follow redirects (default: false)
+   --headers value, -H value [ --headers value, -H value ]  Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'
+   --no-canonicalize-headers, --nch                         Do not canonicalize HTTP header names. If set header names are sent as is (default: false)
+   --method value, -m value                                 the password to the p12 file (default: "GET")
+   --useragent value, -a value                              Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                                    Use a random User-Agent string (default: false)
+   --proxy value                                            Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                              HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                                  Skip TLS certificate verification (default: false)
+   --retry                                                  Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                       Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value                     public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
+   --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                                Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value                      Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                                 Output file to write results to (defaults to stdout)
+   --quiet, -q                                              Don't print the banner and other noise (default: false)
+   --no-progress, --np                                      Don't display progress (default: false)
+   --no-error, --ne                                         Don't display errors (default: false)
+   --pattern value, -p value                                File containing replacement patterns
+   --discover-pattern value, --pd value                     File containing replacement patterns applied to successful guesses
+   --no-color, --nc                                         Disable color output (default: false)
+   --debug                                                  enable debug output (default: false)
+   --exclude-statuscodes value, -b value                    Excluded status codes. Can also handle ranges like 200,300-400,404.
+   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --body value, -B value                                   Request body
+   --help, -h                                               show help
 ```
 
 ### Examples
@@ -636,33 +594,42 @@ gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
 ### Options
 
 ```text
-Uses aws bucket enumeration mode
+NAME:
+   gobuster s3 - Uses aws bucket enumeration mode
 
-Usage:
-  gobuster s3 [flags]
+USAGE:
+   gobuster s3 [command options]
 
-Flags:
-  -h, --help                 help for s3
-  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
-  -k, --no-tls-validation    Skip TLS certificate verification
-      --proxy string         Proxy to use for requests [http(s)://host:port]
-      --random-agent         Use a random User-Agent string
-      --retry                Should retry on request timeout
-      --retry-attempts int   Times to retry on request timeout (default 3)
-      --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --max-files value, -m value                       max files to list when listing buckets (default: 5)
+   --show-files, -s                                  show files from found buckets (default: true)
+   --wordlist value, -w value                        Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                           Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                         Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value               Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                          Output file to write results to (defaults to stdout)
+   --quiet, -q                                       Don't print the banner and other noise (default: false)
+   --no-progress, --np                               Don't display progress (default: false)
+   --no-error, --ne                                  Don't display errors (default: false)
+   --pattern value, -p value                         File containing replacement patterns
+   --discover-pattern value, --pd value              File containing replacement patterns applied to successful guesses
+   --no-color, --nc                                  Disable color output (default: false)
+   --debug                                           enable debug output (default: false)
+   --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                             Use a random User-Agent string (default: false)
+   --proxy value                                     Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                       HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                           Skip TLS certificate verification (default: false)
+   --retry                                           Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value              public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --tls-renegotiation                               Enable TLS renegotiation (default: false)
+   --interface value, --iface value                  specify network interface to use. Can't be used with local-ip
+   --local-ip value                                  specify local ip of network interface to use. Can't be used with interface
+   --help, -h                                        show help
 ```
 
 ### Examples
@@ -676,33 +643,42 @@ gobuster s3 -w bucket-names.txt
 ### Options
 
 ```text
-Uses gcs bucket enumeration mode
+NAME:
+   gobuster gcs - Uses gcs bucket enumeration mode
 
-Usage:
-  gobuster gcs [flags]
+USAGE:
+   gobuster gcs [command options]
 
-Flags:
-  -h, --help                 help for gcs
-  -m, --maxfiles int         max files to list when listing buckets (only shown in verbose mode) (default 5)
-  -k, --no-tls-validation    Skip TLS certificate verification
-      --proxy string         Proxy to use for requests [http(s)://host:port]
-      --random-agent         Use a random User-Agent string
-      --retry                Should retry on request timeout
-      --retry-attempts int   Times to retry on request timeout (default 3)
-      --timeout duration     HTTP Timeout (default 10s)
-  -a, --useragent string     Set the User-Agent string (default "gobuster/3.2.0")
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --max-files value, -m value                       max files to list when listing buckets (default: 5)
+   --show-files, -s                                  show files from found buckets (default: true)
+   --wordlist value, -w value                        Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value                           Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value                         Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value               Resume from a given position in the wordlist (default: 0)
+   --output value, -o value                          Output file to write results to (defaults to stdout)
+   --quiet, -q                                       Don't print the banner and other noise (default: false)
+   --no-progress, --np                               Don't display progress (default: false)
+   --no-error, --ne                                  Don't display errors (default: false)
+   --pattern value, -p value                         File containing replacement patterns
+   --discover-pattern value, --pd value              File containing replacement patterns applied to successful guesses
+   --no-color, --nc                                  Disable color output (default: false)
+   --debug                                           enable debug output (default: false)
+   --useragent value, -a value                       Set the User-Agent string (default: "gobuster/3.7")
+   --random-agent, --rua                             Use a random User-Agent string (default: false)
+   --proxy value                                     Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
+   --timeout value, --to value                       HTTP Timeout (default: 10s)
+   --no-tls-validation, -k                           Skip TLS certificate verification (default: false)
+   --retry                                           Should retry on request timeout (default: false)
+   --retry-attempts value, --ra value                Times to retry on request timeout (default: 3)
+   --client-cert-pem value, --ccp value              public key in PEM format for optional TLS client certificates]
+   --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
+   --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
+   --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --tls-renegotiation                               Enable TLS renegotiation (default: false)
+   --interface value, --iface value                  specify network interface to use. Can't be used with local-ip
+   --local-ip value                                  specify local ip of network interface to use. Can't be used with interface
+   --help, -h                                        show help
 ```
 
 ### Examples
@@ -716,27 +692,28 @@ gobuster gcs -w bucket-names.txt
 ### Options
 
 ```text
-Uses TFTP enumeration mode
+NAME:
+   gobuster tftp - Uses TFTP enumeration mode
 
-Usage:
-  gobuster tftp [flags]
+USAGE:
+   gobuster tftp [command options]
 
-Flags:
-  -h, --help               help for tftp
-  -s, --server string      The target TFTP server
-      --timeout duration   TFTP timeout (default 1s)
-
-Global Flags:
-      --delay duration    Time each thread waits between requests (e.g. 1500ms)
-      --no-color          Disable color output
-      --no-error          Don't display errors
-  -z, --no-progress       Don't display progress
-  -o, --output string     Output file to write results to (defaults to stdout)
-  -p, --pattern string    File containing replacement patterns
-  -q, --quiet             Don't print the banner and other noise
-  -t, --threads int       Number of concurrent threads (default 10)
-  -v, --verbose           Verbose output (errors)
-  -w, --wordlist string   Path to the wordlist
+OPTIONS:
+   --server value, -s value              The target TFTP server
+   --timeout value, --to value           TFTP timeout (default: 1s)
+   --wordlist value, -w value            Path to the wordlist. Set to - to use STDIN.
+   --delay value, -d value               Time each thread waits between requests (e.g. 1500ms) (default: 0s)
+   --threads value, -t value             Number of concurrent threads (default: 10)
+   --wordlist-offset value, --wo value   Resume from a given position in the wordlist (default: 0)
+   --output value, -o value              Output file to write results to (defaults to stdout)
+   --quiet, -q                           Don't print the banner and other noise (default: false)
+   --no-progress, --np                   Don't display progress (default: false)
+   --no-error, --ne                      Don't display errors (default: false)
+   --pattern value, -p value             File containing replacement patterns
+   --discover-pattern value, --pd value  File containing replacement patterns applied to successful guesses
+   --no-color, --nc                      Disable color output (default: false)
+   --debug                               enable debug output (default: false)
+   --help, -h                            show help
 ```
 
 ### Examples
@@ -744,7 +721,6 @@ Global Flags:
 ```text
 gobuster tftp -s tftp.example.com -w common-filenames.txt
 ```
-
 
 ## Wordlists via STDIN
 
@@ -761,6 +737,7 @@ Note: If the `-w` option is specified at the same time as piping from STDIN, an 
 You can supply pattern files that will be applied to every word from the wordlist.
 Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
 This feature is also handy in s3 mode to pre- or postfix certain patterns.
+When supplying patterns, words from the wordlist will not be tried by themselves. If you wish to have patterns and plain words from the wordlist, place `{GOBUSTER}` on a line by itself in the pattern file.
 
 **Caution:** Using a big pattern file can cause a lot of request as every pattern is applied to every word in the wordlist.
 

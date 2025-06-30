@@ -162,13 +162,10 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 }
 
 func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts RequestOptions) (*http.Response, error) {
-	req, err := http.NewRequest(client.method, fullURL, opts.Body)
+	req, err := http.NewRequestWithContext(ctx, client.method, fullURL, opts.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	// add the context so we can easily cancel out
-	req = req.WithContext(ctx)
 
 	if client.cookies != "" {
 		req.Header.Set("Cookie", client.cookies)

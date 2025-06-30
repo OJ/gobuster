@@ -56,8 +56,8 @@ func run(c *cli.Context) error {
 		return errors.New("protocol must be either 'udp' or 'tcp'")
 	}
 
-	if pluginOpts.Protocol != "" && pluginOpts.Resolver == "" {
-		return errors.New("protocol can only be set if a custom resolver is set")
+	if pluginOpts.Protocol != "udp" && pluginOpts.Resolver == "" {
+		return errors.New("custom protocol can only be set if a custom resolver is set")
 	}
 
 	globalOpts, err := internalcli.ParseGlobalOptions(c)

@@ -184,16 +184,16 @@ NAME:
    gobuster dns - Uses DNS subdomain enumeration mode
 
 USAGE:
-   gobuster dns [command options] [arguments...]
+   gobuster dns [command options]
 
 OPTIONS:
    --domain value, --do value            The target domain
-   --show-ips, -i                        Show IP addresses of found domains (default: false)
    --check-cname, -c                     Also check CNAME records (default: false)
    --timeout value, --to value           DNS resolver timeout (default: 1s)
    --wildcard, --wc                      Force continued operation when wildcard found (default: false)
    --no-fqdn, --nf                       Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain (default: false)
    --resolver value                      Use custom DNS server (format server.com or server.com:port)
+   --protocol value                      Use either 'udp' or 'tcp' as protocol on the custom resolver (default: "udp")
    --wordlist value, -w value            Path to the wordlist. Set to - to use STDIN.
    --delay value, -d value               Time each thread waits between requests (e.g. 1500ms) (default: 0s)
    --threads value, -t value             Number of concurrent threads (default: 10)
@@ -218,148 +218,38 @@ gobuster dns -d mysite.com -t 50 -w common-names.txt
 Normal sample run goes like this:
 
 ```text
-gobuster dns -d google.com -w ~/wordlists/subdomains.txt
-
+gobuster dns --do google.com -w ~/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
 ===============================================================
-Gobuster v3.2.0
+Gobuster v3.7
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : google.com
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
+[+] Domain:     google.com
+[+] Threads:    10
+[+] Timeout:    1s
+[+] Wordlist:   /home/firefart/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
 ===============================================================
-2019/06/21 11:54:20 Starting gobuster
+Starting gobuster in DNS enumeration mode
 ===============================================================
-Found: chrome.google.com
-Found: ns1.google.com
-Found: admin.google.com
-Found: www.google.com
-Found: m.google.com
-Found: support.google.com
-Found: translate.google.com
-Found: cse.google.com
-Found: news.google.com
-Found: music.google.com
-Found: mail.google.com
-Found: store.google.com
-Found: mobile.google.com
-Found: search.google.com
-Found: wap.google.com
-Found: directory.google.com
-Found: local.google.com
-Found: blog.google.com
+mail.google.com 172.217.20.5,2a00:1450:400d:80a::2005
+www.google.com 142.250.180.196,2a00:1450:400d:804::2004
+smtp.google.com 74.125.143.27,173.194.69.27,74.125.143.26,173.194.69.26,74.125.128.27,2a00:1450:4013:c08::1b,2a00:1450:4013:c08::1a,2a00:1450:4013:c1a::1a,2a00:1450:4013:c07::1a
+ns1.google.com 216.239.32.10,2001:4860:4802:32::a
+ns2.google.com 216.239.34.10,2001:4860:4802:34::a
+ns.google.com 216.239.32.10
+ns3.google.com 216.239.36.10,2001:4860:4802:36::a
+[...]
+www.research.google.com 172.217.20.14,2a00:1450:400d:807::200e
+ns62.google.com 2001:4860:4802:34::a
+www.image.google.com 142.250.201.206,2a00:1450:400d:806::200e
+opt.google.com 172.217.20.14,2a00:1450:400d:807::200e
+www.plus.google.com 142.251.39.46,2a00:1450:400d:80d::200e
+mts.google.com 142.251.208.142,2a00:1450:400d:80a::200e
+workspace.google.com 142.250.180.238,2a00:1450:400d:807::200e
+notebook.google.com 142.251.39.46
+chrome.google.com 172.217.20.14,2a00:1450:400d:807::200e
+Progress: 4989 / 4989 (100.00%)
 ===============================================================
-2019/06/21 11:54:20 Finished
-===============================================================
-```
-
-Show IP sample run goes like this:
-
-```text
-gobuster dns -d google.com -w ~/wordlists/subdomains.txt -i
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : google.com
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 11:54:54 Starting gobuster
-===============================================================
-Found: www.google.com [172.217.25.36, 2404:6800:4006:802::2004]
-Found: admin.google.com [172.217.25.46, 2404:6800:4006:806::200e]
-Found: store.google.com [172.217.167.78, 2404:6800:4006:802::200e]
-Found: mobile.google.com [172.217.25.43, 2404:6800:4006:802::200b]
-Found: ns1.google.com [216.239.32.10, 2001:4860:4802:32::a]
-Found: m.google.com [172.217.25.43, 2404:6800:4006:802::200b]
-Found: cse.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
-Found: chrome.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: search.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: local.google.com [172.217.25.46, 2404:6800:4006:80a::200e]
-Found: news.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: blog.google.com [216.58.199.73, 2404:6800:4006:806::2009]
-Found: support.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: wap.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: directory.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: translate.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: music.google.com [172.217.25.46, 2404:6800:4006:802::200e]
-Found: mail.google.com [172.217.25.37, 2404:6800:4006:802::2005]
-===============================================================
-2019/06/21 11:54:55 Finished
-===============================================================
-```
-
-Base domain validation warning when the base domain fails to resolve. This is a warning rather than a failure in case the user fat-fingers while typing the domain.
-
-```text
-gobuster dns -d yp.to -w ~/wordlists/subdomains.txt -i
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : yp.to
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 11:56:43 Starting gobuster
-===============================================================
-2019/06/21 11:56:53 [-] Unable to validate base domain: yp.to
-Found: cr.yp.to [131.193.32.108, 131.193.32.109]
-===============================================================
-2019/06/21 11:56:53 Finished
-===============================================================
-```
-
-Wildcard DNS is also detected properly:
-
-```text
-gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : 0.0.1.xip.io
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 12:13:48 Starting gobuster
-===============================================================
-2019/06/21 12:13:48 [-] Wildcard DNS found. IP address(es): 1.0.0.0
-2019/06/21 12:13:48 [!] To force processing of Wildcard DNS, specify the '--wildcard' switch.
-===============================================================
-2019/06/21 12:13:48 Finished
-===============================================================
-```
-
-If the user wants to force processing of a domain that has wildcard entries, use `--wildcard`:
-
-```text
-gobuster dns -d 0.0.1.xip.io -w ~/wordlists/subdomains.txt --wildcard
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dns
-[+] Url/Domain   : 0.0.1.xip.io
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/subdomains.txt
-===============================================================
-2019/06/21 12:13:51 Starting gobuster
-===============================================================
-2019/06/21 12:13:51 [-] Wildcard DNS found. IP address(es): 1.0.0.0
-Found: 127.0.0.1.xip.io
-Found: test.127.0.0.1.xip.io
-===============================================================
-2019/06/21 12:13:53 Finished
+Finished
 ===============================================================
 ```
 
@@ -372,7 +262,7 @@ NAME:
    gobuster dir - Uses directory/file enumeration mode
 
 USAGE:
-   gobuster dir [command options] [arguments...]
+   gobuster dir [command options]
 
 OPTIONS:
    --url value, -u value                                    The target URL
@@ -394,6 +284,9 @@ OPTIONS:
    --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
    --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
    --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
    --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
    --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
    --threads value, -t value                                Number of concurrent threads (default: 10)
@@ -561,7 +454,7 @@ NAME:
    gobuster vhost - Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter)
 
 USAGE:
-   gobuster vhost [command options] [arguments...]
+   gobuster vhost [command options]
 
 OPTIONS:
    --url value, -u value                                    The target URL
@@ -583,6 +476,9 @@ OPTIONS:
    --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
    --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
    --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
    --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
    --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
    --threads value, -t value                                Number of concurrent threads (default: 10)
@@ -596,8 +492,10 @@ OPTIONS:
    --no-color, --nc                                         Disable color output (default: false)
    --debug                                                  enable debug output (default: false)
    --append-domain, --ad                                    Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist. (default: false)
-   --exclude-length value, --xl value                       exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --exclude-length value, --xl value                       exclude the following content lengths. You can separate multiple lengths by comma and it also supports ranges like 203-206
+   --exclude-status value, --xs value                       exclude the following status codes. Can also handle ranges like 200,300-400,404.
    --domain value, --do value                               the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted
+   --force                                                  Force execution even when result is not guaranteed. (default: false)
    --help, -h                                               show help
 ```
 
@@ -641,7 +539,7 @@ NAME:
    gobuster fuzz - Uses fuzzing mode. Replaces the keyword FUZZ in the URL, Headers and the request body
 
 USAGE:
-   gobuster fuzz [command options] [arguments...]
+   gobuster fuzz [command options]
 
 OPTIONS:
    --url value, -u value                                    The target URL
@@ -663,6 +561,9 @@ OPTIONS:
    --client-cert-pem-key value, --ccpk value                private key in PEM format for optional TLS client certificates (this key needs to have no password)
    --client-cert-p12 value, --ccp12 value                   a p12 file to use for options TLS client certificates
    --client-cert-p12-password value, --ccp12p value         the password to the p12 file
+   --tls-renegotiation                                      Enable TLS renegotiation (default: false)
+   --interface value, --iface value                         specify network interface to use. Can't be used with local-ip
+   --local-ip value                                         specify local ip of network interface to use. Can't be used with interface
    --wordlist value, -w value                               Path to the wordlist. Set to - to use STDIN.
    --delay value, -d value                                  Time each thread waits between requests (e.g. 1500ms) (default: 0s)
    --threads value, -t value                                Number of concurrent threads (default: 10)
@@ -696,7 +597,7 @@ NAME:
    gobuster s3 - Uses aws bucket enumeration mode
 
 USAGE:
-   gobuster s3 [command options] [arguments...]
+   gobuster s3 [command options]
 
 OPTIONS:
    --max-files value, -m value                       max files to list when listing buckets (default: 5)
@@ -724,6 +625,9 @@ OPTIONS:
    --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
    --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
    --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --tls-renegotiation                               Enable TLS renegotiation (default: false)
+   --interface value, --iface value                  specify network interface to use. Can't be used with local-ip
+   --local-ip value                                  specify local ip of network interface to use. Can't be used with interface
    --help, -h                                        show help
 ```
 
@@ -742,7 +646,7 @@ NAME:
    gobuster gcs - Uses gcs bucket enumeration mode
 
 USAGE:
-   gobuster gcs [command options] [arguments...]
+   gobuster gcs [command options]
 
 OPTIONS:
    --max-files value, -m value                       max files to list when listing buckets (default: 5)
@@ -770,6 +674,9 @@ OPTIONS:
    --client-cert-pem-key value, --ccpk value         private key in PEM format for optional TLS client certificates (this key needs to have no password)
    --client-cert-p12 value, --ccp12 value            a p12 file to use for options TLS client certificates
    --client-cert-p12-password value, --ccp12p value  the password to the p12 file
+   --tls-renegotiation                               Enable TLS renegotiation (default: false)
+   --interface value, --iface value                  specify network interface to use. Can't be used with local-ip
+   --local-ip value                                  specify local ip of network interface to use. Can't be used with interface
    --help, -h                                        show help
 ```
 
@@ -788,7 +695,7 @@ NAME:
    gobuster tftp - Uses TFTP enumeration mode
 
 USAGE:
-   gobuster tftp [command options] [arguments...]
+   gobuster tftp [command options]
 
 OPTIONS:
    --server value, -s value              The target TFTP server

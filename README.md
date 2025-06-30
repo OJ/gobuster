@@ -47,6 +47,7 @@ All funds that are donated to this project will be donated to charity. A full lo
 - fix progress with patterns by @acammack
 - fix backup discovery by @acammack
 - support tcp protocol on dns servers
+- add support for URL query parameters
 
 ## 3.6
 

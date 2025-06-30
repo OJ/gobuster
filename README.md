@@ -23,6 +23,10 @@ All funds that are donated to this project will be donated to charity. A full lo
 
 # Changes
 
+## 3.8
+
+TODO
+
 ## 3.7
 
 - use new cli library

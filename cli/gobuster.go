@@ -95,6 +95,9 @@ func messageWorker(g *libgobuster.Gobuster, wg *sync.WaitGroup) {
 func printProgress(g *libgobuster.Gobuster) {
 	requestsIssued := g.Progress.RequestsIssued()
 	requestsExpected := g.Progress.RequestsExpected()
+	if requestsExpected == 0 {
+		requestsExpected = 1 // avoid division by zero
+	}
 	percent := float32(requestsIssued) * 100.0 / float32(requestsExpected)
 	if math.IsNaN(float64(percent)) {
 		percent = 0.0

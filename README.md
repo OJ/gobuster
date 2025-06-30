@@ -11,7 +11,7 @@ Gobuster is a tool used to brute-force:
 
 ## Tags, Statuses, etc
 
-[![Build Status](https://travis-ci.com/OJ/gobuster.svg?branch=master)](https://travis-ci.com/OJ/gobuster) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
+[![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
 ## Love this tool? Back it!
 

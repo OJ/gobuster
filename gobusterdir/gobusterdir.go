@@ -213,7 +213,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		entity = entity[i:]
 	}
 	url := *d.options.URL
-	url.Path = fmt.Sprintf("%s%s", d.options.URL.Path, entity)
+	url.Path = fmt.Sprintf("%s%s", url.Path, entity)
 
 	// add some debug output
 	if d.globalopts.Debug {

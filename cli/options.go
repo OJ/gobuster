@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -142,26 +143,30 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 	}
 	opts.BasicHTTPOptions = basic
 
-	opts.URL = c.String("url")
-	if !strings.HasPrefix(opts.URL, "http") {
+	urlInput := c.String("url")
+	if !strings.HasPrefix(urlInput, "http") {
 		// check to see if a port was specified
 		re := regexp.MustCompile(`^[^/]+:(\d+)`)
-		match := re.FindStringSubmatch(opts.URL)
+		match := re.FindStringSubmatch(urlInput)
 
 		if len(match) < 2 {
 			// no port, default to http on 80
-			opts.URL = fmt.Sprintf("http://%s", opts.URL)
+			urlInput = fmt.Sprintf("http://%s", urlInput)
 		} else {
 			port, err2 := strconv.Atoi(match[1])
 			switch {
 			case err2 != nil || (port != 80 && port != 443):
 				return opts, errors.New("url scheme not specified")
 			case port == 80:
-				opts.URL = fmt.Sprintf("http://%s", opts.URL)
+				urlInput = fmt.Sprintf("http://%s", urlInput)
 			default:
-				opts.URL = fmt.Sprintf("https://%s", opts.URL)
+				urlInput = fmt.Sprintf("https://%s", urlInput)
 			}
 		}
+	}
+
+	if opts.URL, err = url.Parse(urlInput); err != nil {
+		return opts, fmt.Errorf("url %q is not valid: %w", urlInput, err)
 	}
 
 	opts.Cookies = c.String("cookies")

@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"crypto/tls"
 	"net"
+	"net/url"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type BasicHTTPOptions struct {
 type HTTPOptions struct {
 	BasicHTTPOptions
 	Password              string
-	URL                   string
+	URL                   *url.URL
 	Username              string
 	Cookies               string
 	Headers               []HTTPHeader

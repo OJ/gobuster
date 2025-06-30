@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -84,7 +85,11 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		return nil, nil // nolint:nilnil
 	}
 
-	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", word, s.options.MaxFilesToList)
+	bucketURL := fmt.Sprintf("https://%s.s3.amazonaws.com/?max-keys=%d", url.PathEscape(word), s.options.MaxFilesToList)
+	u, err := url.Parse(bucketURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse bucket URL %s: %w", bucketURL, err)
+	}
 
 	// add some debug output
 	if s.globalopts.Debug {
@@ -104,7 +109,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, _, _, body, err = s.http.Request(ctx, bucketURL, libgobuster.RequestOptions{ReturnBody: true})
+		statusCode, _, _, body, err = s.http.Request(ctx, *u, libgobuster.RequestOptions{ReturnBody: true})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised

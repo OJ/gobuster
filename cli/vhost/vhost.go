@@ -70,7 +70,7 @@ func run(c *cli.Context) error {
 	force := c.Bool("force")
 	if !force &&
 		(strings.HasPrefix(pluginOpts.Proxy, "http://") || strings.HasPrefix(pluginOpts.Proxy, "https://")) &&
-		strings.HasPrefix(pluginOpts.URL, "http://") {
+		strings.EqualFold(pluginOpts.URL.Scheme, "http") {
 		return errors.New("VHOST mode does not work with a http proxy when using plain text http urls as golang strictly adheres to the http standard. This results in always sending the requests to the IP of the VHOST domain instead of the specified target. See https://github.com/golang/go/issues/30775 for example. You need to either disable the proxy, use a https based url or use the --force switch to continue. When using --force you may need to do some rewrites in your proxy to get the expected result")
 	}
 

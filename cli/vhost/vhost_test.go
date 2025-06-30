@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -27,8 +28,12 @@ func BenchmarkVhostMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
 	pluginopts := gobustervhost.NewOptions()
-	pluginopts.URL = h.URL
+	pluginopts.URL = u
 	pluginopts.Timeout = 10 * time.Second
 
 	wordlist, err := os.CreateTemp(b.TempDir(), "")

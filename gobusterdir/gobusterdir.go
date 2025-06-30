@@ -105,11 +105,11 @@ func (d *GobusterDir) Name() string {
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
 	// add trailing slash
-	if !strings.HasSuffix(d.options.URL, "/") {
-		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
+	if !strings.HasSuffix(d.options.URL.Path, "/") {
+		d.options.URL.Path = fmt.Sprintf("%s/", d.options.URL.Path)
 	}
 
-	_, _, _, _, err := d.http.Request(ctx, d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, _, err := d.http.Request(ctx, *d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
 		switch {
 		case errors.Is(err, io.EOF):
@@ -123,9 +123,10 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 	}
 
 	guid := uuid.New()
-	url := fmt.Sprintf("%s%s", d.options.URL, guid)
+	url := *d.options.URL
+	url.Path = fmt.Sprintf("%s%s", url.Path, guid)
 	if d.options.UseSlash {
-		url = fmt.Sprintf("%s/", url)
+		url.Path = fmt.Sprintf("%s/", url.Path)
 	}
 
 	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
@@ -149,11 +150,11 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 	switch {
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
-			return &WildcardError{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
-			return &WildcardError{url: url, statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	default:
 		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -205,17 +206,14 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	}
 	entity := fmt.Sprintf("%s%s", word, suffix)
 
-	// make sure the url ends with a slash
-	if !strings.HasSuffix(d.options.URL, "/") {
-		d.options.URL = fmt.Sprintf("%s/", d.options.URL)
-	}
 	// prevent double slashes by removing leading /
 	if strings.HasPrefix(entity, "/") {
 		// get size of first rune and trim it
 		_, i := utf8.DecodeRuneInString(entity)
 		entity = entity[i:]
 	}
-	url := fmt.Sprintf("%s%s", d.options.URL, entity)
+	url := *d.options.URL
+	url.Path = fmt.Sprintf("%s%s", d.options.URL.Path, entity)
 
 	// add some debug output
 	if d.globalopts.Debug {
@@ -281,7 +279,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
 			path := "/"
 			if d.options.Expanded {
-				path = d.options.URL
+				path = url.Path
 			}
 			path = fmt.Sprintf("%s%-20s", path, entity)
 

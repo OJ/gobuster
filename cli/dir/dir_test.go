@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -27,8 +28,12 @@ func BenchmarkDirMode(b *testing.B) {
 	h := httpServer(b, "test")
 	defer h.Close()
 
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL: %v", err)
+	}
 	pluginopts := gobusterdir.NewOptions()
-	pluginopts.URL = h.URL
+	pluginopts.URL = u
 	pluginopts.Timeout = 10 * time.Second
 
 	pluginopts.Extensions = ".php,.csv"

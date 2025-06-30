@@ -92,7 +92,16 @@ func (d *GobusterFuzz) PreRun(_ context.Context, _ *libgobuster.Progress) error 
 
 // ProcessWord is the process implementation of gobusterfuzz
 func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
-	url := strings.ReplaceAll(d.options.URL, FuzzKeyword, word)
+	url := *d.options.URL
+	url.Fragment = strings.ReplaceAll(url.Fragment, FuzzKeyword, word)
+	url.Host = strings.ReplaceAll(url.Host, FuzzKeyword, word)
+	url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
+	url.Scheme = strings.ReplaceAll(url.Scheme, FuzzKeyword, word)
+	for key, value := range url.Query() {
+		for i, v := range value {
+			url.Query()[key][i] = strings.ReplaceAll(v, FuzzKeyword, word)
+		}
+	}
 
 	requestOptions := libgobuster.RequestOptions{}
 
@@ -185,7 +194,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 
 		if resultStatus {
 			r := Result{
-				Path:       url,
+				Path:       url.String(),
 				StatusCode: statusCode,
 				Size:       size,
 				Word:       word,

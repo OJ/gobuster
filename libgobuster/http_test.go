@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -59,7 +60,11 @@ func TestRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
-	status, length, _, body, err := c.Request(t.Context(), h.URL, RequestOptions{ReturnBody: true})
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		t.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
+	status, length, _, body, err := c.Request(t.Context(), *u, RequestOptions{ReturnBody: true})
 	if err != nil {
 		t.Fatalf("Got Error: %v", err)
 	}
@@ -87,8 +92,12 @@ func BenchmarkRequestWithoutBody(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
 	for b.Loop() {
-		_, _, _, _, err := c.Request(b.Context(), h.URL, RequestOptions{ReturnBody: false})
+		_, _, _, _, err := c.Request(b.Context(), *u, RequestOptions{ReturnBody: false})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}
@@ -108,8 +117,12 @@ func BenchmarkRequestWitBody(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Got Error: %v", err)
 	}
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		b.Fatalf("could not parse URL %v: %v", h.URL, err)
+	}
 	for b.Loop() {
-		_, _, _, _, err := c.Request(b.Context(), h.URL, RequestOptions{ReturnBody: true})
+		_, _, _, _, err := c.Request(b.Context(), *u, RequestOptions{ReturnBody: true})
 		if err != nil {
 			b.Fatalf("Got Error: %v", err)
 		}

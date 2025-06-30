@@ -130,7 +130,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 
 // Request makes a http request and returns the status, the content length, the headers, the body and an error
 // if you want the body returned set the corresponding property inside RequestOptions
-func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts RequestOptions) (int, int64, http.Header, []byte, error) {
+func (client *HTTPClient) Request(ctx context.Context, fullURL url.URL, opts RequestOptions) (int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(ctx, fullURL, opts)
 	if err != nil {
 		// ignore context canceled errors
@@ -161,8 +161,8 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL string, opts Requ
 	return resp.StatusCode, length, resp.Header, body, nil
 }
 
-func (client *HTTPClient) makeRequest(ctx context.Context, fullURL string, opts RequestOptions) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, client.method, fullURL, opts.Body)
+func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts RequestOptions) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, client.method, fullURL.String(), opts.Body)
 	if err != nil {
 		return nil, err
 	}

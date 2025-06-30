@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -82,22 +81,18 @@ func (v *GobusterVhost) Name() string {
 // PreRun is the pre run implementation of gobusterdir
 func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
 	// add trailing slash
-	if !strings.HasSuffix(v.options.URL, "/") {
-		v.options.URL = fmt.Sprintf("%s/", v.options.URL)
+	if !strings.HasSuffix(v.options.URL.Path, "/") {
+		v.options.URL.Path = fmt.Sprintf("%s/", v.options.URL.Path)
 	}
 
-	urlParsed, err := url.Parse(v.options.URL)
-	if err != nil {
-		return fmt.Errorf("invalid url %s: %w", v.options.URL, err)
-	}
 	if v.options.Domain != "" {
 		v.domain = v.options.Domain
 	} else {
-		v.domain = urlParsed.Host
+		v.domain = v.options.URL.Host
 	}
 
 	// request default vhost for normalBody
-	_, _, _, body, err := v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	_, _, _, body, err := v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		switch {
 		case errors.Is(err, io.EOF):
@@ -113,7 +108,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 
 	// request non existent vhost for abnormalBody
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, _, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 	if err != nil {
 		switch {
 		case errors.Is(err, io.EOF):
@@ -169,7 +164,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, body, err = v.http.Request(ctx, v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+		statusCode, size, header, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised

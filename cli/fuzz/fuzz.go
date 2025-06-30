@@ -82,7 +82,7 @@ func run(c *cli.Context) error {
 }
 
 func containsFuzzKeyword(pluginopts gobusterfuzz.OptionsFuzz) bool {
-	if strings.Contains(pluginopts.URL, gobusterfuzz.FuzzKeyword) {
+	if strings.Contains(pluginopts.URL.String(), gobusterfuzz.FuzzKeyword) {
 		return true
 	}
 

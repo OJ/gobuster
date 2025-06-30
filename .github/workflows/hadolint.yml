@@ -5,6 +5,8 @@ on:
       - "**/Dockerfile"
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   hadolint:
     name: hadolint

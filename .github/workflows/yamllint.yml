@@ -6,6 +6,8 @@ on:
       - "**.yaml"
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   yamllint:
     name: yamllint

@@ -1,6 +1,6 @@
 # Gobuster
 
-[![Go Report Card](https://goreportcard.com/badge/OJ/gobuster/v3)](https://goreportcard.com/report/OJ/gobuster/v3) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/OJ/gobuster/blob/master/LICENSE) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
+[![Go Report Card](https://goreportcard.com/badge/github.com/OJ/gobuster/v3)](https://goreportcard.com/report/github.com/OJ/gobuster/v3) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/OJ/gobuster/blob/master/LICENSE) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
 ## 💻 Introduction
 

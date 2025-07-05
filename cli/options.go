@@ -311,7 +311,7 @@ func getLocalAddrFromInterface(iface string) (*net.TCPAddr, error) {
 	}
 
 	if len(addrs) == 0 {
-		return nil, fmt.Errorf("no ip adresses on interface %s", iface)
+		return nil, fmt.Errorf("no ip addresses on interface %s", iface)
 	}
 
 	tmp, ok := addrs[0].(*net.IPNet)

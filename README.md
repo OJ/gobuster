@@ -1,25 +1,344 @@
 # Gobuster
 
-Gobuster is a tool used to brute-force:
+[![Go Report Card](https://goreportcard.com/badge/OJ/gobuster)](https://goreportcard.com/report/OJ/gobuster) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/OJ/gobuster/blob/master/LICENSE) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
-- URIs (directories and files) in websites.
-- DNS subdomains (with wildcard support).
-- Virtual Host names on target web servers.
-- Open Amazon S3 buckets
-- Open Google Cloud buckets
-- TFTP servers
+## 💻 Introduction
 
-## Tags, Statuses, etc
+> A fast and flexible brute-forcing tool written in Go
+
+**Gobuster** is a high-performance directory/file, DNS and virtual host brute-forcing tool written in Go. It's designed to be fast, reliable, and easy to use for security professionals and penetration testers.
+
+## ✨ Features
+
+- 🚀 **High Performance**: Multi-threaded scanning with configurable concurrency
+- 🔍 **Multiple Modes**: Directory, DNS, virtual host, S3, GCS, TFTP, and fuzzing modes
+- 🛡️ **Security Focused**: Built for penetration testing and security assessments
+- 🐳 **Docker Support**: Available as a Docker container
+- 🔧 **Extensible**: Pattern-based scanning and custom wordlists
+
+## 🎯 What Can Gobuster Do?
+
+- **Web Directory/File Enumeration**: Discover hidden directories and files on web servers
+- **DNS Subdomain Discovery**: Find subdomains with wildcard support
+- **Virtual Host Detection**: Identify virtual hosts on target web servers
+- **Cloud Storage Enumeration**: Discover open Amazon S3 and Google Cloud Storage buckets
+- **TFTP File Discovery**: Find files on TFTP servers
+- **Custom Fuzzing**: Flexible fuzzing with customizable parameters
+
+## 🚀 Quick Start
+
+```bash
+# Install gobuster
+go install github.com/OJ/gobuster/v3@latest
+
+# Basic directory enumeration
+gobuster dir -u https://example.com -w /path/to/wordlist.txt
+
+# DNS subdomain enumeration
+gobuster dns -d example.com -w /path/to/wordlist.txt
+
+# Virtual host discovery
+gobuster vhost -u https://example.com -w /path/to/wordlist.txt
+
+# S3 bucket enumeration
+gobuster s3 -w /path/to/bucket-names.txt
+```
+
+## 📦 Installation
+
+### Quick Install (Recommended)
+
+```bash
+go install github.com/OJ/gobuster/v3@latest
+```
+
+**Requirements**: Go 1.24 or higher
+
+### Alternative Installation Methods
+
+#### Using Binary Releases
+
+Download pre-compiled binaries from the [releases page](https://github.com/OJ/gobuster/releases).
+
+#### Using Docker
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/oj/gobuster:latest
+
+# Run gobuster in Docker
+docker run --rm -it ghcr.io/oj/gobuster:latest dir -u https://example.com -w /usr/share/wordlists/dirb/common.txt
+```
+
+#### Building from Source
+
+```bash
+git clone https://github.com/OJ/gobuster.git
+cd gobuster
+go mod tidy
+go build
+```
+
+### Troubleshooting Installation
+
+If you encounter issues:
+
+- Ensure Go version 1.24+ is installed: `go version`
+- Check your `$GOPATH` and `$GOBIN` environment variables
+- Verify `$GOPATH/bin` is in your `$PATH`
+
+## 🎯 Usage
+
+Gobuster uses a mode-based approach. Each mode is designed for specific enumeration tasks:
+
+```bash
+gobuster [mode] [options]
+```
+
+### Getting Help
+
+```bash
+gobuster help                   # Show general help
+gobuster help [mode]            # Show help for specific mode
+gobuster [mode] --help          # Alternative help syntax
+```
+
+### 📊 Available Modes
+
+#### 🌐 Directory Mode (`dir`)
+
+Enumerate directories and files on web servers.
+
+**Basic Usage:**
+
+```bash
+gobuster dir -u https://example.com -w wordlist.txt
+```
+
+**Advanced Options:**
+
+```bash
+# With file extensions
+gobuster dir -u https://example.com -w wordlist.txt -x php,html,js,txt
+
+# With custom headers and cookies
+gobuster dir -u https://example.com -w wordlist.txt -H "Authorization: Bearer token" -c "session=value"
+
+# Show response length
+gobuster dir -u https://example.com -w wordlist.txt -l
+
+# Filter by status codes
+gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
+```
+
+#### 🔍 DNS Mode (`dns`)
+
+Discover subdomains through DNS resolution.
+
+**Basic Usage:**
+
+```bash
+gobuster dns -d example.com -w wordlist.txt
+```
+
+**Advanced Options:**
+
+```bash
+# Use custom DNS server
+gobuster dns -d example.com -w wordlist.txt -r 8.8.8.8:53
+
+# Increase threads for faster scanning
+gobuster dns -d example.com -w wordlist.txt -t 50
+```
+
+#### 🏠 Virtual Host Mode (`vhost`)
+
+Discover virtual hosts on web servers.
+
+**Basic Usage:**
+
+```bash
+gobuster vhost -u https://example.com --append-domain -w wordlist.txt
+```
+
+#### ☁️ S3 Mode (`s3`)
+
+Enumerate Amazon S3 buckets.
+
+**Basic Usage:**
+
+```bash
+gobuster s3 -w bucket-names.txt
+```
+
+**With Debug Output:**
+
+```bash
+gobuster s3 -w bucket-names.txt --debug
+```
+
+#### ☁️ TFTP Mode (`tftp`)
+
+Enumerate files on tftp servers.
+
+**Basic Usage:**
+
+```bash
+gobuster tftp -s 10.0.0.1 -w wordlist.txt
+```
+
+#### ☁️ GCS Mode (`gcs`)
+
+Enumerate Google Cloud Storage Buckets.
+
+**Basic Usage:**
+
+```bash
+gobuster gcs -w bucket-names.txt
+```
+
+**With Debug Output:**
+
+```bash
+gobuster gcs -w bucket-names.txt --debug
+```
+
+#### 🔧 Fuzz Mode (`fuzz`)
+
+Custom fuzzing with the `FUZZ` keyword.
+
+**Basic Usage:**
+
+```bash
+gobuster fuzz -u https://example.com?FUZZ=test -w wordlist.txt
+```
+
+**Advanced Examples:**
+
+```bash
+# Fuzz URL parameters
+gobuster fuzz -u https://example.com?param=FUZZ -w wordlist.txt
+
+# Fuzz headers
+gobuster fuzz -u https://example.com -H "X-Custom-Header: FUZZ" -w wordlist.txt
+
+# Fuzz POST data
+gobuster fuzz -u https://example.com -d "username=admin&password=FUZZ" -w passwords.txt
+```
+
+## 💰 Support
 
 [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
 
-## Love this tool? Back it!
+### Love this tool? Back it!
 
 If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
 
 [![Backers](https://opencollective.com/gobuster/backers.svg?width=890)](https://opencollective.com/gobuster#backers)
 
 All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
+
+## 💡 Common Use Cases
+
+### Web Application Security Testing
+
+```bash
+# Comprehensive directory enumeration
+gobuster dir -u https://target.com -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,js,txt,asp,aspx,jsp
+
+# API endpoint discovery
+gobuster dir -u https://api.target.com -w /usr/share/wordlists/dirb/common.txt -x json
+
+# Admin panel discovery
+gobuster dir -u https://target.com -w admin-panels.txt -s 200,301,302,403
+```
+
+### DNS Reconnaissance
+
+```bash
+# Comprehensive subdomain enumeration
+gobuster dns -d target.com -w /usr/share/wordlists/dnsrecon/subdomains-top1mil-5000.txt -t 50
+```
+
+### Cloud Storage Assessment
+
+```bash
+# S3 bucket enumeration with patterns
+gobuster s3 -w company-names.txt -v
+
+# GCS bucket enumeration
+gobuster gcs -w company-names.txt -v
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### "Permission Denied" or "Access Denied"
+
+- Try reducing thread count with `-t` flag
+- Add delays between requests with `--delay`
+- Use different user agent with `-a` flag
+
+#### "Connection Timeout"
+
+- Increase timeout with `--timeout` flag
+- Reduce thread count for slower targets
+- Check your internet connection
+
+#### "No Results Found"
+
+- Verify the target URL is accessible
+- Try different wordlists
+- Check status code filtering with `-s` flag
+
+### Performance Issues
+
+#### Slow Scanning
+
+- Increase thread count with `-t` flag (but be careful not to overwhelm the target)
+- Use smaller, more targeted wordlists
+
+## 🎯 Best Practices
+
+### Security Testing Guidelines
+
+1. **Always get proper authorization** before testing any target
+2. **Start with low thread counts** to avoid overwhelming servers
+3. **Use appropriate wordlists** for the target technology
+4. **Respect rate limits** and implement delays if needed
+5. **Monitor your network traffic** to avoid detection
+
+### Wordlist Selection
+
+- **For web applications**: Use technology-specific wordlists (PHP, ASP.NET, etc.)
+- **For APIs**: Focus on common API endpoints and versioning patterns
+- **For DNS**: Use subdomain-specific wordlists with common patterns
+- **For cloud storage**: Use company/brand-specific patterns
+
+### Output Management
+
+```bash
+# Save results to file
+gobuster dir -u https://example.com -w wordlist.txt -o results.txt
+
+# Use quiet mode for clean output
+gobuster dir -u https://example.com -w wordlist.txt -q
+```
+
+## 📚 Additional Resources
+
+### Recommended Wordlists
+
+- **SecLists**: [https://github.com/danielmiessler/SecLists](https://github.com/danielmiessler/SecLists)
+- **FuzzDB**: [https://github.com/fuzzdb-project/fuzzdb](https://github.com/fuzzdb-project/fuzzdb)
+- **Seclists DNS**: [https://github.com/danielmiessler/SecLists/tree/master/Discovery/DNS](https://github.com/danielmiessler/SecLists/tree/master/Discovery/DNS)
+
+---
+
+**Happy hacking! 🚀**
+
+_Remember: Always test responsibly and with proper authorization._
 
 # Changes
 
@@ -137,471 +456,3 @@ All funds that are donated to this project will be donated to charity. A full lo
 - Option to supply custom HTTP headers
 
 </details>
-
-# License
-
-See the [LICENSE](LICENSE) file.
-
-# Installation
-
-## Binary Releases
-
-We are now shipping binaries for each of the releases so that you don't even have to build them yourself! How wonderful is that!
-
-If you're stupid enough to trust binaries that I've put together, you can download them from the [releases](https://github.com/OJ/gobuster/releases) page.
-
-## Docker
-
-You can also grab a prebuilt docker image from [https://github.com/OJ/gobuster/pkgs/container/gobuster](https://github.com/OJ/gobuster/pkgs/container/gobuster)
-
-```bash
-docker pull ghcr.io/oj/gobuster:latest
-```
-
-## Using `go install`
-
-If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
-
-```bash
-go install github.com/OJ/gobuster/v3@latest
-```
-
-PS: You need at least go 1.24 to compile gobuster.
-
-### Complete manual install steps
-
-- Remove possible golang packages from your package distribution (eg `apt remove golang`)
-- Download the latest golang source from [https://go.dev/dl](https://go.dev/dl)
-- Install according to [https://go.dev/doc/install](https://go.dev/doc/install) (don't forget to add it to your PATH)
-- Set your GOPATH environment variable `export GOPATH=$HOME/go`
-- Add `$HOME/go/bin` to your PATH variable (`go install` will install to this location)
-- Make sure all environment variables are persisted across your terminals and survive a reboot
-- Verify `go version` shows the downloaded version and works
-- `go install github.com/OJ/gobuster/v3@latest`
-- verify you can run `gobuster`
-
-## Building From Source
-
-Since this tool is written in [Go](https://golang.org/) you need to install the Go language/compiler/etc. Full details of installation and set up can be found [on the Go language website](https://golang.org/doc/install). Once installed you have two options.
-
-`gobuster` has external dependencies, and so they need to be pulled in first:
-
-```bash
-go get && go build
-```
-
-This will create a `gobuster` binary for you. If you want to install it in the `$GOPATH/bin` folder you can run:
-
-```bash
-go install
-```
-
-## Modes
-
-Help is built-in!
-
-- `gobuster help` - outputs the top-level help.
-- `gobuster help <mode>` - outputs the help specific to that mode.
-
-## Available Modes
-
-- dir - the classic directory brute-forcing mode
-- dns - DNS subdomain brute-forcing mode
-- s3 - Enumerate open S3 buckets and look for existence and bucket listings
-- gcs - Enumerate open google cloud buckets
-- vhost - virtual host brute-forcing mode (not the same as DNS!)
-- fuzz - some basic fuzzing, replaces the `FUZZ` keyword
-- tftp - bruteforce tftp files
-
-## `dns` Mode
-
-DNS mode allows you to bruteforce subdomains of a given domain. If the subdomain has a DNS record, it will be printed out.
-
-### Examples
-
-```text
-gobuster dns -d mysite.com -t 50 -w common-names.txt
-```
-
-Normal sample run goes like this:
-
-```text
-gobuster dns --do google.com -w ~/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
-===============================================================
-Gobuster v3.7
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Domain:     google.com
-[+] Threads:    10
-[+] Timeout:    1s
-[+] Wordlist:   /home/firefart/code/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
-===============================================================
-Starting gobuster in DNS enumeration mode
-===============================================================
-mail.google.com 172.217.20.5,2a00:1450:400d:80a::2005
-www.google.com 142.250.180.196,2a00:1450:400d:804::2004
-smtp.google.com 74.125.143.27,173.194.69.27,74.125.143.26,173.194.69.26,74.125.128.27,2a00:1450:4013:c08::1b,2a00:1450:4013:c08::1a,2a00:1450:4013:c1a::1a,2a00:1450:4013:c07::1a
-ns1.google.com 216.239.32.10,2001:4860:4802:32::a
-ns2.google.com 216.239.34.10,2001:4860:4802:34::a
-ns.google.com 216.239.32.10
-ns3.google.com 216.239.36.10,2001:4860:4802:36::a
-[...]
-www.research.google.com 172.217.20.14,2a00:1450:400d:807::200e
-ns62.google.com 2001:4860:4802:34::a
-www.image.google.com 142.250.201.206,2a00:1450:400d:806::200e
-opt.google.com 172.217.20.14,2a00:1450:400d:807::200e
-www.plus.google.com 142.251.39.46,2a00:1450:400d:80d::200e
-mts.google.com 142.251.208.142,2a00:1450:400d:80a::200e
-workspace.google.com 142.250.180.238,2a00:1450:400d:807::200e
-notebook.google.com 142.251.39.46
-chrome.google.com 172.217.20.14,2a00:1450:400d:807::200e
-Progress: 4989 / 4989 (100.00%)
-===============================================================
-Finished
-===============================================================
-```
-
-## `dir` Mode
-
-In DIR mode you can enumerate all directories and/or files on a given url. If you specify file extension files are also enumerated.
-
-### Examples
-
-```text
-gobuster dir -u https://mysite.com/path/to/folder -c 'session=123456' -t 50 -w common-files.txt -x .php,.html
-```
-
-Default options looks like this:
-
-```text
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.2.0
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:49:43 Starting gobuster
-===============================================================
-/categories (Status: 301)
-/contact (Status: 301)
-/posts (Status: 301)
-/index (Status: 200)
-===============================================================
-2019/06/21 11:49:44 Finished
-===============================================================
-```
-
-Default options with status codes disabled looks like this:
-
-```text
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -n
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.2.0
-[+] No status    : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:50:18 Starting gobuster
-===============================================================
-/categories
-/contact
-/index
-/posts
-===============================================================
-2019/06/21 11:50:18 Finished
-===============================================================
-```
-
-Verbose output looks like this:
-
-```text
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -v
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.2.0
-[+] Verbose      : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:50:51 Starting gobuster
-===============================================================
-Missed: /alsodoesnotexist (Status: 404)
-Found: /index (Status: 200)
-Missed: /doesnotexist (Status: 404)
-Found: /categories (Status: 301)
-Found: /posts (Status: 301)
-Found: /contact (Status: 301)
-===============================================================
-2019/06/21 11:50:51 Finished
-===============================================================
-```
-
-Example showing content length:
-
-```text
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -l
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Mode         : dir
-[+] Url/Domain   : https://buffered.io/
-[+] Threads      : 10
-[+] Wordlist     : /home/oj/wordlists/shortlist.txt
-[+] Status codes : 200,204,301,302,307,401,403
-[+] User Agent   : gobuster/3.2.0
-[+] Show length  : true
-[+] Timeout      : 10s
-===============================================================
-2019/06/21 11:51:16 Starting gobuster
-===============================================================
-/categories (Status: 301) [Size: 178]
-/posts (Status: 301) [Size: 178]
-/contact (Status: 301) [Size: 178]
-/index (Status: 200) [Size: 51759]
-===============================================================
-2019/06/21 11:51:17 Finished
-===============================================================
-```
-
-Quiet output, with status disabled and expanded mode looks like this ("grep mode"):
-
-```text
-gobuster dir -u https://buffered.io -w ~/wordlists/shortlist.txt -q -n -e
-https://buffered.io/index
-https://buffered.io/contact
-https://buffered.io/posts
-https://buffered.io/categories
-```
-
-## `vhost` Mode
-
-VHOST mode requests the site over and over and enumerates all values of the `Host` header. This allows finding custom virtual hosts on the same ip.
-
-### Examples
-
-```text
-gobuster vhost -u https://mysite.com -w common-vhosts.txt
-```
-
-Normal sample run goes like this:
-
-```text
-gobuster vhost -u https://mysite.com -w common-vhosts.txt
-
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Url:          https://mysite.com
-[+] Threads:      10
-[+] Wordlist:     common-vhosts.txt
-[+] User Agent:   gobuster/3.2.0
-[+] Timeout:      10s
-===============================================================
-2019/06/21 08:36:00 Starting gobuster
-===============================================================
-Found: www.mysite.com
-Found: piwik.mysite.com
-Found: mail.mysite.com
-===============================================================
-2019/06/21 08:36:05 Finished
-===============================================================
-```
-
-## `fuzz` Mode
-
-FUZZ mode allows you to do some manual fuzzing. Each value of `{GOBUSTER}` inside the request will be replaced with the current word from the wordlist. This lets you enumerate URL Parameters, Headers and much more.
-
-### Examples
-
-```text
-gobuster fuzz -u https://example.com?FUZZ=test -w parameter-names.txt
-```
-
-## `s3` Mode
-
-S3 mode tries to find valid Amazon S3 buckets.
-
-### Examples
-
-```text
-gobuster s3 -w bucket-names.txt
-```
-
-## `gcs` Mode
-
-GCS mode is the same as S3, but for GCS (Google Cloud Storage)
-
-### Examples
-
-```text
-gobuster gcs -w bucket-names.txt
-```
-
-## `tftp` Mode
-
-TFTP mode allows you to find files on a TFTP server. TFTP servers have no file listing so using this mode you can try to find files hosted by the tftp server.
-
-### Examples
-
-```text
-gobuster tftp -s tftp.example.com -w common-filenames.txt
-```
-
-## Wordlists via STDIN
-
-Wordlists can be piped into `gobuster` via stdin by providing a `-` to the `-w` option:
-
-```bash
-hashcat -a 3 --stdout ?l | gobuster dir -u https://mysite.com -w -
-```
-
-Note: If the `-w` option is specified at the same time as piping from STDIN, an error will be shown and the program will terminate.
-
-## Patterns
-
-You can supply pattern files that will be applied to every word from the wordlist.
-Just place the string `{GOBUSTER}` in it and this will be replaced with the word.
-This feature is also handy in s3 mode to pre- or postfix certain patterns.
-When supplying patterns, words from the wordlist will not be tried by themselves. If you wish to have patterns and plain words from the wordlist, place `{GOBUSTER}` on a line by itself in the pattern file.
-
-**Caution:** Using a big pattern file can cause a lot of request as every pattern is applied to every word in the wordlist.
-
-### Example file
-
-```text
-{GOBUSTER}Partial
-{GOBUSTER}Service
-PRE{GOBUSTER}POST
-{GOBUSTER}-prod
-{GOBUSTER}-dev
-```
-
-#### Use case in combination with patterns
-
-- Create a custom wordlist for the target containing company names and so on
-- Create a pattern file to use for common bucket names.
-
-```bash
-curl -s --output - https://raw.githubusercontent.com/eth0izzle/bucket-stream/master/permutations/extended.txt | sed -s 's/%s/{GOBUSTER}/' > patterns.txt
-```
-
-- Run gobuster with the custom input. Be sure to turn verbose mode on to see the bucket details
-
-```text
-gobuster s3 --wordlist my.custom.wordlist -p patterns.txt -v
-```
-
-Normal sample run goes like this:
-
-```text
-PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Threads:                 10
-[+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.2.0
-[+] Timeout:                 10s
-[+] Maximum files to list:   5
-===============================================================
-2019/08/12 21:48:16 Starting gobuster in S3 bucket enumeration mode
-===============================================================
-webmail
-hacking
-css
-img
-www
-dav
-web
-localhost
-===============================================================
-2019/08/12 21:48:17 Finished
-===============================================================
-```
-
-Verbose and sample run
-
-```text
-PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -v
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Threads:                 10
-[+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.2.0
-[+] Verbose:                 true
-[+] Timeout:                 10s
-[+] Maximum files to list:   5
-===============================================================
-2019/08/12 21:49:00 Starting gobuster in S3 bucket enumeration mode
-===============================================================
-www [Error: All access to this object has been disabled (AllAccessDisabled)]
-hacking [Error: Access Denied (AccessDenied)]
-css [Error: All access to this object has been disabled (AllAccessDisabled)]
-webmail [Error: All access to this object has been disabled (AllAccessDisabled)]
-img [Bucket Listing enabled: GodBlessPotomac1.jpg (1236807b), HOMEWORKOUTAUDIO.zip (203908818b), ProductionInfo.xml (11946b), Start of Perpetual Motion Logo-1.mp3 (621821b), addressbook.gif (3115b)]
-web [Error: Access Denied (AccessDenied)]
-dav [Error: All access to this object has been disabled (AllAccessDisabled)]
-localhost [Error: Access Denied (AccessDenied)]
-===============================================================
-2019/08/12 21:49:01 Finished
-===============================================================
-```
-
-Extended sample run
-
-```text
-PS C:\Users\firefart\Documents\code\gobuster> .\gobuster.exe s3 --wordlist .\wordlist.txt -e
-===============================================================
-Gobuster v3.2.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Threads:                 10
-[+] Wordlist:                .\wordlist.txt
-[+] User Agent:              gobuster/3.2.0
-[+] Timeout:                 10s
-[+] Expanded:                true
-[+] Maximum files to list:   5
-===============================================================
-2019/08/12 21:48:38 Starting gobuster in S3 bucket enumeration mode
-===============================================================
-http://css.s3.amazonaws.com/
-http://www.s3.amazonaws.com/
-http://webmail.s3.amazonaws.com/
-http://hacking.s3.amazonaws.com/
-http://img.s3.amazonaws.com/
-http://web.s3.amazonaws.com/
-http://dav.s3.amazonaws.com/
-http://localhost.s3.amazonaws.com/
-===============================================================
-2019/08/12 21:48:38 Finished
-===============================================================
-```

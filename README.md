@@ -177,7 +177,7 @@ gobuster s3 -w bucket-names.txt
 gobuster s3 -w bucket-names.txt --debug
 ```
 
-#### ☁️ TFTP Mode (`tftp`)
+#### 🖥️ TFTP Mode (`tftp`)
 
 Enumerate files on tftp servers.
 

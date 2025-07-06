@@ -7,12 +7,13 @@ import (
 // OptionsVhost is the struct to hold all options for this plugin
 type OptionsVhost struct {
 	libgobuster.HTTPOptions
-	AppendDomain        bool
-	ExcludeLength       string
-	ExcludeLengthParsed libgobuster.Set[int]
+	AppendDomain          bool
+	ExcludeLength         string
+	ExcludeLengthParsed   libgobuster.Set[int]
 	ExcludeStatus       string
 	ExcludeStatusParsed libgobuster.Set[int]
-	Domain              string
+	Domain                string
+	ExcludeHostnameLength bool
 }
 
 // NewOptions returns a new initialized OptionsVhost

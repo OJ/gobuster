@@ -344,6 +344,16 @@ _Remember: Always test responsibly and with proper authorization._
 
 <details>
 
+<summary>3.8</summary>
+
+## 3.8
+
+- Add exclude-hostname-length flag to dynamically adjust exclude-length by @0xyy66
+
+</details>
+
+<details>
+
 <summary>3.7</summary>
 
 ## 3.7

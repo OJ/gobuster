@@ -31,6 +31,7 @@ func getFlags() []cli.Flag {
 		&cli.StringFlag{Name: "exclude-status", Aliases: []string{"xs"}, Usage: "exclude the following status codes. Can also handle ranges like 200,300-400,404.", Value: ""},
 		&cli.StringFlag{Name: "domain", Aliases: []string{"do"}, Usage: "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted"},
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Force execution even when result is not guaranteed."},
+		&cli.BoolFlag{Name: "exclude-hostname-length", Aliases: []string{"xh"}, Value: false, Usage: "Automatically adjust exclude-length based on dynamic hostname length in responses"},
 	}...)
 
 	return flags
@@ -52,6 +53,11 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("invalid value for exclude-length: %w", err)
 	}
 	pluginOpts.ExcludeLengthParsed = ret
+
+	pluginOpts.ExcludeHostnameLength = c.Bool("exclude-hostname-length")
+	if pluginOpts.ExcludeHostnameLength && pluginOpts.ExcludeLengthParsed.Length() == 0 {
+		return errors.New("exclude-hostname-length requires exclude-length to be set")
+	}
 
 	pluginOpts.ExcludeStatus = c.String("exclude-status")
 	ret2, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeStatus)

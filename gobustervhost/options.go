@@ -10,8 +10,8 @@ type OptionsVhost struct {
 	AppendDomain          bool
 	ExcludeLength         string
 	ExcludeLengthParsed   libgobuster.Set[int]
-	ExcludeStatus       string
-	ExcludeStatusParsed libgobuster.Set[int]
+	ExcludeStatus         string
+	ExcludeStatusParsed   libgobuster.Set[int]
 	Domain                string
 	ExcludeHostnameLength bool
 }

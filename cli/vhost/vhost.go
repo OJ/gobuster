@@ -48,12 +48,16 @@ func run(c *cli.Context) error {
 
 	pluginOpts.AppendDomain = c.Bool("append-domain")
 	pluginOpts.ExcludeLength = c.String("exclude-length")
-	pluginOpts.ExcludeHostnameLength = c.Bool("exclude-hostname-length")
 	ret, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
 	if err != nil {
 		return fmt.Errorf("invalid value for exclude-length: %w", err)
 	}
 	pluginOpts.ExcludeLengthParsed = ret
+
+	pluginOpts.ExcludeHostnameLength = c.Bool("exclude-hostname-length")
+	if pluginOpts.ExcludeHostnameLength && pluginOpts.ExcludeLengthParsed.Length() == 0 {
+		return errors.New("exclude-hostname-length requires exclude-length to be set")
+	}
 
 	pluginOpts.ExcludeStatus = c.String("exclude-status")
 	ret2, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeStatus)

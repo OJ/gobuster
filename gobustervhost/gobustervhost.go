@@ -127,7 +127,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 // ProcessWord is the process implementation of gobusterdir
 func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) (libgobuster.Result, error) {
 	var subdomain string
-	var wordLength int
+	var hostnameLength int
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
 	} else {
@@ -135,9 +135,9 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		subdomain = word
 	}
 	if v.options.ExcludeHostnameLength {
-		wordLength = len(word)
+		hostnameLength = len(subdomain)
 	} else {
-		wordLength = 0
+		hostnameLength = 0
 	}
 
 	// warn people when there is no . detected so they might want to use the other options
@@ -200,7 +200,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if found && !v.options.ExcludeLengthParsed.Contains(int(size)-wordLength) && !v.options.ExcludeStatusParsed.Contains(statusCode) {
+	if found && !v.options.ExcludeLengthParsed.Contains(int(size)-hostnameLength) && !v.options.ExcludeStatusParsed.Contains(statusCode) {
 		r := Result{
 			Vhost:      subdomain,
 			StatusCode: statusCode,

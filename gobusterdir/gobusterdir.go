@@ -103,7 +103,7 @@ func (d *GobusterDir) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
+func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(d.options.URL.Path, "/") {
 		d.options.URL.Path = fmt.Sprintf("%s/", d.options.URL.Path)
@@ -111,15 +111,25 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 
 	_, _, _, _, err := d.http.Request(ctx, *d.options.URL, libgobuster.RequestOptions{})
 	if err != nil {
+		var retErr error
 		switch {
 		case errors.Is(err, io.EOF):
-			return libgobuster.ErrEOF
+			retErr = libgobuster.ErrEOF
 		case os.IsTimeout(err):
-			return libgobuster.ErrTimeout
+			retErr = libgobuster.ErrTimeout
 		case errors.Is(err, syscall.ECONNREFUSED):
-			return libgobuster.ErrConnectionRefused
+			retErr = libgobuster.ErrConnectionRefused
+		default:
+			retErr = fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
 		}
-		return fmt.Errorf("unable to connect to %s: %w", d.options.URL, err)
+		if !d.options.Force {
+			return retErr
+		}
+		// if force is set, we continue even if the preRun fails
+		pr.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelWarn,
+			Message: fmt.Sprintf("PreRun failed with error: %s. Continuing because force is set.", retErr),
+		}
 	}
 
 	guid := uuid.New()
@@ -131,15 +141,25 @@ func (d *GobusterDir) PreRun(ctx context.Context, _ *libgobuster.Progress) error
 
 	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
 	if err != nil {
+		var retErr error
 		switch {
 		case errors.Is(err, io.EOF):
-			return libgobuster.ErrEOF
+			retErr = libgobuster.ErrEOF
 		case os.IsTimeout(err):
-			return libgobuster.ErrTimeout
+			retErr = libgobuster.ErrTimeout
 		case errors.Is(err, syscall.ECONNREFUSED):
-			return libgobuster.ErrConnectionRefused
+			retErr = libgobuster.ErrConnectionRefused
+		default:
+			retErr = fmt.Errorf("unable to connect to %s: %w", url.String(), err)
 		}
-		return err
+		if !d.options.Force {
+			return retErr
+		}
+		// if force is set, we continue even if the preRun fails
+		pr.MessageChan <- libgobuster.Message{
+			Level:   libgobuster.LevelWarn,
+			Message: fmt.Sprintf("PreRun failed with error: %s. Continuing because force is set.", retErr),
+		}
 	}
 
 	if d.options.ExcludeLengthParsed.Contains(int(wildcardLength)) {

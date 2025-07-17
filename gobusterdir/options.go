@@ -21,6 +21,7 @@ type OptionsDir struct {
 	DiscoverBackup             bool
 	ExcludeLength              string
 	ExcludeLengthParsed        libgobuster.Set[int]
+	Force                      bool
 }
 
 // NewOptions returns a new initialized OptionsDir

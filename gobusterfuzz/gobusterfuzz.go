@@ -97,11 +97,17 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	url.Host = strings.ReplaceAll(url.Host, FuzzKeyword, word)
 	url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
 	url.Scheme = strings.ReplaceAll(url.Scheme, FuzzKeyword, word)
-	for key, value := range url.Query() {
-		for i, v := range value {
-			url.Query()[key][i] = strings.ReplaceAll(v, FuzzKeyword, word)
+
+	query := url.Query()
+	for key, value := range query {
+		query.Del(key)
+		key = strings.ReplaceAll(key, FuzzKeyword, word)
+		for _, v := range value {
+			// replace the FuzzKeyword in the value
+			query.Add(key, strings.ReplaceAll(v, FuzzKeyword, word))
 		}
 	}
+	url.RawQuery = query.Encode()
 
 	requestOptions := libgobuster.RequestOptions{}
 

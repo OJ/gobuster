@@ -344,6 +344,18 @@ _Remember: Always test responsibly and with proper authorization._
 
 <details>
 
+<summary>3.8</summary>
+
+## 3.8
+
+- Add exclude-hostname-length flag to dynamically adjust exclude-length by @0xyy66
+- Fix Fuzzing query parameters
+- Add `--force` flag in `dir` mode to continue execution if precheck errors occur
+
+</details>
+
+<details>
+
 <summary>3.7</summary>
 
 ## 3.7

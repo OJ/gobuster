@@ -35,6 +35,7 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "add-slash", Aliases: []string{"f"}, Value: false, Usage: "Append / to each request"},
 		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Upon finding a file search for backup files by appending multiple backup extensions"},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
+		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
 	}...)
 	return flags
 }
@@ -92,6 +93,7 @@ func run(c *cli.Context) error {
 	pluginOpts.NoStatus = c.Bool("no-status")
 	pluginOpts.HideLength = c.Bool("hide-length")
 	pluginOpts.DiscoverBackup = c.Bool("discover-backup")
+	pluginOpts.Force = c.Bool("force")
 	pluginOpts.ExcludeLength = c.String("exclude-length")
 	ret4, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
 	if err != nil {

@@ -349,6 +349,7 @@ _Remember: Always test responsibly and with proper authorization._
 ## 3.8
 
 - Add exclude-hostname-length flag to dynamically adjust exclude-length by @0xyy66
+- Fix Fuzzing query parameters
 
 </details>
 

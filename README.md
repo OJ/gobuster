@@ -344,6 +344,16 @@ _Remember: Always test responsibly and with proper authorization._
 
 <details>
 
+<summary>3.9</summary>
+
+## 3.9
+
+- TODO
+
+</details>
+
+<details>
+
 <summary>3.8</summary>
 
 ## 3.8

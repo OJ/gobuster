@@ -3,6 +3,7 @@ package dir
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	internalcli "github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
@@ -36,6 +37,7 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Upon finding a file search for backup files by appending multiple backup extensions"},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
+		&cli.StringFlag{Name: "body-output-dir", Aliases: []string{"bo"}, Usage: "Folder in which to save HTTP response body (will be created if non-existing)."},
 	}...)
 	return flags
 }
@@ -98,6 +100,13 @@ func run(c *cli.Context) error {
 	ret4, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
 	if err != nil {
 		return fmt.Errorf("invalid value for exclude-length: %w", err)
+	}
+	pluginOpts.BodyOutputDir = c.String("body-output-dir")
+	if pluginOpts.BodyOutputDir != "" {
+		err = os.MkdirAll(pluginOpts.BodyOutputDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
 	pluginOpts.ExcludeLengthParsed = ret4
 

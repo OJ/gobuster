@@ -256,8 +256,8 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-
-		statusCode, size, header, body, err = d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})
+		// if the body output dir option is set, include the return body
+		statusCode, size, header, body, err = d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: d.options.BodyOutputDir != ""})
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -318,7 +318,9 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			if !d.options.HideLength {
 				r.Size = size
 			}
-			os.WriteFile(filepath.Join(d.options.BodyOutputDir, entity), body, 0644)
+			if d.options.BodyOutputDir != "" {
+				os.WriteFile(filepath.Join(d.options.BodyOutputDir, entity), body, 0644)
+			}
 
 			return r, nil
 		}

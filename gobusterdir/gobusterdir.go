@@ -319,7 +319,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				r.Size = size
 			}
 			if d.options.BodyOutputDir != "" {
-				os.WriteFile(filepath.Join(d.options.BodyOutputDir, entity), body, 0644)
+				os.WriteFile(filepath.Join(d.options.BodyOutputDir, strings.ReplaceAll(entity, "/", "_")), body, 0644)
 			}
 
 			return r, nil

@@ -22,6 +22,7 @@ type OptionsDir struct {
 	ExcludeLength              string
 	ExcludeLengthParsed        libgobuster.Set[int]
 	Force                      bool
+	BodyOutputDir              string
 }
 
 // NewOptions returns a new initialized OptionsDir

@@ -35,7 +35,7 @@ go install github.com/OJ/gobuster/v3@latest
 gobuster dir -u https://example.com -w /path/to/wordlist.txt
 
 # DNS subdomain enumeration
-gobuster dns -d example.com -w /path/to/wordlist.txt
+gobuster dns -do example.com -w /path/to/wordlist.txt
 
 # Virtual host discovery
 gobuster vhost -u https://example.com -w /path/to/wordlist.txt
@@ -138,17 +138,17 @@ Discover subdomains through DNS resolution.
 **Basic Usage:**
 
 ```bash
-gobuster dns -d example.com -w wordlist.txt
+gobuster dns -do example.com -w wordlist.txt
 ```
 
 **Advanced Options:**
 
 ```bash
 # Use custom DNS server
-gobuster dns -d example.com -w wordlist.txt -r 8.8.8.8:53
+gobuster dns -do example.com -w wordlist.txt -r 8.8.8.8:53
 
 # Increase threads for faster scanning
-gobuster dns -d example.com -w wordlist.txt -t 50
+gobuster dns -do example.com -w wordlist.txt -t 50
 ```
 
 #### 🏠 Virtual Host Mode (`vhost`)
@@ -257,7 +257,7 @@ gobuster dir -u https://target.com -w admin-panels.txt -s 200,301,302,403
 
 ```bash
 # Comprehensive subdomain enumeration
-gobuster dns -d target.com -w /usr/share/wordlists/dnsrecon/subdomains-top1mil-5000.txt -t 50
+gobuster dns -do target.com -w /usr/share/wordlists/dnsrecon/subdomains-top1mil-5000.txt -t 50
 ```
 
 ### Cloud Storage Assessment

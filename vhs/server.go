@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log" // nolint:depguard
 	"net/http"
 	"regexp"
 )
@@ -35,15 +35,16 @@ func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	x := RegexpHandler{}
-	x.routes = append(x.routes, &route{regexp.MustCompile(`^/\w+-\w+-\w+-\w+-\w+$`), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	x.routes = append(x.routes, &route{regexp.MustCompile(`^/\w+-\w+-\w+-\w+-\w+$`), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})})
 	x.routes = append(x.routes, &route{regexp.MustCompile(`^/`), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(r.URL.Path))
+		if _, err := w.Write([]byte(r.URL.Path)); err != nil {
+			log.Fatal(err.Error())
+		}
 	})})
 
-	log.Fatal(http.ListenAndServe("127.0.0.1:8081", &x))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8081", &x)) // nolint:gosec
 }

@@ -29,6 +29,11 @@ jobs:
       - name: Build linux
         run: task linux
 
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg ttyd
+
       - uses: charmbracelet/vhs-action@v1
         with:
           path: "vhs/gobuster_dir.tape"

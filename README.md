@@ -348,7 +348,7 @@ _Remember: Always test responsibly and with proper authorization._
 
 ## 3.9
 
-- TODO
+- Fix expanded mode showing the entries twice
 
 </details>
 

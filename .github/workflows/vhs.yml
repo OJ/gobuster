@@ -1,0 +1,47 @@
+name: vhs
+on:
+  push:
+    paths:
+      - vhs/**.tape
+
+permissions:
+  contents: write
+
+jobs:
+  vhs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get dependencies
+        run: task deps
+
+      - name: Build linux
+        run: task linux
+
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg ttyd
+
+      - uses: charmbracelet/vhs-action@v1
+        with:
+          path: "vhs/gobuster_dir.tape"
+
+      - name: commit and push changes
+        run: |
+          git config user.name "Github"
+          git config user.email "<>"
+          git add vhs/*.gif
+          git commit -m "update vhs gifs" || echo "no changes to commit"
+          git push origin master

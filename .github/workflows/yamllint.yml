@@ -13,7 +13,7 @@ jobs:
     name: yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: karancode/yamllint-github-action@master
         with:
           # fail on warnings and errors

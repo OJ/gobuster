@@ -8,7 +8,7 @@ import (
 
 const (
 	// VERSION contains the current gobuster version
-	VERSION = "3.8"
+	VERSION = "3.8.1"
 )
 
 func GetVersion() string {

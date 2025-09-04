@@ -11,7 +11,7 @@ jobs:
   vhs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -34,7 +34,7 @@ jobs:
           sudo apt update
           sudo apt install -y ffmpeg ttyd
 
-      - uses: charmbracelet/vhs-action@v1
+      - uses: charmbracelet/vhs-action@v2
         with:
           path: "vhs/gobuster_dir.tape"
 

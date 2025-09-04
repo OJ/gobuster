@@ -344,11 +344,11 @@ _Remember: Always test responsibly and with proper authorization._
 
 <details>
 
-<summary>3.9</summary>
+<summary>3.8.2</summary>
 
-## 3.9
+## 3.8.2
 
-- TODO
+- Fix expanded mode to show the full url again
 
 </details>
 

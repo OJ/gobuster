@@ -129,6 +129,11 @@ gobuster dir -u https://example.com -w wordlist.txt -l
 
 # Filter by status codes
 gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
+
+# Filter using a regex against the response body
+# This can be handy for websites that return status code 200 for everything, but the html contains an error message
+# NOTE: we need to exclude status codes `200` for this to work
+gobuster dir -u https://example.com -w wordlist.txt -b 200 -re "error\shello"
 ```
 
 #### 🔍 DNS Mode (`dns`)

@@ -252,9 +252,16 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var statusCode int
 	var size int64
 	var header http.Header
+	var body []byte
+
+	requestOptions := libgobuster.RequestOptions{}
+	if d.options.RegexParsed != nil {
+		requestOptions.ReturnBody = true
+	}
+
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, header, body, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -282,6 +289,11 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 
 	if statusCode != 0 {
 		resultStatus := false
+
+		// check body with the regex
+		if d.options.RegexParsed != nil && body != nil && d.options.RegexParsed.Match(body) {
+			resultStatus = true
+		}
 
 		switch {
 		case d.options.StatusCodesBlacklistParsed.Length() > 0:
@@ -444,6 +456,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
+			return "", err
+		}
+	}
+
+	if o.RegexParsed != nil 	{
+		if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.RegexParsed.String()); err != nil {
 			return "", err
 		}
 	}

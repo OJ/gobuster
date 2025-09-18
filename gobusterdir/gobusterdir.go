@@ -291,8 +291,12 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		resultStatus := false
 
 		// check body with the regex
-		if d.options.RegexParsed != nil && body != nil && d.options.RegexParsed.Match(body) {
-			resultStatus = true
+		if d.options.RegexParsed != nil && body != nil {
+			if d.options.RegexInvert {
+				resultStatus = !d.options.RegexParsed.Match(body)
+			} else {
+				resultStatus = d.options.RegexParsed.Match(body)
+			}
 		}
 
 		switch {

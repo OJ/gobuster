@@ -134,6 +134,9 @@ gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
 # This can be handy for websites that return status code 200 for everything, but the html contains an error message
 # NOTE: we need to exclude status codes `200` for this to work
 gobuster dir -u https://example.com -w wordlist.txt -b 200 -re "error\shello"
+
+# Filter using a regex but inverted against the response body
+gobuster dir -u https://example.com -w wordlist.txt -b 200 -rei "(?i)\berror\b"
 ```
 
 #### 🔍 DNS Mode (`dns`)

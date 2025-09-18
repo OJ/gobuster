@@ -26,6 +26,7 @@ type OptionsDir struct {
 	Force                      bool
 	Regex 					   string
 	RegexParsed                *regexp.Regexp
+	RegexInvert                bool
 }
 
 // NewOptions returns a new initialized OptionsDir

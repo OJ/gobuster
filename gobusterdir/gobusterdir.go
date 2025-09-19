@@ -168,6 +168,8 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 	}
 
 	switch {
+	case d.options.RegexParsed != nil:
+		d.options.StatusCodesBlacklistParsed= libgobuster.NewSet[int]()
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
@@ -290,16 +292,27 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	if statusCode != 0 {
 		resultStatus := false
 
-		// check body with the regex
-		if d.options.RegexParsed != nil && body != nil {
+		switch {
+		case d.options.RegexParsed != nil && body != nil:
 			if d.options.RegexInvert {
 				resultStatus = !d.options.RegexParsed.Match(body)
 			} else {
 				resultStatus = d.options.RegexParsed.Match(body)
 			}
-		}
 
-		switch {
+			if d.globalopts.Debug {
+				debugMessage := ""
+				if d.options.RegexInvert {
+					debugMessage = fmt.Sprintf("checking body with inverted regex for %s", d.options.RegexParsed.String())
+				} else {
+					debugMessage = fmt.Sprintf("checking body with regex for %s", d.options.RegexParsed.String())
+				}
+
+				progress.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelDebug,
+					Message: debugMessage,
+				}
+			}
 		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
 				resultStatus = true
@@ -464,9 +477,15 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.RegexParsed != nil 	{
-		if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.RegexParsed.String()); err != nil {
-			return "", err
+	if o.RegexParsed != nil {
+		if o.RegexInvert {
+			if _, err := fmt.Fprintf(tw, "[+] Regex Inverted:\t%s\n", o.RegexParsed.String()); err != nil {
+				return "", err
+			}
+		} else {
+			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.RegexParsed.String()); err != nil {
+				return "", err
+			}
 		}
 	}
 

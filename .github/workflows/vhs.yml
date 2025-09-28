@@ -48,4 +48,4 @@ jobs:
           git config user.email "<>"
           git add vhs/*.gif
           git commit -m "update vhs gifs" || echo "no changes to commit"
-          git push origin master
+          git push

@@ -351,6 +351,16 @@ _Remember: Always test responsibly and with proper authorization._
 
 <details>
 
+<summary>3.8.3</summary>
+
+## 3.8.3
+
+- Add option to filter body by regex
+
+</details>
+
+<details>
+
 <summary>3.8.2</summary>
 
 ## 3.8.2

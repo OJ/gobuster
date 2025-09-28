@@ -24,8 +24,7 @@ type OptionsDir struct {
 	ExcludeLength              string
 	ExcludeLengthParsed        libgobuster.Set[int]
 	Force                      bool
-	Regex 					   string
-	RegexParsed                *regexp.Regexp
+	Regex                      *regexp.Regexp
 	RegexInvert                bool
 }
 

@@ -37,13 +37,19 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Upon finding a file search for backup files by appending multiple backup extensions"},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
-		&cli.StringFlag{Name: "regex", Aliases: []string{"re"}, Usage: "Use regex to filter the results, by inspecting the content of the response body."},
-		&cli.StringFlag{Name: "regex-invert", Aliases: []string{"rei"}, Usage: "Use regex to filter the results, but inverted, by inspecting the content of the response body."},
+		&cli.StringFlag{Name: "regex", Aliases: []string{"re"}, Usage: "Use regex to filter the results, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses matching the regex will be displayed."},
+		&cli.StringFlag{Name: "regex-invert", Aliases: []string{"rei"}, Usage: "Use regex to filter the results, but inverted, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses NOT matching the regex will be displayed."},
 	}...)
 	return flags
 }
 
 func run(c *cli.Context) error {
+	globalOpts, err := internalcli.ParseGlobalOptions(c)
+	if err != nil {
+		return err
+	}
+	log := libgobuster.NewLogger(globalOpts.Debug)
+
 	pluginOpts := gobusterdir.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)
@@ -104,29 +110,26 @@ func run(c *cli.Context) error {
 	}
 	pluginOpts.ExcludeLengthParsed = ret4
 
-	if c.IsSet("regex") {
-		pluginOpts.Regex = c.String("regex")
+	if c.IsSet("regex") && c.IsSet("regex-invert") {
+		return errors.New("regex and regex-invert are mutually exclusive, please set only one")
 	}
 
-	if c.IsSet("regex-invert") {
-		pluginOpts.Regex = c.String("regex-invert")
-		pluginOpts.RegexInvert = true
-	}
-
-	if pluginOpts.Regex != "" {
-		parsedRegex, err := regexp.Compile(pluginOpts.Regex)
+	if c.IsSet("regex") && c.String("regex") != "" {
+		regex, err := regexp.Compile(c.String("regex"))
 		if err != nil {
 			return fmt.Errorf("invalid value for regex: %w", err)
 		}
-		pluginOpts.RegexParsed = parsedRegex
+		pluginOpts.Regex = regex
 	}
 
-	globalOpts, err := internalcli.ParseGlobalOptions(c)
-	if err != nil {
-		return err
+	if c.IsSet("regex-invert") && c.String("regex-invert") != "" {
+		regex, err := regexp.Compile(c.String("regex-invert"))
+		if err != nil {
+			return fmt.Errorf("invalid value for regex-invert: %w", err)
+		}
+		pluginOpts.Regex = regex
+		pluginOpts.RegexInvert = true
 	}
-
-	log := libgobuster.NewLogger(globalOpts.Debug)
 
 	plugin, err := gobusterdir.New(&globalOpts, pluginOpts, log)
 	if err != nil {

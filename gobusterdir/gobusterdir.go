@@ -102,6 +102,19 @@ func (d *GobusterDir) Name() string {
 	return "directory enumeration"
 }
 
+func (d *GobusterDir) regexBodyIsAMatch(body []byte) bool {
+	switch {
+	case d.options.Regex != nil && body != nil:
+		if d.options.RegexInvert {
+			return !d.options.Regex.Match(body)
+		} else {
+			return d.options.Regex.Match(body)
+		}
+	default:
+		return true
+	}
+}
+
 // PreRun is the pre run implementation of gobusterdir
 func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) error {
 	// add trailing slash
@@ -139,7 +152,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 		url.Path = fmt.Sprintf("%s/", url.Path)
 	}
 
-	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, wildcardHeader, wildcardBody, err := d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		var retErr error
 		switch {
@@ -168,15 +181,21 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 	}
 
 	switch {
-	case d.options.RegexParsed != nil:
-		d.options.StatusCodesBlacklistParsed= libgobuster.NewSet[int]()
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
-			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			if d.regexBodyIsAMatch(wildcardBody) {
+				return nil
+			} else {
+				return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			}
 		}
 	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
-			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			if d.regexBodyIsAMatch(wildcardBody) {
+				return nil
+			} else {
+				return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
+			}
 		}
 	default:
 		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -257,7 +276,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var body []byte
 
 	requestOptions := libgobuster.RequestOptions{}
-	if d.options.RegexParsed != nil {
+	if d.options.Regex != nil {
 		requestOptions.ReturnBody = true
 	}
 
@@ -293,33 +312,13 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		resultStatus := false
 
 		switch {
-		case d.options.RegexParsed != nil && body != nil:
-			if d.options.RegexInvert {
-				resultStatus = !d.options.RegexParsed.Match(body)
-			} else {
-				resultStatus = d.options.RegexParsed.Match(body)
-			}
-
-			if d.globalopts.Debug {
-				debugMessage := ""
-				if d.options.RegexInvert {
-					debugMessage = fmt.Sprintf("checking body with inverted regex for %s", d.options.RegexParsed.String())
-				} else {
-					debugMessage = fmt.Sprintf("checking body with regex for %s", d.options.RegexParsed.String())
-				}
-
-				progress.MessageChan <- libgobuster.Message{
-					Level:   libgobuster.LevelDebug,
-					Message: debugMessage,
-				}
-			}
 		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
-				resultStatus = true
+				resultStatus = d.regexBodyIsAMatch(body)
 			}
 		case d.options.StatusCodesParsed.Length() > 0:
 			if d.options.StatusCodesParsed.Contains(statusCode) {
-				resultStatus = true
+				resultStatus = d.regexBodyIsAMatch(body)
 			}
 		default:
 			return nil, errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
@@ -477,13 +476,13 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 		}
 	}
 
-	if o.RegexParsed != nil {
+	if o.Regex != nil {
 		if o.RegexInvert {
-			if _, err := fmt.Fprintf(tw, "[+] Regex Inverted:\t%s\n", o.RegexParsed.String()); err != nil {
+			if _, err := fmt.Fprintf(tw, "[+] Regex Inverted:\t%s\n", o.Regex.String()); err != nil {
 				return "", err
 			}
 		} else {
-			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.RegexParsed.String()); err != nil {
+			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.Regex.String()); err != nil {
 				return "", err
 			}
 		}

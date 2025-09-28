@@ -5,6 +5,7 @@ on:
       - vhs/**.tape
   schedule:
     - cron: "0 0 * * 0" # every week
+  workflow_dispatch:
 
 permissions:
   contents: write

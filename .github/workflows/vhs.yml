@@ -29,14 +29,18 @@ jobs:
       - name: Build linux
         run: task linux
 
-      - name: Install deps
+      - name: Install vhs deps
         run: |
           sudo apt update
           sudo apt install -y ffmpeg ttyd
 
-      - uses: charmbracelet/vhs-action@v2
-        with:
-          path: "vhs/gobuster_dir.tape"
+      - name: Install vhs
+        run: |
+          go install github.com/charmbracelet/vhs@latest
+
+      - name: Generate vhs gif
+        run: |
+          vhs vhs/gobuster_dir.tape -o vhs/gobuster_dir.gif
 
       - name: commit and push changes
         run: |

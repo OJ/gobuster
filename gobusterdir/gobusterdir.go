@@ -168,6 +168,8 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 	}
 
 	switch {
+	case d.options.RegexParsed != nil:
+		d.options.StatusCodesBlacklistParsed= libgobuster.NewSet[int]()
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
@@ -252,9 +254,16 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var statusCode int
 	var size int64
 	var header http.Header
+	var body []byte
+
+	requestOptions := libgobuster.RequestOptions{}
+	if d.options.RegexParsed != nil {
+		requestOptions.ReturnBody = true
+	}
+
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, header, body, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -284,6 +293,26 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		resultStatus := false
 
 		switch {
+		case d.options.RegexParsed != nil && body != nil:
+			if d.options.RegexInvert {
+				resultStatus = !d.options.RegexParsed.Match(body)
+			} else {
+				resultStatus = d.options.RegexParsed.Match(body)
+			}
+
+			if d.globalopts.Debug {
+				debugMessage := ""
+				if d.options.RegexInvert {
+					debugMessage = fmt.Sprintf("checking body with inverted regex for %s", d.options.RegexParsed.String())
+				} else {
+					debugMessage = fmt.Sprintf("checking body with regex for %s", d.options.RegexParsed.String())
+				}
+
+				progress.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelDebug,
+					Message: debugMessage,
+				}
+			}
 		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
 				resultStatus = true
@@ -445,6 +474,18 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
 			return "", err
+		}
+	}
+
+	if o.RegexParsed != nil {
+		if o.RegexInvert {
+			if _, err := fmt.Fprintf(tw, "[+] Regex Inverted:\t%s\n", o.RegexParsed.String()); err != nil {
+				return "", err
+			}
+		} else {
+			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.RegexParsed.String()); err != nil {
+				return "", err
+			}
 		}
 	}
 

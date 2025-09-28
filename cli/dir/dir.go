@@ -3,6 +3,7 @@ package dir
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	internalcli "github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
@@ -36,6 +37,8 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Upon finding a file search for backup files by appending multiple backup extensions"},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
+		&cli.StringFlag{Name: "regex", Aliases: []string{"re"}, Usage: "Use regex to filter the results, by inspecting the content of the response body."},
+		&cli.StringFlag{Name: "regex-invert", Aliases: []string{"rei"}, Usage: "Use regex to filter the results, but inverted, by inspecting the content of the response body."},
 	}...)
 	return flags
 }
@@ -100,6 +103,23 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("invalid value for exclude-length: %w", err)
 	}
 	pluginOpts.ExcludeLengthParsed = ret4
+
+	if c.IsSet("regex") {
+		pluginOpts.Regex = c.String("regex")
+	}
+
+	if c.IsSet("regex-invert") {
+		pluginOpts.Regex = c.String("regex-invert")
+		pluginOpts.RegexInvert = true
+	}
+
+	if pluginOpts.Regex != "" {
+		parsedRegex, err := regexp.Compile(pluginOpts.Regex)
+		if err != nil {
+			return fmt.Errorf("invalid value for regex: %w", err)
+		}
+		pluginOpts.RegexParsed = parsedRegex
+	}
 
 	globalOpts, err := internalcli.ParseGlobalOptions(c)
 	if err != nil {

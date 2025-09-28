@@ -392,3 +392,173 @@ func BenchmarkParseCommaSeparatedInt(b *testing.B) {
 		})
 	}
 }
+
+func TestSanitizeFilename(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "unnamed",
+		},
+		{
+			name:     "normal filename",
+			input:    "test.txt",
+			expected: "test.txt",
+		},
+		{
+			name:     "filename with spaces",
+			input:    "  test file.txt  ",
+			expected: "test file.txt",
+		},
+		{
+			name:     "filename with path separators",
+			input:    "folder/test\\file.txt",
+			expected: "folder_test_file.txt",
+		},
+		{
+			name:     "filename with Windows invalid characters",
+			input:    "test<file>name:with|invalid?chars*.txt",
+			expected: "test_file_name_with_invalid_chars_.txt",
+		},
+		{
+			name:     "filename with control characters",
+			input:    "test\x00file\x1fname.txt",
+			expected: "test_file_name.txt",
+		},
+		{
+			name:     "filename with non-printable Unicode",
+			input:    "test\u200bfile\u2028name.txt",
+			expected: "test_file_name.txt",
+		},
+		{
+			name:     "Windows reserved name - CON",
+			input:    "CON.txt",
+			expected: "_CON.txt",
+		},
+		{
+			name:     "Windows reserved name - PRN (lowercase)",
+			input:    "prn.log",
+			expected: "_prn.log",
+		},
+		{
+			name:     "Windows reserved name - COM1",
+			input:    "COM1",
+			expected: "_COM1",
+		},
+		{
+			name:     "Windows reserved name - LPT9",
+			input:    "lpt9.dat",
+			expected: "_lpt9.dat",
+		},
+		{
+			name:     "filename with reserved name as part of longer name",
+			input:    "CONfig.txt",
+			expected: "CONfig.txt",
+		},
+		{
+			name:     "filename with trailing dots and spaces",
+			input:    "test.txt..   ",
+			expected: "test.txt",
+		},
+		{
+			name:     "filename that becomes empty after sanitization",
+			input:    "...   ",
+			expected: "unnamed",
+		},
+		{
+			name:     "very long filename",
+			input:    strings.Repeat("a", 300) + ".txt",
+			expected: strings.Repeat("a", 251) + ".txt", // 255 total
+		},
+		{
+			name:     "long filename with long extension",
+			input:    strings.Repeat("a", 250) + "." + strings.Repeat("b", 10),
+			expected: strings.Repeat("a", 244) + "." + strings.Repeat("b", 10), // 255 total
+		},
+		{
+			name:     "long filename where extension is too long",
+			input:    "test." + strings.Repeat("b", 260),
+			expected: ("test." + strings.Repeat("b", 260))[:255],
+		},
+		{
+			name:     "whitespace only",
+			input:    "   \t\n  ",
+			expected: "unnamed",
+		},
+		{
+			name:     "mixed invalid characters and reserved name",
+			input:    "aux|with<invalid>chars.log",
+			expected: "aux_with_invalid_chars.log",
+		},
+		{
+			name:     "reserved name",
+			input:    "AUX.log",
+			expected: "_AUX.log",
+		},
+		{
+			name:     "Unicode filename",
+			input:    "тест файл.txt",
+			expected: "тест файл.txt",
+		},
+		{
+			name:     "filename with quotes",
+			input:    `"quoted filename".txt`,
+			expected: "_quoted filename_.txt",
+		},
+		{
+			name:     "filename with pipe character",
+			input:    "file|with|pipes.txt",
+			expected: "file_with_pipes.txt",
+		},
+		{
+			name:     "filename with question marks",
+			input:    "what?is?this?.txt",
+			expected: "what_is_this_.txt",
+		},
+		{
+			name:     "filename with asterisks",
+			input:    "wild*card*name*.txt",
+			expected: "wild_card_name_.txt",
+		},
+		{
+			name:     "only extension",
+			input:    ".hidden",
+			expected: ".hidden",
+		},
+		{
+			name:     "reserved name without extension",
+			input:    "NUL",
+			expected: "_NUL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SanitizeFilename(tt.input)
+			if result != tt.expected {
+				t.Errorf("sanitizeFilename(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+
+			// Additional validation: ensure result is safe
+			if len(result) > 255 {
+				t.Errorf("sanitizeFilename(%q) returned filename too long: %d characters", tt.input, len(result))
+			}
+
+			if strings.ContainsAny(result, `<>:"|?*`) {
+				t.Errorf("sanitizeFilename(%q) still contains invalid characters: %q", tt.input, result)
+			}
+
+			if strings.Contains(result, "/") || strings.Contains(result, "\\") {
+				t.Errorf("sanitizeFilename(%q) still contains path separators: %q", tt.input, result)
+			}
+
+			if result == "" {
+				t.Errorf("sanitizeFilename(%q) returned empty string", tt.input)
+			}
+		})
+	}
+}

@@ -31,4 +31,5 @@ type HTTPOptions struct {
 	NoCanonicalizeHeaders bool
 	FollowRedirect        bool
 	Method                string
+	BodyOutputDir         string
 }

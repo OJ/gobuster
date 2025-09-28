@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -86,6 +87,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
+		BodyOutputDir:         opts.BodyOutputDir,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -273,7 +275,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var body []byte
 
 	requestOptions := libgobuster.RequestOptions{}
-	if d.options.Regex != nil {
+	if d.options.Regex != nil || d.options.BodyOutputDir != "" {
 		requestOptions.ReturnBody = true
 	}
 
@@ -303,6 +305,18 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			return nil, err
 		}
 		break
+	}
+
+	if d.options.BodyOutputDir != "" && body != nil {
+		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(entity, "/"), statusCode))
+		fpath := filepath.Join(d.options.BodyOutputDir, fname)
+		err := os.WriteFile(fpath, body, 0o600)
+		if err != nil {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelError,
+				Message: fmt.Sprintf("Could not write body to file %s: %v", fpath, err),
+			}
+		}
 	}
 
 	if statusCode != 0 {

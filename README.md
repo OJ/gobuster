@@ -356,6 +356,7 @@ _Remember: Always test responsibly and with proper authorization._
 ## 3.8.3
 
 - Add option to filter body by regex
+- Add option to save response bodies
 
 </details>
 

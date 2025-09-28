@@ -107,9 +107,8 @@ func (d *GobusterDir) regexBodyIsAMatch(body []byte) bool {
 	case d.options.Regex != nil && body != nil:
 		if d.options.RegexInvert {
 			return !d.options.Regex.Match(body)
-		} else {
-			return d.options.Regex.Match(body)
 		}
+		return d.options.Regex.Match(body)
 	default:
 		return true
 	}
@@ -185,17 +184,15 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
 			if d.regexBodyIsAMatch(wildcardBody) {
 				return nil
-			} else {
-				return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 			}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
 			if d.regexBodyIsAMatch(wildcardBody) {
 				return nil
-			} else {
-				return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 			}
+			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	default:
 		return errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")

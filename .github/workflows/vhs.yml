@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - vhs/**.tape
+  schedule:
+    - cron: "0 0 * * 0" # every week
 
 permissions:
   contents: write

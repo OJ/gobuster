@@ -44,14 +44,14 @@ type Wordlist struct {
 }
 
 // NewGobuster returns a new Gobuster object
-func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuster, error) {
+func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) *Gobuster {
 	var g Gobuster
 	g.Opts = opts
 	g.plugin = plugin
 	g.Logger = logger
 	g.Progress = NewProgress()
 
-	return &g, nil
+	return &g
 }
 
 func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successChan chan<- *Guess, wg *sync.WaitGroup) {

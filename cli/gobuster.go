@@ -148,10 +148,7 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	ctxCancel, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	gobuster, err := libgobuster.NewGobuster(opts, plugin, log)
-	if err != nil {
-		return err
-	}
+	gobuster := libgobuster.NewGobuster(opts, plugin, log)
 
 	if !opts.Quiet {
 		log.Println(ruler)

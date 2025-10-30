@@ -191,7 +191,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range gcsListing.Items {
-				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size)
+				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size) // nolint:perfsprint
 			}
 			extraStr = strings.TrimRight(extraStr, ", ")
 		}

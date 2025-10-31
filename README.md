@@ -357,6 +357,7 @@ _Remember: Always test responsibly and with proper authorization._
 
 - Add option to filter body by regex
 - Add option to save response bodies
+- Allow comma in Header values passed via the CLI
 
 </details>
 

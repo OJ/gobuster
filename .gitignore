@@ -30,3 +30,4 @@ config.json
 gobuster
 *.txt
 dist/
+wordlist

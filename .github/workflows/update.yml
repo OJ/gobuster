@@ -2,7 +2,7 @@ name: Update Dependencies
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Runs daily at 04:00 UTC
+    - cron: "0 4 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 'stable'
+          go-version: "stable"
 
       - name: Update all dependencies
         run: |

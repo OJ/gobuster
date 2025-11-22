@@ -194,6 +194,10 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 				return nil, err
 			}
 		}
+		if statusCode == http.StatusTooManyRequests && v.globalopts.StopOnRateLimit {
+			fmt.Println("Rate limit reached, exiting...")
+			os.Exit(0)
+		}
 		break
 	}
 

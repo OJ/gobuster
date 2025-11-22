@@ -235,6 +235,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
+		&cli.BoolFlag{Name: "stop-on-rate-limit", Value: false, Usage: "When enabled exits when a rate limit is detected"},
 	}
 }
 
@@ -262,6 +263,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	opts.NoProgress = c.Bool("no-progress")
 	opts.NoError = c.Bool("no-error")
 	opts.PatternFile = c.String("pattern")
+	opts.StopOnRateLimit = c.Bool("stop-on-rate-limit")
 	if opts.PatternFile != "" {
 		if _, err := os.Stat(opts.PatternFile); os.IsNotExist(err) {
 			return opts, fmt.Errorf("pattern file %q does not exist: %w", opts.PatternFile, err)

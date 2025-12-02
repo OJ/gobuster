@@ -20,12 +20,12 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/tools v0.36.0 // indirect
-	mvdan.cc/gofumpt v0.9.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
+	mvdan.cc/gofumpt v0.9.2 // indirect
 )
 
 tool mvdan.cc/gofumpt

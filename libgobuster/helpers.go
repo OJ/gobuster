@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // Set is a set of Ts
@@ -206,4 +208,72 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 		}
 	}
 	return ret, nil
+}
+
+// Windows reserved characters: < > : " | ? * and control characters (0-31)
+var filenameInvalidChars = regexp.MustCompile(`[<>:"|?*\x00-\x1f]`)
+
+// sanitizeFilename removes or replaces invalid characters from a filename
+// to make it safe for use on Windows, macOS, and Linux filesystems
+func SanitizeFilename(filename string) string {
+	if filename == "" {
+		return "unnamed"
+	}
+
+	// Remove leading/trailing whitespace
+	filename = strings.TrimSpace(filename)
+
+	// Replace path separators and other problematic characters
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "\\", "_")
+
+	filename = filenameInvalidChars.ReplaceAllString(filename, "_")
+
+	// Remove non-printable Unicode characters
+	filename = strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return '_'
+	}, filename)
+
+	// Windows reserved names (case-insensitive)
+	reservedNames := []string{
+		"CON", "PRN", "AUX", "NUL",
+		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+	}
+
+	// Check if filename (without extension) is a reserved name
+	nameOnly := strings.TrimSuffix(filename, filepath.Ext(filename))
+	for _, reserved := range reservedNames {
+		if strings.EqualFold(nameOnly, reserved) {
+			filename = "_" + filename
+			break
+		}
+	}
+
+	// Remove trailing dots and spaces (Windows requirement)
+	filename = strings.TrimRight(filename, ". ")
+
+	// Ensure filename isn't empty after sanitization
+	if filename == "" {
+		filename = "unnamed"
+	}
+
+	filename = filepath.Base(filename)
+
+	// Limit length to 255 characters (common filesystem limit)
+	if len(filename) > 255 {
+		ext := filepath.Ext(filename)
+		base := strings.TrimSuffix(filename, ext)
+		maxBase := 255 - len(ext)
+		if maxBase > 0 {
+			filename = base[:maxBase] + ext
+		} else {
+			filename = filename[:255]
+		}
+	}
+
+	return filename
 }

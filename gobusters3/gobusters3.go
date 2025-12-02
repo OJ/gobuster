@@ -180,7 +180,7 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range awsListing.Contents {
-				extraStr += fmt.Sprintf("%s (%db), ", x.Key, x.Size)
+				extraStr += fmt.Sprintf("%s (%db), ", x.Key, x.Size) // nolint:perfsprint
 			}
 			extraStr = strings.TrimRight(extraStr, ", ")
 		}

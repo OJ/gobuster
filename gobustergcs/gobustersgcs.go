@@ -43,13 +43,15 @@ func New(globalopts *libgobuster.Options, opts *OptionsGCS, logger *libgobuster.
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		LocalAddr:        opts.LocalAddr,
+		TLSRenegotiation: opts.TLSRenegotiation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -189,7 +191,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			}
 			extraStr = "Bucket Listing enabled: "
 			for _, x := range gcsListing.Items {
-				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size)
+				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size) // nolint:perfsprint
 			}
 			extraStr = strings.TrimRight(extraStr, ", ")
 		}

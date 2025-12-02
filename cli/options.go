@@ -130,6 +130,7 @@ func CommonHTTPOptions() []cli.Flag {
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
 		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
 		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "Specify HTTP method"},
+    &cli.StringFlag{Name: "body-output-dir", Usage: "Directory to store response bodies"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
 	return flags
@@ -207,6 +208,14 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 		}
 		header := libgobuster.HTTPHeader{Name: key, Value: value}
 		opts.Headers = append(opts.Headers, header)
+	}
+
+	if c.IsSet("body-output-dir") {
+		opts.BodyOutputDir = c.String("body-output-dir")
+		err = os.MkdirAll(opts.BodyOutputDir, 0o755)
+		if err != nil {
+			return opts, fmt.Errorf("could not create body output dir %q: %w", opts.BodyOutputDir, err)
+		}
 	}
 
 	return opts, nil

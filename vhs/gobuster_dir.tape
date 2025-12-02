@@ -55,7 +55,7 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output vhs/gobuster_dir.gif
+Output gobuster_dir.gif
 
 # Require gobuster
 

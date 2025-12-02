@@ -129,7 +129,7 @@ func CommonHTTPOptions() []cli.Flag {
 		&cli.BoolFlag{Name: "follow-redirect", Aliases: []string{"r"}, Value: false, Usage: "Follow redirects"},
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
 		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
-		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "the password to the p12 file"},
+		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "Specify HTTP method"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
 	return flags

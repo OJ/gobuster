@@ -130,7 +130,7 @@ func CommonHTTPOptions() []cli.Flag {
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
 		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
 		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "Specify HTTP method"},
-    &cli.StringFlag{Name: "body-output-dir", Usage: "Directory to store response bodies"},
+		&cli.StringFlag{Name: "body-output-dir", Usage: "Directory to store response bodies"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
 	return flags

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -45,13 +46,15 @@ func New(globalopts *libgobuster.Options, opts *OptionsVhost, logger *libgobuste
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		LocalAddr:        opts.LocalAddr,
+		TLSRenegotiation: opts.TLSRenegotiation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -63,6 +66,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsVhost, logger *libgobuste
 		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
+		BodyOutputDir:         opts.BodyOutputDir,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -195,6 +199,18 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 			}
 		}
 		break
+	}
+
+	if v.options.BodyOutputDir != "" && body != nil {
+		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(word, "/"), statusCode))
+		fpath := filepath.Join(v.options.BodyOutputDir, fname)
+		err := os.WriteFile(fpath, body, 0o600)
+		if err != nil {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelError,
+				Message: fmt.Sprintf("Could not write body to file %s: %v", fpath, err),
+			}
+		}
 	}
 
 	// subdomain must not match default vhost and non existent vhost

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -52,13 +53,15 @@ func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		LocalAddr:        opts.LocalAddr,
+		TLSRenegotiation: opts.TLSRenegotiation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -70,6 +73,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster
 		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
+		BodyOutputDir:         opts.BodyOutputDir,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -139,6 +143,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		requestOptions.UpdatedBasicAuthPassword = strings.ReplaceAll(d.options.Password, FuzzKeyword, word)
 	}
 
+	if d.options.BodyOutputDir != "" {
+		requestOptions.ReturnBody = true
+	}
+
 	// add some debug output
 	if d.globalopts.Debug {
 		progress.MessageChan <- libgobuster.Message{
@@ -156,9 +164,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	var statusCode int
 	var size int64
 	var responseHeaders http.Header
+	var body []byte
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, responseHeaders, _, err = d.http.Request(ctx, url, requestOptions)
+		statusCode, size, responseHeaders, body, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -183,6 +192,18 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 			}
 		}
 		break
+	}
+
+	if d.options.BodyOutputDir != "" && body != nil {
+		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(word, "/"), statusCode))
+		fpath := filepath.Join(d.options.BodyOutputDir, fname)
+		err := os.WriteFile(fpath, body, 0o600)
+		if err != nil {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelError,
+				Message: fmt.Sprintf("Could not write body to file %s: %v", fpath, err),
+			}
+		}
 	}
 
 	if statusCode != 0 {

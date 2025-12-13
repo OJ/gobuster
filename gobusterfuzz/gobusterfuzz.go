@@ -191,6 +191,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 				return nil, err
 			}
 		}
+		if statusCode == http.StatusTooManyRequests && d.globalopts.StopOnRateLimit {
+			fmt.Println("Rate limit reached, exiting...")
+			os.Exit(0)
+		}
 		break
 	}
 

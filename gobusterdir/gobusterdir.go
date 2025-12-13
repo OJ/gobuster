@@ -304,6 +304,11 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			}
 			return nil, err
 		}
+		if statusCode == http.StatusTooManyRequests && d.globalopts.StopOnRateLimit {
+			fmt.Println("Rate limit reached, exiting...")
+			os.Exit(0)
+
+		}
 		break
 	}
 

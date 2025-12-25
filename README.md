@@ -488,3 +488,257 @@ _Remember: Always test responsibly and with proper authorization._
 - Option to supply custom HTTP headers
 
 </details>
+
+# Gobuster on Termux (Android) – Complete Installation Guide
+
+This repository provides a **complete, step-by-step guide to install Gobuster on Android using Termux**.
+
+⚠️ Note: The **official Gobuster repository does not include Termux-specific instructions**.  
+This guide fills that gap for **Android & mobile users**.
+
+---
+
+## 📱 Requirements
+
+- Android device (ARM64 recommended)
+- Latest Termux app
+- Stable internet connection
+
+---
+
+## 🧰 Step 1: Update Termux
+
+Always start by updating Termux packages:
+
+```bash
+pkg update && pkg upgrade -y
+
+
+---
+
+🧰 Step 2: Install Required Packages
+
+Gobuster is written in Go and needs compiler tools.
+
+pkg install golang git clang make -y
+
+
+---
+
+🔍 Step 3: Verify Go Installation
+
+Gobuster requires Go 1.24 or higher.
+
+go version
+
+Expected output example:
+
+go version go1.25.4 android/arm64
+
+If Go is outdated:
+
+pkg upgrade golang
+
+
+---
+
+📁 Step 4: Move to Home Directory
+
+cd ~
+pwd
+
+Expected path:
+
+/data/data/com.termux/files/home
+
+
+---
+
+⚙️ Step 5: Install Gobuster
+
+go install github.com/OJ/gobuster/v3@latest
+
+This will:
+
+Download Gobuster source code
+
+Compile it for Android (ARM64)
+
+Install the binary at:
+
+
+$HOME/go/bin/gobuster
+
+
+---
+
+🔍 Step 6: Confirm Gobuster Binary
+
+ls $HOME/go/bin
+
+Expected output:
+
+gobuster
+
+
+---
+
+🔍 Step 7: Check Go Environment
+
+go env | grep -E "GOBIN|GOPATH"
+
+Example output:
+
+GOBIN=''
+GOPATH='/data/data/com.termux/files/home/go'
+
+
+---
+
+🛠️ Step 8: Fix PATH (IMPORTANT)
+
+Termux does not include Go binaries in PATH by default.
+
+Check current PATH:
+
+echo $PATH
+
+If $HOME/go/bin is missing, add it permanently:
+
+echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.bashrc
+source ~/.bashrc
+
+
+---
+
+✅ Step 9: Verify Gobuster Installation
+
+gobuster --version
+
+Expected output:
+
+gobuster version 3.8.2
+
+Check binary location:
+
+which gobuster
+
+Expected:
+
+/data/data/com.termux/files/home/go/bin/gobuster
+
+
+---
+
+📖 Step 10: Gobuster Help & Modes
+
+gobuster help
+
+Available modes:
+
+dir
+
+dns
+
+vhost
+
+fuzz
+
+tftp
+
+s3
+
+gcs
+
+
+
+---
+
+📚 Step 11: Install Wordlists (SecLists)
+
+Use a network-friendly shallow clone (recommended for mobile):
+
+git clone --depth=1 https://github.com/danielmiessler/SecLists.git
+
+If clone fails due to network:
+
+rm -rf SecLists
+
+Then retry.
+
+
+---
+
+🧪 Step 12: First LEGAL Practice Scan
+
+⚠️ Scan only authorized or practice targets.
+
+Example (safe testing site):
+
+gobuster dir \
+-u http://testphp.vulnweb.com \
+-w SecLists/Discovery/Web-Content/common.txt \
+-t 10
+
+
+---
+
+⚙️ Performance Tips (Android Users)
+
+Recommended threads:
+
+
+-t 5 or -t 10
+
+Avoid high thread counts:
+
+
+-t 50 or higher
+
+High threads may cause phone heating or crashes.
+
+
+---
+
+❗ Common Issues & Fixes
+
+Gobuster command not found
+
+export PATH="$PATH:$HOME/go/bin"
+
+Git clone fails
+
+git clone --depth=1 https://github.com/danielmiessler/SecLists.git
+
+
+---
+
+⚠️ Legal Warning
+
+❌ Do NOT scan random websites
+✅ Scan only:
+
+Your own systems
+
+Practice labs
+
+Authorized targets
+
+
+Unauthorized scanning may be illegal.
+
+
+---
+
+🎯 Summary
+
+✔ Gobuster runs perfectly on Termux
+✔ Android ARM64 supported
+✔ All commands tested in real Termux environment
+✔ Ideal for mobile ethical hacking learners
+
+Happy hacking 🚀
+
+---
+
+

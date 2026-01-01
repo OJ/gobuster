@@ -30,6 +30,7 @@ type Gobuster struct {
 	Logger   *Logger
 	plugin   GobusterPlugin
 	Progress *Progress
+	Pause    *PauseController
 }
 
 type Guess struct {
@@ -50,6 +51,7 @@ func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuste
 	g.plugin = plugin
 	g.Logger = logger
 	g.Progress = NewProgress()
+	g.Pause = NewPauseController()
 
 	return &g, nil
 }
@@ -57,6 +59,11 @@ func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuste
 func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successChan chan<- *Guess, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
+		// Check if paused and wait for resume
+		if err := g.Pause.Wait(ctx); err != nil {
+			return
+		}
+
 		// Prioritize stopping when the context is done
 		select {
 		case <-ctx.Done():

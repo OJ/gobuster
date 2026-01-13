@@ -164,7 +164,8 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 		return nil, nil // nolint:nilnil
 	}
 
-	extraStr := ""
+	var extraStrBuilder strings.Builder
+
 	if s.options.ShowFiles {
 		// get status
 		var result map[string]interface{}
@@ -180,7 +181,10 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			if err != nil {
 				return nil, fmt.Errorf("could not parse error json: %w", err)
 			}
-			extraStr = fmt.Sprintf("Error: %s (%d)", gcsError.Error.Message, gcsError.Error.Code)
+			_, err = fmt.Fprintf(&extraStrBuilder, "Error: %s (%d)", gcsError.Error.Message, gcsError.Error.Code)
+			if err != nil {
+				return nil, fmt.Errorf("fmt.Fprintf to strings.Builder failed: %w", err)
+			}
 		} else if v, exist := result["kind"]; exist && v == "storage#objects" {
 			// https://cloud.google.com/storage/docs/json_api/v1/status-codes
 			// bucket listing enabled
@@ -189,18 +193,23 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 			if err != nil {
 				return nil, fmt.Errorf("could not parse result json: %w", err)
 			}
-			extraStr = "Bucket Listing enabled: "
-			for _, x := range gcsListing.Items {
-				extraStr += fmt.Sprintf("%s (%sb), ", x.Name, x.Size) // nolint:perfsprint
+			extraStrBuilder.WriteString("Bucket Listing enabled: ")
+			for i, x := range gcsListing.Items {
+				if i > 0 {
+					extraStrBuilder.WriteString(", ")
+				}
+				_, err := fmt.Fprintf(&extraStrBuilder, "%s (%sb)", x.Name, x.Size)
+				if err != nil {
+					return nil, fmt.Errorf("fmt.Fprintf to strings.Builder failed: %w", err)
+				}
 			}
-			extraStr = strings.TrimRight(extraStr, ", ")
 		}
 	}
 
 	r := Result{
 		Found:      found,
 		BucketName: word,
-		Status:     extraStr,
+		Status:     extraStrBuilder.String(),
 	}
 
 	return r, nil

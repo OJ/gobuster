@@ -160,7 +160,8 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 		return nil, nil // nolint:nilnil
 	}
 
-	extraStr := ""
+	var extraStrBuilder strings.Builder
+
 	if s.options.ShowFiles {
 		// get status
 		if bytes.Contains(body, []byte("<Error>")) {
@@ -170,7 +171,10 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 				return nil, fmt.Errorf("could not parse error xml: %w", err)
 			}
 			// https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
-			extraStr = fmt.Sprintf("Error: %s (%s)", awsError.Message, awsError.Code)
+			_, err = fmt.Fprintf(&extraStrBuilder, "Error: %s (%s)", awsError.Message, awsError.Code)
+			if err != nil {
+				return nil, fmt.Errorf("fmt.Fprintf to strings.Builder failed: %w", err)
+			}
 		} else if bytes.Contains(body, []byte("<ListBucketResult ")) {
 			// bucket listing enabled
 			awsListing := AWSListing{}
@@ -178,18 +182,23 @@ func (s *GobusterS3) ProcessWord(ctx context.Context, word string, progress *lib
 			if err != nil {
 				return nil, fmt.Errorf("could not parse result xml: %w", err)
 			}
-			extraStr = "Bucket Listing enabled: "
-			for _, x := range awsListing.Contents {
-				extraStr += fmt.Sprintf("%s (%db), ", x.Key, x.Size) // nolint:perfsprint
+			extraStrBuilder.WriteString("Bucket Listing enabled: ")
+			for i, x := range awsListing.Contents {
+				if i > 0 {
+					extraStrBuilder.WriteString(", ")
+				}
+				_, err := fmt.Fprintf(&extraStrBuilder, "%s (%db)", x.Key, x.Size)
+				if err != nil {
+					return nil, fmt.Errorf("fmt.Fprintf to strings.Builder failed: %w", err)
+				}
 			}
-			extraStr = strings.TrimRight(extraStr, ", ")
 		}
 	}
 
 	r := Result{
 		Found:      found,
 		BucketName: word,
-		Status:     extraStr,
+		Status:     extraStrBuilder.String(),
 	}
 
 	return r, nil

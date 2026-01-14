@@ -122,7 +122,7 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 func CommonHTTPOptions() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, []cli.Flag{
-		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL", Required: true},
+		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL"},
 		&cli.StringFlag{Name: "cookies", Aliases: []string{"c"}, Usage: "Cookies to use for the requests"},
 		&cli.StringFlag{Name: "username", Aliases: []string{"U"}, Usage: "Username for Basic Auth"},
 		&cli.StringFlag{Name: "password", Aliases: []string{"P"}, Usage: "Password for Basic Auth"},

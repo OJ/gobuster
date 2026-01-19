@@ -170,10 +170,26 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 	switch {
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
+			if d.options.AutoCalibrate {
+				d.options.ExcludeLengthParsed.Add(int(wildcardLength))
+				pr.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelInfo,
+					Message: fmt.Sprintf("[!] Wildcard detected, calibrating... (Length: %d)", wildcardLength),
+				}
+				return nil
+			}
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
+			if d.options.AutoCalibrate {
+				d.options.ExcludeLengthParsed.Add(int(wildcardLength))
+				pr.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelInfo,
+					Message: fmt.Sprintf("[!] Wildcard detected, calibrating... (Length: %d)", wildcardLength),
+				}
+				return nil
+			}
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	default:

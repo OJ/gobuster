@@ -38,6 +38,9 @@ func getFlags() []cli.Flag {
 }
 
 func run(c *cli.Context) error {
+	if c.String("url") == "" {
+		return errors.New("the url flag is required")
+	}
 	pluginOpts := gobustervhost.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)

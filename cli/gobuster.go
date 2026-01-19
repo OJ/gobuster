@@ -26,7 +26,11 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 	var f *os.File
 	var err error
 	if filename != "" {
-		f, err = os.Create(filename)
+		if g.Opts.Append {
+			f, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		} else {
+			f, err = os.Create(filename)
+		}
 		if err != nil {
 			g.Logger.Fatalf("error on creating output file: %v", err)
 		}

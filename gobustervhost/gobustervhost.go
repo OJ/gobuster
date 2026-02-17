@@ -135,7 +135,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		subdomain = word
 	}
 	if v.options.ExcludeHostnameLength {
-		hostnameLength = len(subdomain)
+		hostnameLength = len(word)
 	} else {
 		hostnameLength = 0
 	}

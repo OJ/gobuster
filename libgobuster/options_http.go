@@ -23,7 +23,7 @@ type BasicHTTPOptions struct {
 // HTTPOptions is the struct to pass in all http options to Gobuster
 type HTTPOptions struct {
 	BasicHTTPOptions
-	Password              string
+	Password              string // nolint:gosec
 	URL                   *url.URL
 	Username              string
 	Cookies               string

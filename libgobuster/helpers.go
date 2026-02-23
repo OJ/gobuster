@@ -86,7 +86,7 @@ func lineCounter(r io.Reader) (int, error) {
 
 		// store last character received if we got any bytes
 		if c > 0 {
-			lastChar = buf[c-1]
+			lastChar = buf[c-1] // nolint:gosec
 		}
 
 		switch {

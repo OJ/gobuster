@@ -197,7 +197,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	if d.options.BodyOutputDir != "" && body != nil {
 		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(word, "/"), statusCode))
 		fpath := filepath.Join(d.options.BodyOutputDir, fname)
-		err := os.WriteFile(fpath, body, 0o600)
+		err := os.WriteFile(fpath, body, 0o600) // nolint:gosec
 		if err != nil {
 			progress.MessageChan <- libgobuster.Message{
 				Level:   libgobuster.LevelError,

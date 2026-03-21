@@ -3,7 +3,7 @@ module github.com/OJ/gobuster/v3
 go 1.25.0
 
 require (
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/google/uuid v1.6.0
 	github.com/pin/tftp/v3 v3.2.0
 	github.com/urfave/cli/v2 v2.27.7

@@ -1,6 +1,9 @@
 package libgobuster
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type MessageLevel int
 
@@ -24,6 +27,8 @@ type Progress struct {
 	ResultChan            chan Result
 	ErrorChan             chan error
 	MessageChan           chan Message
+	// CancelFunc can be set by the runner to allow plugins to signal a graceful stop
+	CancelFunc context.CancelFunc
 }
 
 func NewProgress() *Progress {

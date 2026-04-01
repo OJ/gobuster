@@ -26,6 +26,8 @@ type OptionsDir struct {
 	Force                      bool
 	Regex                      *regexp.Regexp
 	RegexInvert                bool
+	StopOnRateLimit            bool
+	RetryOnRateLimit           bool
 }
 
 // NewOptions returns a new initialized OptionsDir

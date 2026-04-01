@@ -10,14 +10,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
+	"time"
 	"unicode/utf8"
 
 	"github.com/OJ/gobuster/v3/libgobuster"
 	"github.com/google/uuid"
 )
+
+const defaultRetryAfterSeconds = 5
 
 // nolint:gochecknoglobals
 var (
@@ -304,6 +308,49 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 			}
 			return nil, err
 		}
+
+		// Handle HTTP 429 Too Many Requests
+		if statusCode == http.StatusTooManyRequests {
+			if d.options.StopOnRateLimit {
+				progress.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelError,
+					Message: fmt.Sprintf("Rate limit hit (HTTP 429) on %s - stopping scan as --stop-on-rate-limit is set", url.String()),
+				}
+				if progress.CancelFunc != nil {
+					progress.CancelFunc()
+				}
+				return nil, nil // nolint:nilnil
+			}
+
+			if d.options.RetryOnRateLimit {
+				waitDuration := time.Duration(defaultRetryAfterSeconds) * time.Second
+				if retryAfter := header.Get("Retry-After"); retryAfter != "" {
+					if seconds, parseErr := strconv.Atoi(retryAfter); parseErr == nil {
+						waitDuration = time.Duration(seconds) * time.Second
+					} else if retryTime, parseErr := http.ParseTime(retryAfter); parseErr == nil {
+						waitDuration = time.Until(retryTime)
+						if waitDuration < 0 {
+							waitDuration = time.Duration(defaultRetryAfterSeconds) * time.Second
+						}
+					}
+				}
+
+				progress.MessageChan <- libgobuster.Message{
+					Level:   libgobuster.LevelWarn,
+					Message: fmt.Sprintf("Rate limit hit (HTTP 429) on %s - retrying after %s", url.String(), waitDuration),
+				}
+
+				select {
+				case <-ctx.Done():
+					return nil, nil // nolint:nilnil
+				case <-time.After(waitDuration):
+				}
+				// retry this attempt (don't increment i for rate limit retries)
+				i--
+				continue
+			}
+		}
+
 		break
 	}
 
@@ -496,6 +543,18 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.Regex.String()); err != nil {
 				return "", err
 			}
+		}
+	}
+
+	if o.StopOnRateLimit {
+		if _, err := fmt.Fprintf(tw, "[+] Stop on rate limit:\ttrue\n"); err != nil {
+			return "", err
+		}
+	}
+
+	if o.RetryOnRateLimit {
+		if _, err := fmt.Fprintf(tw, "[+] Retry on rate limit:\ttrue\n"); err != nil {
+			return "", err
 		}
 	}
 

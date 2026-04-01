@@ -39,6 +39,8 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
 		&cli.StringFlag{Name: "regex", Aliases: []string{"re"}, Usage: "Use regex to filter the results, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses matching the regex will be displayed."},
 		&cli.StringFlag{Name: "regex-invert", Aliases: []string{"rei"}, Usage: "Use regex to filter the results, but inverted, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses NOT matching the regex will be displayed."},
+		&cli.BoolFlag{Name: "stop-on-rate-limit", Value: false, Usage: "Stop the scan gracefully when an HTTP 429 (Too Many Requests) response is received"},
+		&cli.BoolFlag{Name: "retry-on-rate-limit", Value: false, Usage: "When an HTTP 429 response is received, wait for the Retry-After duration (or 5s default) then retry the request"},
 	}...)
 	return flags
 }
@@ -103,6 +105,12 @@ func run(c *cli.Context) error {
 	pluginOpts.HideLength = c.Bool("hide-length")
 	pluginOpts.DiscoverBackup = c.Bool("discover-backup")
 	pluginOpts.Force = c.Bool("force")
+	pluginOpts.StopOnRateLimit = c.Bool("stop-on-rate-limit")
+	pluginOpts.RetryOnRateLimit = c.Bool("retry-on-rate-limit")
+
+	if pluginOpts.StopOnRateLimit && pluginOpts.RetryOnRateLimit {
+		return fmt.Errorf("--stop-on-rate-limit and --retry-on-rate-limit are mutually exclusive, please set only one")
+	}
 	pluginOpts.ExcludeLength = c.String("exclude-length")
 	ret4, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludeLength)
 	if err != nil {

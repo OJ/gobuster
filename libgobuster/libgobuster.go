@@ -237,6 +237,9 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	feederCtx, feederCancel := context.WithCancel(ctx)
 	defer feederCancel()
 
+	// Allow plugins to signal a graceful stop (e.g. on rate limiting)
+	g.Progress.CancelFunc = workerCancel
+
 	var workerGroup, feederGroup sync.WaitGroup
 	workerGroup.Add(g.Opts.Threads)
 

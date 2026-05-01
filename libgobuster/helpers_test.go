@@ -3,6 +3,7 @@ package libgobuster
 import (
 	"errors"
 	"io"
+	"net/url"
 	"os"
 	"reflect"
 	"strconv"
@@ -10,6 +11,71 @@ import (
 	"testing"
 	"testing/iotest"
 )
+
+func TestSetURLPathPreservingEncoding(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name      string
+		startURL  string
+		rawPath   string
+		wantURL   string
+		wantPath  string
+		wantRaw   string
+	}{
+		{
+			name:     "percent_encoded_word_is_not_double_encoded",
+			startURL: "http://example/cgi-bin/FUZZ",
+			rawPath:  "/cgi-bin/%2e%2e/opt/passwords",
+			wantURL:  "http://example/cgi-bin/%2e%2e/opt/passwords",
+			wantPath: "/cgi-bin/../opt/passwords",
+			wantRaw:  "/cgi-bin/%2e%2e/opt/passwords",
+		},
+		{
+			name:     "plain_path_is_unchanged_on_the_wire",
+			startURL: "http://example/",
+			rawPath:  "/admin/login",
+			wantURL:  "http://example/admin/login",
+			wantPath: "/admin/login",
+			wantRaw:  "/admin/login",
+		},
+		{
+			name:     "preexisting_encoded_segment_round_trips",
+			startURL: "http://example/dir%20space/FUZZ",
+			rawPath:  "/dir%20space/admin",
+			wantURL:  "http://example/dir%20space/admin",
+			wantPath: "/dir space/admin",
+			wantRaw:  "/dir%20space/admin",
+		},
+		{
+			name:     "invalid_percent_sequence_falls_back_to_path_only",
+			startURL: "http://example/",
+			rawPath:  "/literal-%-sign",
+			wantURL:  "http://example/literal-%25-sign",
+			wantPath: "/literal-%-sign",
+			wantRaw:  "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			u, err := url.Parse(tc.startURL)
+			if err != nil {
+				t.Fatalf("parse: %v", err)
+			}
+			SetURLPathPreservingEncoding(u, tc.rawPath)
+			if got := u.String(); got != tc.wantURL {
+				t.Errorf("u.String() = %q, want %q", got, tc.wantURL)
+			}
+			if u.Path != tc.wantPath {
+				t.Errorf("u.Path = %q, want %q", u.Path, tc.wantPath)
+			}
+			if u.RawPath != tc.wantRaw {
+				t.Errorf("u.RawPath = %q, want %q", u.RawPath, tc.wantRaw)
+			}
+		})
+	}
+}
 
 func TestNewSet(t *testing.T) {
 	t.Parallel()

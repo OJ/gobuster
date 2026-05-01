@@ -6,11 +6,30 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+// SetURLPathPreservingEncoding assigns rawPath to u as both the encoded
+// (RawPath) and decoded (Path) forms. When u.String() serializes the URL it
+// emits RawPath verbatim, which preserves percent-encoded sequences in
+// rawPath instead of double-encoding them (e.g. %2e -> %252e). This matters
+// for fuzzing wordlists that contain pre-encoded payloads. If rawPath is not
+// a valid percent-encoded path the function falls back to the previous
+// behavior of assigning it to Path only.
+func SetURLPathPreservingEncoding(u *url.URL, rawPath string) {
+	decoded, err := url.PathUnescape(rawPath)
+	if err != nil {
+		u.Path = rawPath
+		u.RawPath = ""
+		return
+	}
+	u.Path = decoded
+	u.RawPath = rawPath
+}
 
 // Set is a set of Ts
 type Set[T comparable] struct {

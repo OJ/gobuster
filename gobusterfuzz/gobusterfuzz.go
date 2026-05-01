@@ -95,7 +95,11 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	url := *d.options.URL
 	url.Fragment = strings.ReplaceAll(url.Fragment, FuzzKeyword, word)
 	url.Host = strings.ReplaceAll(url.Host, FuzzKeyword, word)
-	url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
+	// Replace FUZZ in the encoded path string (EscapedPath returns RawPath
+	// when set, otherwise the percent-encoded form of Path) and re-assign
+	// via the helper so percent sequences in the wordlist word are not
+	// double-encoded as %25XX. See issue #618.
+	libgobuster.SetURLPathPreservingEncoding(&url, strings.ReplaceAll(url.EscapedPath(), FuzzKeyword, word))
 	url.Scheme = strings.ReplaceAll(url.Scheme, FuzzKeyword, word)
 
 	query := url.Query()

@@ -43,13 +43,15 @@ func New(globalopts *libgobuster.Options, opts *OptionsGCS, logger *libgobuster.
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		LocalAddr:        opts.LocalAddr,
+		TLSRenegotiation: opts.TLSRenegotiation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{

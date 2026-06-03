@@ -226,7 +226,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts
 		client.logger.Debugf("%s", dump)
 	}
 
-	resp, err := client.client.Do(req)
+	resp, err := client.client.Do(req) // nolint:gosec
 	if err != nil {
 		var ue *url.Error
 		if errors.As(err, &ue) {

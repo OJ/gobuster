@@ -1,6 +1,7 @@
 package gobustervhost
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -47,4 +48,25 @@ func (r Result) ResultToString() (string, error) {
 	}
 
 	return fmt.Sprintf("%s %s [Size: %d]%s\n", r.Vhost, statusCode, r.Size, locationString), nil
+}
+
+// ResultToJSON converts the Result to JSON
+func (r Result) ResultToJSON() ([]byte, error) {
+	type JSONResult struct {
+		Vhost      string      `json:"vhost"`
+		StatusCode int         `json:"status_code"`
+		Size       int64       `json:"size"`
+		Location   string      `json:"location,omitempty"`
+		Header     http.Header `json:"header,omitempty"`
+	}
+
+	jr := JSONResult{
+		Vhost:      r.Vhost,
+		StatusCode: r.StatusCode,
+		Size:       r.Size,
+		Location:   r.Header.Get("Location"),
+		Header:     r.Header,
+	}
+
+	return json.Marshal(jr)
 }

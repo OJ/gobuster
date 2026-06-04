@@ -30,7 +30,7 @@ func getFlags() []cli.Flag {
 		&cli.DurationFlag{Name: "timeout", Aliases: []string{"to"}, Value: 1 * time.Second, Usage: "DNS resolver timeout"},
 		&cli.BoolFlag{Name: "wildcard", Aliases: []string{"wc"}, Value: false, Usage: "Force continued operation when wildcard found"},
 		&cli.BoolFlag{Name: "no-fqdn", Aliases: []string{"nf"}, Value: false, Usage: "Do not automatically add a trailing dot to the domain, so the resolver uses the DNS search domain"},
-		&cli.StringFlag{Name: "resolver", Usage: "Use custom DNS server (format server.com or server.com:port)"},
+		&cli.StringFlag{Name: "resolver", Aliases: []string{"r"}, Usage: "Use custom DNS server (format server.com or server.com:port)"},
 		&cli.StringFlag{Name: "protocol", Value: "udp", Usage: "Use either 'udp' or 'tcp' as protocol on the custom resolver"},
 	}...)
 	flags = append(flags, internalcli.GlobalOptions()...)

@@ -20,4 +20,5 @@ type Options struct {
 	NoError             bool
 	Quiet               bool
 	Delay               time.Duration
+	Append              bool
 }

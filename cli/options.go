@@ -122,7 +122,7 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 func CommonHTTPOptions() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, []cli.Flag{
-		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL", Required: true},
+		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL"},
 		&cli.StringFlag{Name: "cookies", Aliases: []string{"c"}, Usage: "Cookies to use for the requests"},
 		&cli.StringFlag{Name: "username", Aliases: []string{"U"}, Usage: "Username for Basic Auth"},
 		&cli.StringFlag{Name: "password", Aliases: []string{"P"}, Usage: "Password for Basic Auth"},
@@ -234,7 +234,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
 		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
-		&cli.BoolFlag{Name: "json", Aliases: []string{"j"}, Value: false, Usage: "Output results in JSON format (requires --output)"},
+		&cli.BoolFlag{Name: "append", Aliases: []string{"ap"}, Value: false, Usage: "Append to the output file instead of overwriting"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}
 }
@@ -259,13 +259,6 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	}
 
 	opts.OutputFilename = c.String("output")
-	opts.OutputAsJSON = c.Bool("json")
-	
-	// JSON output requires a file
-	if opts.OutputAsJSON && opts.OutputFilename == "" {
-		return opts, errors.New("JSON output (--json) requires an output file (--output)")
-	}
-	
 	opts.Quiet = c.Bool("quiet")
 	opts.NoProgress = c.Bool("no-progress")
 	opts.NoError = c.Bool("no-error")
@@ -314,6 +307,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	}
 
 	opts.Debug = c.Bool("debug")
+	opts.Append = c.Bool("append")
 	return opts, nil
 }
 

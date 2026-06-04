@@ -122,14 +122,15 @@ func ParseBasicHTTPOptions(c *cli.Context) (libgobuster.BasicHTTPOptions, error)
 func CommonHTTPOptions() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, []cli.Flag{
-		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL", Required: true},
+		&cli.StringFlag{Name: "url", Aliases: []string{"u"}, Usage: "The target URL"},
 		&cli.StringFlag{Name: "cookies", Aliases: []string{"c"}, Usage: "Cookies to use for the requests"},
 		&cli.StringFlag{Name: "username", Aliases: []string{"U"}, Usage: "Username for Basic Auth"},
 		&cli.StringFlag{Name: "password", Aliases: []string{"P"}, Usage: "Password for Basic Auth"},
 		&cli.BoolFlag{Name: "follow-redirect", Aliases: []string{"r"}, Value: false, Usage: "Follow redirects"},
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
 		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
-		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "the password to the p12 file"},
+		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "Specify HTTP method"},
+		&cli.StringFlag{Name: "body-output-dir", Usage: "Directory to store response bodies"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
 	return flags
@@ -209,6 +210,14 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 		opts.Headers = append(opts.Headers, header)
 	}
 
+	if c.IsSet("body-output-dir") {
+		opts.BodyOutputDir = c.String("body-output-dir")
+		err = os.MkdirAll(opts.BodyOutputDir, 0o755)
+		if err != nil {
+			return opts, fmt.Errorf("could not create body output dir %q: %w", opts.BodyOutputDir, err)
+		}
+	}
+
 	return opts, nil
 }
 
@@ -225,6 +234,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
 		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
+		&cli.BoolFlag{Name: "append", Aliases: []string{"ap"}, Value: false, Usage: "Append to the output file instead of overwriting"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}
 }
@@ -297,6 +307,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	}
 
 	opts.Debug = c.Bool("debug")
+	opts.Append = c.Bool("append")
 	return opts, nil
 }
 

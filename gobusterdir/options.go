@@ -22,6 +22,7 @@ type OptionsDir struct {
 	ExcludeLength              string
 	ExcludeLengthParsed        libgobuster.Set[int]
 	Force                      bool
+	AutoCalibrate              bool
 }
 
 // NewOptions returns a new initialized OptionsDir

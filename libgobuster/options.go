@@ -15,8 +15,10 @@ type Options struct {
 	Patterns            []string
 	DiscoverPatterns    []string
 	OutputFilename      string
+	OutputAsJSON        bool
 	NoProgress          bool
 	NoError             bool
 	Quiet               bool
 	Delay               time.Duration
+	Append              bool
 }

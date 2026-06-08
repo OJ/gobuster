@@ -8,7 +8,7 @@ require (
 	github.com/pin/tftp/v3 v3.2.0
 	github.com/urfave/cli/v2 v2.27.7
 	go.uber.org/automaxprocs v1.6.0
-	golang.org/x/term v0.43.0
+	golang.org/x/term v0.44.0
 	software.sslmate.com/src/go-pkcs12 v0.7.1
 )
 
@@ -22,7 +22,7 @@ require (
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	mvdan.cc/gofumpt v0.10.0 // indirect
 )

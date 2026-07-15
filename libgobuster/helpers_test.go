@@ -152,7 +152,7 @@ func TestSetStringify(t *testing.T) {
 	// order is random
 	for _, i := range v2 {
 		if !strings.Contains(z, strconv.Itoa(i)) {
-			t.Fatalf("Did not find value %q in %q", i, z)
+			t.Fatalf("Did not find value %d in %q", i, z)
 		}
 	}
 }

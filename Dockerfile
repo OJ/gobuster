@@ -20,7 +20,7 @@ RUN mkdir -p /app \
     && adduser -D gobuster -u ${UID} -G gobuster \
     && chown -R gobuster:gobuster /app
 
-USER ${UID}
+USER ${UID}:${GID}
 WORKDIR /app
 
 COPY --from=build-env /src/gobuster .

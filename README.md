@@ -60,6 +60,15 @@ go install github.com/OJ/gobuster/v3@latest
 
 Download pre-compiled binaries from the [releases page](https://github.com/OJ/gobuster/releases).
 
+On Windows, after extracting a release zip (or after `go install`), open a **new** terminal so
+`PATH` updates apply. For Go installs, ensure `%USERPROFILE%\go\bin` (or `$env:GOBIN`) is on `PATH`.
+
+#### Using Homebrew
+
+```bash
+brew install gobuster
+```
+
 #### Using Docker
 
 ```bash

@@ -194,6 +194,10 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 		break
 	}
 
+	if d.globalopts.StopOnRateLimit && statusCode == http.StatusTooManyRequests {
+		return nil, libgobuster.ErrRateLimited
+	}
+
 	if d.options.BodyOutputDir != "" && body != nil {
 		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(word, "/"), statusCode))
 		fpath := filepath.Join(d.options.BodyOutputDir, fname)
@@ -265,6 +269,12 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 
 	if d.globalopts.Delay > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
+			return "", err
+		}
+	}
+
+	if d.globalopts.StopOnRateLimit {
+		if _, err := fmt.Fprintf(tw, "[+] Stop on 429:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

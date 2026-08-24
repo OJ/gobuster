@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,10 +27,12 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
-	Opts     *Options
-	Logger   *Logger
-	plugin   GobusterPlugin
-	Progress *Progress
+	Opts        *Options
+	Logger      *Logger
+	plugin      GobusterPlugin
+	Progress    *Progress
+	cancel      context.CancelFunc
+	rateLimited atomic.Bool
 }
 
 type Guess struct {
@@ -71,6 +74,19 @@ func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successC
 			// Mode-specific processing
 			res, err := g.plugin.ProcessWord(ctx, guess.word, g.Progress)
 			if err != nil {
+				if g.Opts.StopOnRateLimit && errors.Is(err, ErrRateLimited) {
+					// only the first worker to hit the limit prints the message
+					if g.rateLimited.CompareAndSwap(false, true) {
+						g.Progress.MessageChan <- Message{
+							Level:   LevelError,
+							Message: "hit rate limit (HTTP 429), stopping. Use a delay or lower the thread count to avoid this",
+						}
+					}
+					if g.cancel != nil {
+						g.cancel()
+					}
+					return
+				}
 				// do not exit and continue
 				g.Progress.ErrorChan <- fmt.Errorf("error on word %s: %w", guess.word, err)
 			}
@@ -232,9 +248,15 @@ func (g *Gobuster) Run(ctx context.Context) error {
 		return err
 	}
 
-	workerCtx, workerCancel := context.WithCancel(ctx)
+	// runCtx lets a worker stop the whole run early, for example when the
+	// server starts rate limiting and StopOnRateLimit is set
+	runCtx, runCancel := context.WithCancel(ctx)
+	defer runCancel()
+	g.cancel = runCancel
+
+	workerCtx, workerCancel := context.WithCancel(runCtx)
 	defer workerCancel()
-	feederCtx, feederCancel := context.WithCancel(ctx)
+	feederCtx, feederCancel := context.WithCancel(runCtx)
 	defer feederCancel()
 
 	var workerGroup, feederGroup sync.WaitGroup
@@ -271,13 +293,13 @@ ListenForMore:
 	for {
 		// Prioritize stopping when the context is done
 		select {
-		case <-ctx.Done():
+		case <-runCtx.Done():
 			break ListenForMore
 		default:
 		}
 
 		select {
-		case <-ctx.Done():
+		case <-runCtx.Done():
 			break ListenForMore
 		case successGuess := <-successChan:
 			// Add more guesses based on the results of previous attempts

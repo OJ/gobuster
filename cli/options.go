@@ -250,6 +250,9 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.Delay = c.Duration("delay")
 	opts.Threads = c.Int("threads")
+	if opts.Threads <= 0 {
+		return opts, errors.New("threads must be bigger than 0")
+	}
 	opts.WordlistOffset = c.Int("wordlist-offset")
 	if opts.Wordlist == "-" && opts.WordlistOffset > 0 {
 		return opts, errors.New("wordlist-offset is not supported when reading from STDIN")
@@ -283,7 +286,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.DiscoverPatternFile = c.String("discover-pattern")
 	if opts.DiscoverPatternFile != "" {
-		if _, err := os.Stat(opts.PatternFile); os.IsNotExist(err) {
+		if _, err := os.Stat(opts.DiscoverPatternFile); os.IsNotExist(err) {
 			return opts, fmt.Errorf("discover pattern file %q does not exist: %w", opts.DiscoverPatternFile, err)
 		}
 		discoverPatternFile, err := os.Open(opts.DiscoverPatternFile)

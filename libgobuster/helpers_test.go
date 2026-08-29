@@ -168,9 +168,9 @@ func TestLineCounter(t *testing.T) {
 		{"3 Lines", "TestString\nTest\n1234", 3},
 		{"Trailing newline", "TestString\nTest\n1234\n", 3},
 		{"3 Lines cr lf", "TestString\r\nTest\r\n1234", 3},
-		{"Empty", "", 1},       // these are wrong, but I've found no good way to handle those
-		{"Empty 2", "\n", 1},   // these are wrong, but I've found no good way to handle those
-		{"Empty 3", "\r\n", 1}, // these are wrong, but I've found no good way to handle those
+		{"Empty", "", 0},
+		{"Empty 2", "\n", 1},
+		{"Empty 3", "\r\n", 1},
 	}
 	for _, x := range tt {
 		t.Run(x.testName, func(t *testing.T) {

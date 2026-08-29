@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+const defaultMaxResponseBodySize int64 = 10 * 1024 * 1024
+
 // HTTPHeader holds a single key value pair of a HTTP header
 type HTTPHeader struct {
 	Name  string
@@ -32,6 +34,7 @@ type HTTPClient struct {
 	method                string
 	host                  string
 	logger                *Logger
+	maxResponseBodySize   int64
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -125,6 +128,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 		}
 	}
 	client.logger = logger
+	client.maxResponseBodySize = defaultMaxResponseBodySize
 	return &client, nil
 }
 
@@ -144,9 +148,12 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL url.URL, opts Req
 	var body []byte
 	var length int64
 	if opts.ReturnBody {
-		body, err = io.ReadAll(resp.Body)
+		body, err = io.ReadAll(io.LimitReader(resp.Body, client.maxResponseBodySize+1))
 		if err != nil {
 			return 0, 0, nil, nil, fmt.Errorf("could not read body %w", err)
+		}
+		if int64(len(body)) > client.maxResponseBodySize {
+			return 0, 0, nil, nil, fmt.Errorf("response body exceeds maximum size of %d bytes", client.maxResponseBodySize)
 		}
 		length = int64(len(body))
 	} else {

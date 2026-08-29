@@ -70,15 +70,14 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-// this method is much faster than lineCounter_slow but has the following errors:
-// - empty files are reported as 1 line
-// - files only containing a newline are reported as 1 line
-// - also counts lines with comments
+// This method is much faster than lineCounterSlow. It counts physical lines,
+// including blank and comment lines; the feeder adjusts blank lines later.
 func lineCounter(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
-	count := 1
+	count := 0
 	lineSep := []byte{'\n'}
 	var lastChar byte
+	var hasData bool
 
 	for {
 		c, err := r.Read(buf)
@@ -86,14 +85,15 @@ func lineCounter(r io.Reader) (int, error) {
 
 		// store last character received if we got any bytes
 		if c > 0 {
+			hasData = true
 			lastChar = buf[c-1] // nolint:gosec
 		}
 
 		switch {
 		case errors.Is(err, io.EOF):
-			// account for trailing new line
-			if lastChar == '\n' {
-				count--
+			// A final line without a newline still counts.
+			if hasData && lastChar != '\n' {
+				count++
 			}
 			return count, nil
 

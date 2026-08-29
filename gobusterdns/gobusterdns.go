@@ -146,7 +146,7 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 				result.CNAME = cname
 			} else {
 				var wErr *net.DNSError
-				if !errors.As(err, &wErr) && !wErr.IsNotFound {
+				if !errors.As(err, &wErr) || !wErr.IsNotFound {
 					// host not found is the expected error here, send all other errors to the error channel
 					progress.ErrorChan <- err
 				}

@@ -137,9 +137,9 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
 		result := Result{
 			Subdomain: strings.TrimSuffix(subdomain, "."),
-		}
 
-		result.IPs = ips
+			IPs: ips,
+		}
 		if d.options.CheckCNAME {
 			cname, err := d.dnsLookupCname(ctx, subdomain)
 			if err == nil {

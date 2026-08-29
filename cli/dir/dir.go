@@ -137,8 +137,7 @@ func run(c *cli.Context) error {
 	}
 
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
-		var wErr *gobusterdir.WildcardError
-		if errors.As(err, &wErr) {
+		if wErr, ok := errors.AsType[*gobusterdir.WildcardError](err); ok {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
 		log.Debugf("%#v", err)

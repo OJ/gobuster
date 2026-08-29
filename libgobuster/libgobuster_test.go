@@ -13,7 +13,7 @@ type testPlugin struct{}
 func (testPlugin) Name() string                            { return "test" }
 func (testPlugin) PreRun(context.Context, *Progress) error { return nil }
 func (testPlugin) ProcessWord(context.Context, string, *Progress) (Result, error) {
-	return nil, nil
+	return nil, nil //nolint:nilnil // A test plugin intentionally produces no result.
 }
 func (testPlugin) AdditionalWords(string) []string        { return nil }
 func (testPlugin) AdditionalWordsLen() int                { return 0 }

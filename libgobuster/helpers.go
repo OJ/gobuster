@@ -134,7 +134,7 @@ func ParseExtensions(extensions string) (Set[string], error) {
 		return ret, nil
 	}
 
-	for _, e := range strings.Split(extensions, ",") {
+	for e := range strings.SplitSeq(extensions, ",") {
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
 		ret.Add(strings.TrimPrefix(e, "."))
@@ -174,7 +174,7 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 		return ret, nil
 	}
 
-	for _, part := range strings.Split(inputString, ",") {
+	for part := range strings.SplitSeq(inputString, ",") {
 		part = strings.TrimSpace(part)
 		// check for range
 		if strings.Contains(part, "-") {

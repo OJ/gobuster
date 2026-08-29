@@ -235,8 +235,7 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts
 
 	resp, err := client.client.Do(req) // nolint:gosec
 	if err != nil {
-		var ue *url.Error
-		if errors.As(err, &ue) {
+		if ue, ok := errors.AsType[*url.Error](err); ok {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
 				return nil, fmt.Errorf("invalid certificate: %w", ue.Err)
 			}

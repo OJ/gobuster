@@ -39,6 +39,11 @@ type Guess struct {
 	discoverOnSuccess bool
 }
 
+type successfulGuess struct {
+	guess  *Guess
+	result Result
+}
+
 type Wordlist struct {
 	scanner        *bufio.Scanner
 	guessesPerLine int
@@ -56,7 +61,7 @@ func NewGobuster(opts *Options, plugin GobusterPlugin, logger *Logger) (*Gobuste
 	return &g, nil
 }
 
-func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successChan chan<- *Guess, wg *sync.WaitGroup) {
+func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successChan chan<- successfulGuess, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		// Prioritize stopping when the context is done
@@ -69,6 +74,9 @@ func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successC
 		case <-ctx.Done():
 			return
 		case guess := <-guessChan:
+			if guess == nil {
+				return
+			}
 
 			// Mode-specific processing
 			res, err := g.plugin.ProcessWord(ctx, guess.word, g.Progress)
@@ -84,7 +92,7 @@ func (g *Gobuster) worker(ctx context.Context, guessChan <-chan *Guess, successC
 				case <-ctx.Done():
 					g.Progress.incrementRequests()
 					return
-				case successChan <- guess:
+				case successChan <- successfulGuess{guess: guess, result: res}:
 				}
 			}
 
@@ -234,6 +242,70 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	defer close(g.Progress.ErrorChan)
 	defer close(g.Progress.MessageChan)
 
+	if !g.Opts.Recursion {
+		return g.runTarget(ctx, nil)
+	}
+	plugin, ok := g.plugin.(RecursivePlugin)
+	if !ok {
+		return errors.New("the selected plugin does not support recursion")
+	}
+	if g.Opts.Wordlist == "-" {
+		return errors.New("recursion is not supported with a wordlist read from stdin")
+	}
+
+	type target struct {
+		url   string
+		depth int
+	}
+	queue := []target{{}}
+	seen := make(map[string]struct{})
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if current.url != "" {
+			if err := plugin.SetTarget(current.url); err != nil {
+				return fmt.Errorf("failed to set recursive target %q: %w", current.url, err)
+			}
+		}
+
+		var discovered []string
+		if err := g.runTarget(ctx, func(result Result) {
+			recursiveResult, ok := result.(RecursiveResult)
+			if !ok {
+				return
+			}
+			targetURL := recursiveResult.RecursiveTarget()
+			if targetURL != "" {
+				discovered = append(discovered, targetURL)
+			}
+		}); err != nil {
+			return err
+		}
+		if err := ctx.Err(); err != nil {
+			return nil
+		}
+		if g.Opts.RecursionDepth > 0 && current.depth >= g.Opts.RecursionDepth {
+			continue
+		}
+		for _, targetURL := range discovered {
+			if _, exists := seen[targetURL]; exists {
+				continue
+			}
+			seen[targetURL] = struct{}{}
+			if g.Opts.RecursionMaxTargets > 0 && len(seen) > g.Opts.RecursionMaxTargets {
+				return fmt.Errorf("recursive target limit of %d exceeded", g.Opts.RecursionMaxTargets)
+			}
+			queue = append(queue, target{url: targetURL, depth: current.depth + 1})
+		}
+	}
+	return nil
+}
+
+// runTarget runs one complete wordlist against the plugin's current target.
+// It does not close the public channels; Run owns their lifetime across all
+// recursive targets.
+func (g *Gobuster) runTarget(ctx context.Context, onResult func(Result)) error {
+
 	if err := g.plugin.PreRun(ctx, g.Progress); err != nil {
 		return err
 	}
@@ -247,7 +319,7 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	workerGroup.Add(g.Opts.Threads)
 
 	guessChan := make(chan *Guess, g.Opts.Threads*3)
-	successChan := make(chan *Guess)
+	successChan := make(chan successfulGuess)
 	scanDone := make(chan error, 1)
 
 	var f io.ReadSeekCloser
@@ -293,17 +365,20 @@ ListenForMore:
 			if scanErr != nil {
 				break ListenForMore
 			}
-		case successGuess := <-successChan:
+		case success := <-successChan:
+			if onResult != nil && success.guess.discoverOnSuccess {
+				onResult(success.result)
+			}
 			// Add more guesses based on the results of previous attempts
-			if successGuess.discoverOnSuccess {
-				discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
+			if success.guess.discoverOnSuccess {
+				discoverWords := g.plugin.AdditionalSuccessWords(success.guess.word)
 				if len(discoverWords) > 0 {
 					g.Progress.IncrementTotalRequests(len(discoverWords))
 					feederGroup.Add(1)
 					go g.feeder(feederCtx, guessChan, discoverWords, false, &feederGroup)
 				}
 
-				patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
+				patternDiscoverWords := g.processDiscoverPatterns(success.guess.word)
 				if len(patternDiscoverWords) > 0 {
 					g.Progress.IncrementTotalRequests(len(patternDiscoverWords))
 					feederGroup.Add(1)

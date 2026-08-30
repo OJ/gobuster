@@ -19,4 +19,7 @@ type Options struct {
 	NoError             bool
 	Quiet               bool
 	Delay               time.Duration
+	Recursion           bool
+	RecursionDepth      int
+	RecursionMaxTargets int
 }

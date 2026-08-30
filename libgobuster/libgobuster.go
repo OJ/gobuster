@@ -280,14 +280,11 @@ ListenForMore:
 		case <-ctx.Done():
 			break ListenForMore
 		case successGuess := <-successChan:
-			// Call the success callback for every successful result so generated
-			// recursive targets are still processed even when the originating guess
-			// was created with discoverOnSuccess disabled.
-			discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
-			patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
 			if !successGuess.discoverOnSuccess {
 				break
 			}
+			discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
+			patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
 			if len(discoverWords) > 0 {
 				g.Progress.IncrementTotalRequests(len(discoverWords))
 				feederGroup.Add(1)

@@ -129,6 +129,15 @@ gobuster dir -u https://example.com -w wordlist.txt -l
 
 # Filter by status codes
 gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
+
+# Apply replacement patterns to each word before requesting it
+gobuster dir -u https://example.com -w wordlist.txt -p patterns.txt
+
+# Generate follow-up values from successful matches
+gobuster dir -u https://example.com -w wordlist.txt --discover-pattern discover-patterns.txt
+
+# Resume a scan from a later offset in the wordlist
+gobuster dir -u https://example.com -w wordlist.txt --wordlist-offset 500
 ```
 
 #### 🔍 DNS Mode (`dns`)

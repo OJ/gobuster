@@ -280,21 +280,23 @@ ListenForMore:
 		case <-ctx.Done():
 			break ListenForMore
 		case successGuess := <-successChan:
-			// Add more guesses based on the results of previous attempts
-			if successGuess.discoverOnSuccess {
-				discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
-				if len(discoverWords) > 0 {
-					g.Progress.IncrementTotalRequests(len(discoverWords))
-					feederGroup.Add(1)
-					go g.feeder(feederCtx, guessChan, discoverWords, false, &feederGroup)
-				}
-
-				patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
-				if len(patternDiscoverWords) > 0 {
-					g.Progress.IncrementTotalRequests(len(patternDiscoverWords))
-					feederGroup.Add(1)
-					go g.feeder(feederCtx, guessChan, patternDiscoverWords, false, &feederGroup)
-				}
+			// Call the success callback for every successful result so generated
+			// recursive targets are still processed even when the originating guess
+			// was created with discoverOnSuccess disabled.
+			discoverWords := g.plugin.AdditionalSuccessWords(successGuess.word)
+			patternDiscoverWords := g.processDiscoverPatterns(successGuess.word)
+			if !successGuess.discoverOnSuccess {
+				break
+			}
+			if len(discoverWords) > 0 {
+				g.Progress.IncrementTotalRequests(len(discoverWords))
+				feederGroup.Add(1)
+				go g.feeder(feederCtx, guessChan, discoverWords, false, &feederGroup)
+			}
+			if len(patternDiscoverWords) > 0 {
+				g.Progress.IncrementTotalRequests(len(patternDiscoverWords))
+				feederGroup.Add(1)
+				go g.feeder(feederCtx, guessChan, patternDiscoverWords, false, &feederGroup)
 			}
 		case <-time.After(200 * time.Millisecond):
 			// With requests issued only after the results are synchronously

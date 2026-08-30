@@ -52,6 +52,51 @@ func (p *recursiveTestPlugin) ProcessWord(_ context.Context, word string, _ *Pro
 	}
 }
 
+type recursiveDiscoveryTestPlugin struct{}
+
+func (*recursiveDiscoveryTestPlugin) Name() string { return "recursive discovery test" }
+func (*recursiveDiscoveryTestPlugin) PreRun(context.Context, *Progress) error { return nil }
+func (*recursiveDiscoveryTestPlugin) ProcessWord(_ context.Context, word string, _ *Progress) (Result, error) {
+	switch word {
+	case "one":
+		return recursiveTestResult("root"), nil
+	case "discovered":
+		return recursiveTestResult("child"), nil
+	default:
+		return nil, nil //nolint:nilnil
+	}
+}
+
+func (*recursiveDiscoveryTestPlugin) AdditionalWords(string) []string        { return nil }
+func (*recursiveDiscoveryTestPlugin) AdditionalWordsLen() int                { return 0 }
+func (*recursiveDiscoveryTestPlugin) AdditionalSuccessWords(string) []string { return []string{"discovered"} }
+func (*recursiveDiscoveryTestPlugin) GetConfigString() (string, error)       { return "", nil }
+
+func TestRunTargetInvokesCallbackForDiscoveredResults(t *testing.T) {
+	wordlist := t.TempDir() + "/words.txt"
+	if err := os.WriteFile(wordlist, []byte("one\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	g, err := NewGobuster(&Options{Threads: 1, Wordlist: wordlist}, &recursiveDiscoveryTestPlugin{}, NewLogger(false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	drainProgress(g.Progress)
+	var got []string
+	if err := g.runTarget(t.Context(), func(result Result) {
+		recursiveResult, ok := result.(RecursiveResult)
+		if !ok {
+			return
+		}
+		got = append(got, recursiveResult.RecursiveTarget())
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if want := "root,child"; strings.Join(got, ",") != want {
+		t.Fatalf("discovered targets %q, want %q", strings.Join(got, ","), want)
+	}
+}
+
 func TestRunRecursionEnforcesTargetLimit(t *testing.T) {
 	wordlist := t.TempDir() + "/words.txt"
 	if err := os.WriteFile(wordlist, []byte("one\ntwo\n"), 0o600); err != nil {

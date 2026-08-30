@@ -90,6 +90,8 @@ Useful directory-mode options include:
 - `--exclude-length 123,456-500` to ignore response sizes
 - `--regex PATTERN` or `--regex-invert PATTERN` to filter response bodies
 - `--recursive` to scan discovered directories recursively
+- `--recursion-depth N` to limit recursion depth (`0` for unlimited)
+- `--recursion-max-targets N` to cap discovered recursive targets (`0` for unlimited)
 - `--body-output-dir PATH` to save response bodies
 - `-k` to skip TLS certificate verification
 

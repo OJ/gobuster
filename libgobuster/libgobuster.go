@@ -365,7 +365,7 @@ ListenForMore:
 				break ListenForMore
 			}
 		case success := <-successChan:
-			if onResult != nil && success.guess.discoverOnSuccess {
+			if onResult != nil {
 				onResult(success.result)
 			}
 			// Add more guesses based on the results of previous attempts

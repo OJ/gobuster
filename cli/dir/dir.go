@@ -55,10 +55,10 @@ func run(c *cli.Context) error {
 	globalOpts.RecursionDepth = c.Int("recursion-depth")
 	globalOpts.RecursionMaxTargets = c.Int("recursion-max-targets")
 	if globalOpts.RecursionDepth < 0 {
-		return errors.New("recursion-depth must be bigger or equal to 0")
+		return errors.New("recursion-depth must be greater than or equal to 0")
 	}
 	if globalOpts.RecursionMaxTargets < 0 {
-		return errors.New("recursion-max-targets must be bigger or equal to 0")
+		return errors.New("recursion-max-targets must be greater than or equal to 0")
 	}
 	log := libgobuster.NewLogger(globalOpts.Debug)
 

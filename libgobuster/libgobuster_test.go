@@ -128,15 +128,18 @@ func TestRunRejectsRecursionForUnsupportedPlugin(t *testing.T) {
 
 func drainProgress(progress *Progress) {
 	go func() {
-		for range progress.ResultChan {
+		for result := range progress.ResultChan {
+			_ = result
 		}
 	}()
 	go func() {
-		for range progress.ErrorChan {
+		for err := range progress.ErrorChan {
+			_ = err
 		}
 	}()
 	go func() {
-		for range progress.MessageChan {
+		for message := range progress.MessageChan {
+			_ = message
 		}
 	}()
 }

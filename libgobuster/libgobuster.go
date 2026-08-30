@@ -305,7 +305,6 @@ func (g *Gobuster) Run(ctx context.Context) error {
 // It does not close the public channels; Run owns their lifetime across all
 // recursive targets.
 func (g *Gobuster) runTarget(ctx context.Context, onResult func(Result)) error {
-
 	if err := g.plugin.PreRun(ctx, g.Progress); err != nil {
 		return err
 	}

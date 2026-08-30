@@ -28,10 +28,16 @@ type ResultToStringFunc func(*Gobuster, *Result) (*string, error)
 
 // Gobuster is the main object when creating a new run
 type Gobuster struct {
-	Opts     *Options
-	Logger   *Logger
-	plugin   GobusterPlugin
-	Progress *Progress
+	Opts          *Options
+	Logger        *Logger
+	plugin        GobusterPlugin
+	Progress      *Progress
+	wordlistCache *wordlistCache
+}
+
+type wordlistCache struct {
+	guessesPerLine int
+	lineCount      int
 }
 
 type Guess struct {
@@ -182,8 +188,7 @@ func (g *Gobuster) feedWordlist(ctx context.Context, guessChan chan<- *Guess, wo
 	}
 }
 
-func (g *Gobuster) getWordlist(wordlist io.ReadSeeker) (*Wordlist, error) {
-	// calculate expected requests
+func (g *Gobuster) getWordlistCache() (*wordlistCache, error) {
 	var guessesPerLine int
 	if len(g.Opts.Patterns) > 0 {
 		nPats := len(g.Opts.Patterns)
@@ -193,15 +198,55 @@ func (g *Gobuster) getWordlist(wordlist io.ReadSeeker) (*Wordlist, error) {
 	}
 
 	if g.Opts.Wordlist == "-" {
+		return &wordlistCache{guessesPerLine: guessesPerLine}, nil
+	}
+
+	f, err := os.Open(g.Opts.Wordlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open wordlist: %w", err)
+	}
+	defer f.Close()
+
+	lines, err := lineCounter(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get number of lines: %w", err)
+	}
+	if lines-g.Opts.WordlistOffset <= 0 {
+		return nil, errors.New("offset is greater than the number of lines in the wordlist")
+	}
+
+	return &wordlistCache{guessesPerLine: guessesPerLine, lineCount: lines}, nil
+}
+
+func (g *Gobuster) getWordlist(wordlist io.ReadSeeker) (*Wordlist, error) {
+	guessesPerLine := 0
+	if g.wordlistCache != nil {
+		guessesPerLine = g.wordlistCache.guessesPerLine
+	} else {
+		if len(g.Opts.Patterns) > 0 {
+			nPats := len(g.Opts.Patterns)
+			guessesPerLine = nPats + nPats*g.plugin.AdditionalWordsLen()
+		} else {
+			guessesPerLine = 1 + g.plugin.AdditionalWordsLen()
+		}
+	}
+
+	if g.Opts.Wordlist == "-" {
 		// Read directly from stdin
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Buffer(make([]byte, 64*1024), maxWordlistLineSize)
 		return &Wordlist{scanner: scanner, guessesPerLine: guessesPerLine, isStream: true}, nil
 	}
 
-	lines, err := lineCounter(wordlist)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get number of lines: %w", err)
+	lines := 0
+	var err error
+	if g.wordlistCache != nil {
+		lines = g.wordlistCache.lineCount
+	} else {
+		lines, err = lineCounter(wordlist)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get number of lines: %w", err)
+		}
 	}
 
 	if lines-g.Opts.WordlistOffset <= 0 {
@@ -241,6 +286,7 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	defer close(g.Progress.ResultChan)
 	defer close(g.Progress.ErrorChan)
 	defer close(g.Progress.MessageChan)
+	g.wordlistCache = nil
 
 	if !g.Opts.Recursion {
 		return g.runTarget(ctx, nil)
@@ -252,6 +298,12 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	if g.Opts.Wordlist == "-" {
 		return errors.New("recursion is not supported with a wordlist read from stdin")
 	}
+
+	cache, err := g.getWordlistCache()
+	if err != nil {
+		return err
+	}
+	g.wordlistCache = cache
 
 	type target struct {
 		url   string

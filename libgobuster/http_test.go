@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -76,6 +77,26 @@ func TestRequest(t *testing.T) {
 	}
 	if body == nil || !bytes.Equal(body, []byte(ret)) {
 		t.Fatalf("Invalid body returned: %d", body)
+	}
+}
+
+func TestRequestRejectsOversizedBody(t *testing.T) {
+	t.Parallel()
+	h := httpServerT(t, strings.Repeat("x", 11*1024*1024))
+	defer h.Close()
+
+	c, err := NewHTTPClient(&HTTPOptions{}, NewLogger(false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, _, _, err = c.Request(t.Context(), *u, RequestOptions{ReturnBody: true})
+	if err == nil || !strings.Contains(err.Error(), "response body exceeds maximum size") {
+		t.Fatalf("expected response size error, got %v", err)
 	}
 }
 

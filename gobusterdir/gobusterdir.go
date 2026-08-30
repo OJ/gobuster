@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -40,7 +42,7 @@ func (e *WildcardError) Error() string {
 	} else {
 		addInfo = fmt.Sprintf("%s => %d (Length: %d)", e.url, e.statusCode, e.length)
 	}
-	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s. Please exclude the response length or the status code or set the wildcard option.", addInfo)
+	return fmt.Sprintf("the server returns a status code that matches the provided options for non existing urls. %s. Please exclude the response length (or as a range), the status code or set the force option (but expect false positives).", addInfo)
 }
 
 // GobusterDir is the main type to implement the interface
@@ -48,6 +50,7 @@ type GobusterDir struct {
 	options    *OptionsDir
 	globalopts *libgobuster.Options
 	http       *libgobuster.HTTPClient
+	rootURL    *url.URL
 }
 
 // New creates a new initialized GobusterDir
@@ -63,6 +66,10 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 	g := GobusterDir{
 		options:    opts,
 		globalopts: globalopts,
+	}
+	if opts.URL != nil {
+		rootURL := *opts.URL
+		g.rootURL = &rootURL
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
@@ -86,6 +93,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 		NoCanonicalizeHeaders: opts.NoCanonicalizeHeaders,
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
+		BodyOutputDir:         opts.BodyOutputDir,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -97,9 +105,43 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 	return &g, nil
 }
 
+// SetTarget changes the base URL between recursive scans. The orchestrator
+// calls this only after all workers for the previous target have stopped.
+func (d *GobusterDir) SetTarget(target string) error {
+	u, err := url.Parse(target)
+	if err != nil {
+		return err
+	}
+	if d.rootURL == nil {
+		return errors.New("initial URL is not set")
+	}
+	if !strings.EqualFold(u.Scheme, d.rootURL.Scheme) || !strings.EqualFold(u.Host, d.rootURL.Host) {
+		return errors.New("recursive target must have the same scheme and host as the initial URL")
+	}
+	u.RawQuery = ""
+	u.Fragment = ""
+	if !strings.HasSuffix(u.Path, "/") {
+		u.Path += "/"
+	}
+	d.options.URL = u
+	return nil
+}
+
 // Name should return the name of the plugin
 func (d *GobusterDir) Name() string {
 	return "directory enumeration"
+}
+
+func (d *GobusterDir) regexBodyIsAMatch(body []byte) bool {
+	switch {
+	case d.options.Regex != nil && body != nil:
+		if d.options.RegexInvert {
+			return !d.options.Regex.Match(body)
+		}
+		return d.options.Regex.Match(body)
+	default:
+		return true
+	}
 }
 
 // PreRun is the pre run implementation of gobusterdir
@@ -139,7 +181,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 		url.Path = fmt.Sprintf("%s/", url.Path)
 	}
 
-	wildcardResp, wildcardLength, wildcardHeader, _, err := d.http.Request(ctx, url, libgobuster.RequestOptions{})
+	wildcardResp, wildcardLength, wildcardHeader, wildcardBody, err := d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})
 	if err != nil {
 		var retErr error
 		switch {
@@ -170,10 +212,16 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 	switch {
 	case d.options.StatusCodesBlacklistParsed.Length() > 0:
 		if !d.options.StatusCodesBlacklistParsed.Contains(wildcardResp) {
+			if d.regexBodyIsAMatch(wildcardBody) {
+				return nil
+			}
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	case d.options.StatusCodesParsed.Length() > 0:
 		if d.options.StatusCodesParsed.Contains(wildcardResp) {
+			if d.regexBodyIsAMatch(wildcardBody) {
+				return nil
+			}
 			return &WildcardError{url: url.String(), statusCode: wildcardResp, length: wildcardLength, location: wildcardHeader.Get("Location")}
 		}
 	default:
@@ -252,9 +300,16 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var statusCode int
 	var size int64
 	var header http.Header
+	var body []byte
+
+	requestOptions := libgobuster.RequestOptions{}
+	if d.options.Regex != nil || d.options.BodyOutputDir != "" {
+		requestOptions.ReturnBody = true
+	}
+
 	for i := 1; i <= tries; i++ {
 		var err error
-		statusCode, size, header, _, err = d.http.Request(ctx, url, libgobuster.RequestOptions{})
+		statusCode, size, header, body, err = d.http.Request(ctx, url, requestOptions)
 		if err != nil {
 			// check if it's a timeout and if we should try again and try again
 			// otherwise the timeout error is raised
@@ -280,24 +335,40 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		break
 	}
 
+	if d.options.BodyOutputDir != "" && body != nil {
+		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(entity, "/"), statusCode))
+		fpath := filepath.Join(d.options.BodyOutputDir, fname)
+		err := os.WriteFile(fpath, body, 0o600) // nolint:gosec
+		if err != nil {
+			progress.MessageChan <- libgobuster.Message{
+				Level:   libgobuster.LevelError,
+				Message: fmt.Sprintf("Could not write body to file %s: %v", fpath, err),
+			}
+		}
+	}
+
 	if statusCode != 0 {
 		resultStatus := false
 
 		switch {
 		case d.options.StatusCodesBlacklistParsed.Length() > 0:
 			if !d.options.StatusCodesBlacklistParsed.Contains(statusCode) {
-				resultStatus = true
+				resultStatus = d.regexBodyIsAMatch(body)
 			}
 		case d.options.StatusCodesParsed.Length() > 0:
 			if d.options.StatusCodesParsed.Contains(statusCode) {
-				resultStatus = true
+				resultStatus = d.regexBodyIsAMatch(body)
 			}
 		default:
 			return nil, errors.New("StatusCodes and StatusCodesBlacklist are both not set which should not happen")
 		}
 
 		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
-			path := fmt.Sprintf("%-20s", entity)
+			displayPath := entity
+			if d.globalopts.Recursion {
+				displayPath = fmt.Sprintf("%s%s", d.options.URL.Path, entity)
+			}
+			path := fmt.Sprintf("%-20s", displayPath)
 			if d.options.Expanded {
 				// expanded mode should show the full url
 				path = url.String()
@@ -308,6 +379,15 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				Header:     header,
 				StatusCode: -1,
 				Size:       -1,
+			}
+			if d.globalopts.Recursion && d.isDirectoryCandidate(word) {
+				recursionURL := url
+				if !strings.HasSuffix(recursionURL.Path, "/") {
+					recursionURL.Path += "/"
+				}
+				recursionURL.RawQuery = ""
+				recursionURL.Fragment = ""
+				r.recursionTarget = recursionURL.String()
 			}
 			if !d.options.NoStatus {
 				r.StatusCode = statusCode
@@ -320,6 +400,15 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	}
 
 	return nil, nil // nolint:nilnil
+}
+
+func (d *GobusterDir) isDirectoryCandidate(word string) bool {
+	for ext := range d.options.ExtensionsParsed.Set {
+		if strings.HasSuffix(word, "."+ext) {
+			return false
+		}
+	}
+	return true
 }
 
 // GetConfigString returns the string representation of the current config
@@ -342,6 +431,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if d.globalopts.Delay > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
+			return "", err
+		}
+	}
+
+	if d.globalopts.Recursion {
+		if _, err := fmt.Fprintf(tw, "[+] Recursion:\tenabled (depth %d, max targets %d)\n", d.globalopts.RecursionDepth, d.globalopts.RecursionMaxTargets); err != nil {
 			return "", err
 		}
 	}
@@ -445,6 +540,18 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 	if o.NoStatus {
 		if _, err := fmt.Fprintf(tw, "[+] No status:\ttrue\n"); err != nil {
 			return "", err
+		}
+	}
+
+	if o.Regex != nil {
+		if o.RegexInvert {
+			if _, err := fmt.Fprintf(tw, "[+] Regex Inverted:\t%s\n", o.Regex.String()); err != nil {
+				return "", err
+			}
+		} else {
+			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.Regex.String()); err != nil {
+				return "", err
+			}
 		}
 	}
 

@@ -3,6 +3,7 @@ package dir
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	internalcli "github.com/OJ/gobuster/v3/cli"
 	"github.com/OJ/gobuster/v3/gobusterdir"
@@ -34,13 +35,33 @@ func getFlags() []cli.Flag {
 		&cli.BoolFlag{Name: "hide-length", Aliases: []string{"hl"}, Value: false, Usage: "Hide the length of the body in the output"},
 		&cli.BoolFlag{Name: "add-slash", Aliases: []string{"f"}, Value: false, Usage: "Append / to each request"},
 		&cli.BoolFlag{Name: "discover-backup", Aliases: []string{"db"}, Value: false, Usage: "Upon finding a file search for backup files by appending multiple backup extensions"},
+		&cli.BoolFlag{Name: "recursive", Usage: "Recursively scan discovered directories"},
+		&cli.IntFlag{Name: "recursion-depth", Value: 5, Usage: "Maximum recursion depth (0 for unlimited)"},
+		&cli.IntFlag{Name: "recursion-max-targets", Value: 1000, Usage: "Maximum number of discovered targets (0 for unlimited)"},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
 		&cli.BoolFlag{Name: "force", Value: false, Usage: "Continue even if the prechecks fail. Please only use this if you know what you are doing, it can lead to unexpected results."},
+		&cli.StringFlag{Name: "regex", Aliases: []string{"re"}, Usage: "Use regex to filter the results, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses matching the regex will be displayed."},
+		&cli.StringFlag{Name: "regex-invert", Aliases: []string{"rei"}, Usage: "Use regex to filter the results, but inverted, by inspecting the content of the response body. When using this option be sure to set the status-codes and status-codes-blacklist options accordingly. The regex check is done after the status code checks. Only responses NOT matching the regex will be displayed."},
 	}...)
 	return flags
 }
 
 func run(c *cli.Context) error {
+	globalOpts, err := internalcli.ParseGlobalOptions(c)
+	if err != nil {
+		return err
+	}
+	globalOpts.Recursion = c.Bool("recursive")
+	globalOpts.RecursionDepth = c.Int("recursion-depth")
+	globalOpts.RecursionMaxTargets = c.Int("recursion-max-targets")
+	if globalOpts.RecursionDepth < 0 {
+		return errors.New("recursion-depth must be greater than or equal to 0")
+	}
+	if globalOpts.RecursionMaxTargets < 0 {
+		return errors.New("recursion-max-targets must be greater than or equal to 0")
+	}
+	log := libgobuster.NewLogger(globalOpts.Debug)
+
 	pluginOpts := gobusterdir.NewOptions()
 
 	httpOptions, err := internalcli.ParseCommonHTTPOptions(c)
@@ -101,12 +122,26 @@ func run(c *cli.Context) error {
 	}
 	pluginOpts.ExcludeLengthParsed = ret4
 
-	globalOpts, err := internalcli.ParseGlobalOptions(c)
-	if err != nil {
-		return err
+	if c.IsSet("regex") && c.IsSet("regex-invert") {
+		return errors.New("regex and regex-invert are mutually exclusive, please set only one")
 	}
 
-	log := libgobuster.NewLogger(globalOpts.Debug)
+	if c.IsSet("regex") && c.String("regex") != "" {
+		regex, err := regexp.Compile(c.String("regex"))
+		if err != nil {
+			return fmt.Errorf("invalid value for regex: %w", err)
+		}
+		pluginOpts.Regex = regex
+	}
+
+	if c.IsSet("regex-invert") && c.String("regex-invert") != "" {
+		regex, err := regexp.Compile(c.String("regex-invert"))
+		if err != nil {
+			return fmt.Errorf("invalid value for regex-invert: %w", err)
+		}
+		pluginOpts.Regex = regex
+		pluginOpts.RegexInvert = true
+	}
 
 	plugin, err := gobusterdir.New(&globalOpts, pluginOpts, log)
 	if err != nil {
@@ -114,8 +149,7 @@ func run(c *cli.Context) error {
 	}
 
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
-		var wErr *gobusterdir.WildcardError
-		if errors.As(err, &wErr) {
+		if wErr, ok := errors.AsType[*gobusterdir.WildcardError](err); ok {
 			return fmt.Errorf("%w. To continue please exclude the status code or the length", wErr)
 		}
 		log.Debugf("%#v", err)

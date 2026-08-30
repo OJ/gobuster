@@ -54,7 +54,7 @@ func (p *recursiveTestPlugin) ProcessWord(_ context.Context, word string, _ *Pro
 
 type recursiveDiscoveryTestPlugin struct{}
 
-func (*recursiveDiscoveryTestPlugin) Name() string { return "recursive discovery test" }
+func (*recursiveDiscoveryTestPlugin) Name() string                            { return "recursive discovery test" }
 func (*recursiveDiscoveryTestPlugin) PreRun(context.Context, *Progress) error { return nil }
 func (*recursiveDiscoveryTestPlugin) ProcessWord(_ context.Context, word string, _ *Progress) (Result, error) {
 	switch word {
@@ -67,10 +67,12 @@ func (*recursiveDiscoveryTestPlugin) ProcessWord(_ context.Context, word string,
 	}
 }
 
-func (*recursiveDiscoveryTestPlugin) AdditionalWords(string) []string        { return nil }
-func (*recursiveDiscoveryTestPlugin) AdditionalWordsLen() int                { return 0 }
-func (*recursiveDiscoveryTestPlugin) AdditionalSuccessWords(string) []string { return []string{"discovered"} }
-func (*recursiveDiscoveryTestPlugin) GetConfigString() (string, error)       { return "", nil }
+func (*recursiveDiscoveryTestPlugin) AdditionalWords(string) []string { return nil }
+func (*recursiveDiscoveryTestPlugin) AdditionalWordsLen() int         { return 0 }
+func (*recursiveDiscoveryTestPlugin) AdditionalSuccessWords(string) []string {
+	return []string{"discovered"}
+}
+func (*recursiveDiscoveryTestPlugin) GetConfigString() (string, error) { return "", nil }
 
 func TestRunTargetInvokesCallbackForDiscoveredResults(t *testing.T) {
 	wordlist := t.TempDir() + "/words.txt"

@@ -257,7 +257,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 	if opts.Wordlist == "-" && opts.WordlistOffset > 0 {
 		return opts, errors.New("wordlist-offset is not supported when reading from STDIN")
 	} else if opts.WordlistOffset < 0 {
-		return opts, errors.New("wordlist-offset must be bigger or equal to 0")
+		return opts, errors.New("wordlist-offset must be greater than or equal to 0")
 	}
 
 	opts.OutputFilename = c.String("output")

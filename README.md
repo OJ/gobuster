@@ -146,6 +146,7 @@ The following options are shared by most modes:
 | Option           | Description                                               |
 | ---------------- | --------------------------------------------------------- |
 | `-w, --wordlist` | Wordlist path; use `-` to read from standard input        |
+| `--wordlist-offset` | Skip this many initial wordlist entries (`0` by default) |
 | `-t, --threads`  | Number of concurrent workers (default: `10`)              |
 | `-d, --delay`    | Delay applied by each worker, such as `250ms`             |
 | `--timeout`      | Network timeout, such as `15s`                            |

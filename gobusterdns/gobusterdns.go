@@ -137,16 +137,16 @@ func (d *GobusterDNS) ProcessWord(ctx context.Context, word string, progress *li
 	if !d.isWildcard || !d.wildcardIps.ContainsAny(ips) {
 		result := Result{
 			Subdomain: strings.TrimSuffix(subdomain, "."),
-		}
 
-		result.IPs = ips
+			IPs: ips,
+		}
 		if d.options.CheckCNAME {
 			cname, err := d.dnsLookupCname(ctx, subdomain)
 			if err == nil {
 				result.CNAME = cname
 			} else {
 				var wErr *net.DNSError
-				if !errors.As(err, &wErr) && !wErr.IsNotFound {
+				if !errors.As(err, &wErr) || !wErr.IsNotFound {
 					// host not found is the expected error here, send all other errors to the error channel
 					progress.ErrorChan <- err
 				}

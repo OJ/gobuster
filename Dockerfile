@@ -9,14 +9,18 @@ RUN go build -a -o gobuster -trimpath
 
 FROM alpine:latest
 
+ARG UID=1000
+ARG GID=1000
+
 RUN apk add --no-cache ca-certificates \
     && rm -rf /var/cache/*
 
 RUN mkdir -p /app \
-    && adduser -D gobuster \
+    && addgroup -g ${GID} gobuster \
+    && adduser -D gobuster -u ${UID} -G gobuster \
     && chown -R gobuster:gobuster /app
 
-USER gobuster
+USER ${UID}:${GID}
 WORKDIR /app
 
 COPY --from=build-env /src/gobuster .

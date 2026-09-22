@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"strings"
 	"syscall"
@@ -95,7 +96,25 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	url := *d.options.URL
 	url.Fragment = strings.ReplaceAll(url.Fragment, FuzzKeyword, word)
 	url.Host = strings.ReplaceAll(url.Host, FuzzKeyword, word)
-	url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
+
+	// Substitute FUZZ into the *escaped* path, not the decoded one: url.URL.Path
+	// holds the decoded path, so writing a literal percent-encoded word (e.g.
+	// "%2e%2e" from a wordlist, common when fuzzing path-traversal bypasses like
+	// CVE-2021-41773) directly into it makes url.String() treat the '%' as a
+	// literal character and re-escape it to "%25", mangling the request.
+	// Setting RawPath keeps the wire-format exactly as the word was supplied,
+	// as long as it round-trips through PathUnescape; otherwise fall back to
+	// the previous (decoded-path) behaviour for words that aren't valid
+	// percent-encoding.
+	rawPath := strings.ReplaceAll(url.EscapedPath(), FuzzKeyword, word)
+	if decodedPath, err := neturl.PathUnescape(rawPath); err == nil {
+		url.Path = decodedPath
+		url.RawPath = rawPath
+	} else {
+		url.Path = strings.ReplaceAll(url.Path, FuzzKeyword, word)
+		url.RawPath = ""
+	}
+
 	url.Scheme = strings.ReplaceAll(url.Scheme, FuzzKeyword, word)
 
 	query := url.Query()

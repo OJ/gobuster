@@ -2,6 +2,7 @@ package gobustertftp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -33,4 +34,21 @@ func (r Result) ResultToString() (string, error) {
 
 	s := buf.String()
 	return s, nil
+}
+
+// ResultToJSON converts the Result to JSON
+func (r Result) ResultToJSON() ([]byte, error) {
+	type JSONResult struct {
+		Filename     string `json:"filename"`
+		Size         int64  `json:"size"`
+		ErrorMessage string `json:"error_message,omitempty"`
+	}
+
+	jr := JSONResult{
+		Filename:     r.Filename,
+		Size:         r.Size,
+		ErrorMessage: r.ErrorMessage,
+	}
+
+	return json.Marshal(jr)
 }

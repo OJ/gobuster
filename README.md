@@ -129,6 +129,13 @@ gobuster dir -u https://example.com -w wordlist.txt -l
 
 # Filter by status codes
 gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
+
+# Filter using a regex against the response body
+# This can be handy for websites that return status code 200 for everything, but the html contains an error message
+gobuster dir -u https://example.com -w wordlist.txt -re "error\shello"
+
+# Filter using a regex but inverted against the response body
+gobuster dir -u https://example.com -w wordlist.txt -rei "(?i)\berror\b"
 ```
 
 #### 🔍 DNS Mode (`dns`)
@@ -341,6 +348,18 @@ gobuster dir -u https://example.com -w wordlist.txt -q
 _Remember: Always test responsibly and with proper authorization._
 
 # Changes
+
+<details>
+
+<summary>3.8.3</summary>
+
+## 3.8.3
+
+- Add option to filter body by regex
+- Add option to save response bodies
+- Allow comma in Header values passed via the CLI
+
+</details>
 
 <details>
 

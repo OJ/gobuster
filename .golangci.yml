@@ -23,7 +23,6 @@ linters:
     - gocheckcompilerdirectives
     - gochecknoinits
     - gochecksumtype
-    - goconst
     - gocritic
     - gomoddirectives
     - goprintffuncname
@@ -159,7 +158,6 @@ linters:
       - linters:
           - bodyclose
           - errcheck
-          - goconst
           - gosec
           - noctx
           - wrapcheck

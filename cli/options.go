@@ -129,7 +129,8 @@ func CommonHTTPOptions() []cli.Flag {
 		&cli.BoolFlag{Name: "follow-redirect", Aliases: []string{"r"}, Value: false, Usage: "Follow redirects"},
 		&cli.StringSliceFlag{Name: "headers", Aliases: []string{"H"}, Usage: "Specify HTTP headers, -H 'Header1: val1' -H 'Header2: val2'"},
 		&cli.BoolFlag{Name: "no-canonicalize-headers", Aliases: []string{"nch"}, Value: false, Usage: "Do not canonicalize HTTP header names. If set header names are sent as is"},
-		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "the password to the p12 file"},
+		&cli.StringFlag{Name: "method", Aliases: []string{"m"}, Value: "GET", Usage: "Specify HTTP method"},
+		&cli.StringFlag{Name: "body-output-dir", Usage: "Directory to store response bodies"},
 	}...)
 	flags = append(flags, BasicHTTPOptions()...)
 	return flags
@@ -209,6 +210,14 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 		opts.Headers = append(opts.Headers, header)
 	}
 
+	if c.IsSet("body-output-dir") {
+		opts.BodyOutputDir = c.String("body-output-dir")
+		err = os.MkdirAll(opts.BodyOutputDir, 0o755)
+		if err != nil {
+			return opts, fmt.Errorf("could not create body output dir %q: %w", opts.BodyOutputDir, err)
+		}
+	}
+
 	return opts, nil
 }
 
@@ -241,6 +250,9 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.Delay = c.Duration("delay")
 	opts.Threads = c.Int("threads")
+	if opts.Threads <= 0 {
+		return opts, errors.New("threads must be bigger than 0")
+	}
 	opts.WordlistOffset = c.Int("wordlist-offset")
 	if opts.Wordlist == "-" && opts.WordlistOffset > 0 {
 		return opts, errors.New("wordlist-offset is not supported when reading from STDIN")
@@ -274,7 +286,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.DiscoverPatternFile = c.String("discover-pattern")
 	if opts.DiscoverPatternFile != "" {
-		if _, err := os.Stat(opts.PatternFile); os.IsNotExist(err) {
+		if _, err := os.Stat(opts.DiscoverPatternFile); os.IsNotExist(err) {
 			return opts, fmt.Errorf("discover pattern file %q does not exist: %w", opts.DiscoverPatternFile, err)
 		}
 		discoverPatternFile, err := os.Open(opts.DiscoverPatternFile)

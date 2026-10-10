@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // Set is a set of Ts
@@ -68,15 +70,14 @@ func (set *Set[T]) Stringify() string {
 	return strings.Join(values, ",")
 }
 
-// this method is much faster than lineCounter_slow but has the following errors:
-// - empty files are reported as 1 line
-// - files only containing a newline are reported as 1 line
-// - also counts lines with comments
+// This method is much faster than lineCounterSlow. It counts physical lines,
+// including blank and comment lines; the feeder adjusts blank lines later.
 func lineCounter(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
-	count := 1
+	count := 0
 	lineSep := []byte{'\n'}
 	var lastChar byte
+	var hasData bool
 
 	for {
 		c, err := r.Read(buf)
@@ -84,14 +85,15 @@ func lineCounter(r io.Reader) (int, error) {
 
 		// store last character received if we got any bytes
 		if c > 0 {
-			lastChar = buf[c-1]
+			hasData = true
+			lastChar = buf[c-1] // nolint:gosec
 		}
 
 		switch {
 		case errors.Is(err, io.EOF):
-			// account for trailing new line
-			if lastChar == '\n' {
-				count--
+			// A final line without a newline still counts.
+			if hasData && lastChar != '\n' {
+				count++
 			}
 			return count, nil
 
@@ -132,7 +134,7 @@ func ParseExtensions(extensions string) (Set[string], error) {
 		return ret, nil
 	}
 
-	for _, e := range strings.Split(extensions, ",") {
+	for e := range strings.SplitSeq(extensions, ",") {
 		e = strings.TrimSpace(e)
 		// remove leading . from extensions
 		ret.Add(strings.TrimPrefix(e, "."))
@@ -172,7 +174,7 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 		return ret, nil
 	}
 
-	for _, part := range strings.Split(inputString, ",") {
+	for part := range strings.SplitSeq(inputString, ",") {
 		part = strings.TrimSpace(part)
 		// check for range
 		if strings.Contains(part, "-") {
@@ -206,4 +208,72 @@ func ParseCommaSeparatedInt(inputString string) (Set[int], error) {
 		}
 	}
 	return ret, nil
+}
+
+// Windows reserved characters: < > : " | ? * and control characters (0-31)
+var filenameInvalidChars = regexp.MustCompile(`[<>:"|?*\x00-\x1f]`)
+
+// sanitizeFilename removes or replaces invalid characters from a filename
+// to make it safe for use on Windows, macOS, and Linux filesystems
+func SanitizeFilename(filename string) string {
+	if filename == "" {
+		return "unnamed"
+	}
+
+	// Remove leading/trailing whitespace
+	filename = strings.TrimSpace(filename)
+
+	// Replace path separators and other problematic characters
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "\\", "_")
+
+	filename = filenameInvalidChars.ReplaceAllString(filename, "_")
+
+	// Remove non-printable Unicode characters
+	filename = strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return '_'
+	}, filename)
+
+	// Windows reserved names (case-insensitive)
+	reservedNames := []string{
+		"CON", "PRN", "AUX", "NUL",
+		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+	}
+
+	// Check if filename (without extension) is a reserved name
+	nameOnly := strings.TrimSuffix(filename, filepath.Ext(filename))
+	for _, reserved := range reservedNames {
+		if strings.EqualFold(nameOnly, reserved) {
+			filename = "_" + filename
+			break
+		}
+	}
+
+	// Remove trailing dots and spaces (Windows requirement)
+	filename = strings.TrimRight(filename, ". ")
+
+	// Ensure filename isn't empty after sanitization
+	if filename == "" {
+		filename = "unnamed"
+	}
+
+	filename = filepath.Base(filename)
+
+	// Limit length to 255 characters (common filesystem limit)
+	if len(filename) > 255 {
+		ext := filepath.Ext(filename)
+		base := strings.TrimSuffix(filename, ext)
+		maxBase := 255 - len(ext)
+		if maxBase > 0 {
+			filename = base[:maxBase] + ext
+		} else {
+			filename = filename[:255]
+		}
+	}
+
+	return filename
 }

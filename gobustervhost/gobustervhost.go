@@ -201,6 +201,10 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 		break
 	}
 
+	if v.globalopts.StopOnRateLimit && statusCode == http.StatusTooManyRequests {
+		return nil, libgobuster.ErrRateLimited
+	}
+
 	if v.options.BodyOutputDir != "" && body != nil {
 		fname := libgobuster.SanitizeFilename(fmt.Sprintf("%s_%d.html", strings.Trim(word, "/"), statusCode))
 		fpath := filepath.Join(v.options.BodyOutputDir, fname)
@@ -260,6 +264,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if v.globalopts.Delay > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", v.globalopts.Delay); err != nil {
+			return "", err
+		}
+	}
+
+	if v.globalopts.StopOnRateLimit {
+		if _, err := fmt.Fprintf(tw, "[+] Stop on 429:\ttrue\n"); err != nil {
 			return "", err
 		}
 	}

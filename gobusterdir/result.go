@@ -19,10 +19,17 @@ var (
 
 // Result represents a single result
 type Result struct {
-	Path       string
-	Header     http.Header
-	StatusCode int
-	Size       int64
+	Path            string
+	Header          http.Header
+	StatusCode      int
+	Size            int64
+	recursionTarget string
+}
+
+// RecursiveTarget returns the next URL to scan, or an empty string when this
+// result represents a file rather than a directory candidate.
+func (r Result) RecursiveTarget() string {
+	return r.recursionTarget
 }
 
 // ResultToString converts the Result to its textual representation

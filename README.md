@@ -286,6 +286,7 @@ gobuster gcs -w company-names.txt -v
 - Try reducing thread count with `-t` flag
 - Add delays between requests with `--delay`
 - Use different user agent with `-a` flag
+- Use `--stop-on-429` to stop the scan as soon as the server starts rate limiting (HTTP 429) instead of hammering it and risking a block
 
 #### "Connection Timeout"
 

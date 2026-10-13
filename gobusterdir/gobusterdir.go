@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,6 +50,7 @@ type GobusterDir struct {
 	options    *OptionsDir
 	globalopts *libgobuster.Options
 	http       *libgobuster.HTTPClient
+	rootURL    *url.URL
 }
 
 // New creates a new initialized GobusterDir
@@ -64,6 +66,10 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 	g := GobusterDir{
 		options:    opts,
 		globalopts: globalopts,
+	}
+	if opts.URL != nil {
+		rootURL := *opts.URL
+		g.rootURL = &rootURL
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
@@ -97,6 +103,28 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 	g.http = h
 
 	return &g, nil
+}
+
+// SetTarget changes the base URL between recursive scans. The orchestrator
+// calls this only after all workers for the previous target have stopped.
+func (d *GobusterDir) SetTarget(target string) error {
+	u, err := url.Parse(target)
+	if err != nil {
+		return err
+	}
+	if d.rootURL == nil {
+		return errors.New("initial URL is not set")
+	}
+	if !strings.EqualFold(u.Scheme, d.rootURL.Scheme) || !strings.EqualFold(u.Host, d.rootURL.Host) {
+		return errors.New("recursive target must have the same scheme and host as the initial URL")
+	}
+	u.RawQuery = ""
+	u.Fragment = ""
+	if !strings.HasSuffix(u.Path, "/") {
+		u.Path += "/"
+	}
+	d.options.URL = u
+	return nil
 }
 
 // Name should return the name of the plugin
@@ -336,7 +364,11 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 		}
 
 		if resultStatus && !d.options.ExcludeLengthParsed.Contains(int(size)) {
-			path := fmt.Sprintf("%-20s", entity)
+			displayPath := entity
+			if d.globalopts.Recursion {
+				displayPath = fmt.Sprintf("%s%s", d.options.URL.Path, entity)
+			}
+			path := fmt.Sprintf("%-20s", displayPath)
 			if d.options.Expanded {
 				// expanded mode should show the full url
 				path = url.String()
@@ -347,6 +379,15 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 				Header:     header,
 				StatusCode: -1,
 				Size:       -1,
+			}
+			if d.globalopts.Recursion && d.isDirectoryCandidate(word) {
+				recursionURL := url
+				if !strings.HasSuffix(recursionURL.Path, "/") {
+					recursionURL.Path += "/"
+				}
+				recursionURL.RawQuery = ""
+				recursionURL.Fragment = ""
+				r.recursionTarget = recursionURL.String()
 			}
 			if !d.options.NoStatus {
 				r.StatusCode = statusCode
@@ -359,6 +400,15 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	}
 
 	return nil, nil // nolint:nilnil
+}
+
+func (d *GobusterDir) isDirectoryCandidate(word string) bool {
+	for ext := range d.options.ExtensionsParsed.Set {
+		if strings.HasSuffix(word, "."+ext) {
+			return false
+		}
+	}
+	return true
 }
 
 // GetConfigString returns the string representation of the current config
@@ -381,6 +431,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 
 	if d.globalopts.Delay > 0 {
 		if _, err := fmt.Fprintf(tw, "[+] Delay:\t%s\n", d.globalopts.Delay); err != nil {
+			return "", err
+		}
+	}
+
+	if d.globalopts.Recursion {
+		if _, err := fmt.Fprintf(tw, "[+] Recursion:\tenabled (depth %d, max targets %d)\n", d.globalopts.RecursionDepth, d.globalopts.RecursionMaxTargets); err != nil {
 			return "", err
 		}
 	}

@@ -2,8 +2,10 @@ package gobusterdir
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -66,4 +68,25 @@ func (r Result) ResultToString() (string, error) {
 	s := buf.String()
 
 	return s, nil
+}
+
+// ResultToJSON converts the Result to JSON
+func (r Result) ResultToJSON() ([]byte, error) {
+	type JSONResult struct {
+		Path       string      `json:"path"`
+		StatusCode int         `json:"status_code"`
+		Size       int64       `json:"size"`
+		Location   string      `json:"location,omitempty"`
+		Header     http.Header `json:"header,omitempty"`
+	}
+
+	jr := JSONResult{
+		Path:       strings.TrimSpace(r.Path),
+		StatusCode: r.StatusCode,
+		Size:       r.Size,
+		Location:   r.Header.Get("Location"),
+		Header:     r.Header,
+	}
+
+	return json.Marshal(jr)
 }

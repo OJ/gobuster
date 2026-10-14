@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
+	github.com/xrash/smetrics v0.0.0-20261013231157-39c47d93efba // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.61.0 // indirect

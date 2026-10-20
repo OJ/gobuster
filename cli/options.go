@@ -234,6 +234,7 @@ func GlobalOptions() []cli.Flag {
 		&cli.StringFlag{Name: "pattern", Aliases: []string{"p"}, Usage: "File containing replacement patterns"},
 		&cli.StringFlag{Name: "discover-pattern", Aliases: []string{"pd"}, Usage: "File containing replacement patterns applied to successful guesses"},
 		&cli.BoolFlag{Name: "no-color", Aliases: []string{"nc"}, Value: false, Usage: "Disable color output"},
+		&cli.BoolFlag{Name: "stop-on-429", Value: false, Usage: "Stop the scan when the server responds with HTTP 429 Too Many Requests (HTTP based modes only)"},
 		&cli.BoolFlag{Name: "debug", Value: false, Usage: "enable debug output"},
 	}
 }
@@ -308,6 +309,7 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 		color.NoColor = true
 	}
 
+	opts.StopOnRateLimit = c.Bool("stop-on-429")
 	opts.Debug = c.Bool("debug")
 	return opts, nil
 }

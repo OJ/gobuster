@@ -122,7 +122,7 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	}
 	// Host header needs to be set separately
 	for _, h := range opt.Headers {
-		if h.Name == "Host" {
+		if http.CanonicalHeaderKey(h.Name) == "Host" {
 			client.host = h.Value
 			break
 		}
@@ -210,6 +210,11 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts
 		}
 	} else {
 		for _, h := range client.headers {
+			// the Host header is already set via req.Host
+			if http.CanonicalHeaderKey(h.Name) == "Host" {
+				continue
+			}
+
 			if client.noCanonicalizeHeaders {
 				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
 				req.Header[h.Name] = []string{h.Value}

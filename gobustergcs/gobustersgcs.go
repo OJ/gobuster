@@ -43,13 +43,15 @@ func New(globalopts *libgobuster.Options, opts *OptionsGCS, logger *libgobuster.
 	}
 
 	basicOptions := libgobuster.BasicHTTPOptions{
-		Proxy:           opts.Proxy,
-		Timeout:         opts.Timeout,
-		UserAgent:       opts.UserAgent,
-		NoTLSValidation: opts.NoTLSValidation,
-		RetryOnTimeout:  opts.RetryOnTimeout,
-		RetryAttempts:   opts.RetryAttempts,
-		TLSCertificate:  opts.TLSCertificate,
+		Proxy:            opts.Proxy,
+		Timeout:          opts.Timeout,
+		UserAgent:        opts.UserAgent,
+		NoTLSValidation:  opts.NoTLSValidation,
+		RetryOnTimeout:   opts.RetryOnTimeout,
+		RetryAttempts:    opts.RetryAttempts,
+		TLSCertificate:   opts.TLSCertificate,
+		LocalAddr:        opts.LocalAddr,
+		TLSRenegotiation: opts.TLSRenegotiation,
 	}
 
 	httpOpts := libgobuster.HTTPOptions{
@@ -166,7 +168,7 @@ func (s *GobusterGCS) ProcessWord(ctx context.Context, word string, progress *li
 
 	if s.options.ShowFiles {
 		// get status
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(body, &result)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse response json: %w", err)

@@ -72,8 +72,7 @@ func run(c *cli.Context) error {
 
 	log := libgobuster.NewLogger(globalOpts.Debug)
 	if err := internalcli.Gobuster(c.Context, &globalOpts, plugin, log); err != nil {
-		var wErr *gobusterdns.WildcardError
-		if errors.As(err, &wErr) {
+		if wErr, ok := errors.AsType[*gobusterdns.WildcardError](err); ok {
 			return fmt.Errorf("%w. To force processing of Wildcard DNS, specify the '--wildcard' switch", wErr)
 		}
 		log.Debugf("%#v", err)

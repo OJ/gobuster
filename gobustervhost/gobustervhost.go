@@ -67,6 +67,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsVhost, logger *libgobuste
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
 		BodyOutputDir:         opts.BodyOutputDir,
+		RateLimitSleep:        opts.RateLimitSleep,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -83,7 +84,7 @@ func (v *GobusterVhost) Name() string {
 }
 
 // PreRun is the pre run implementation of gobusterdir
-func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) error {
+func (v *GobusterVhost) PreRun(ctx context.Context, pr *libgobuster.Progress) error {
 	// add trailing slash
 	if !strings.HasSuffix(v.options.URL.Path, "/") {
 		v.options.URL.Path = fmt.Sprintf("%s/", v.options.URL.Path)
@@ -96,7 +97,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 	}
 
 	// request default vhost for normalBody
-	_, _, _, body, err := v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{ReturnBody: true})
+	_, _, _, body, err := v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{ReturnBody: true, Progress: pr})
 	if err != nil {
 		switch {
 		case errors.Is(err, io.EOF):
@@ -112,7 +113,7 @@ func (v *GobusterVhost) PreRun(ctx context.Context, _ *libgobuster.Progress) err
 
 	// request non existent vhost for abnormalBody
 	subdomain := fmt.Sprintf("%s.%s", uuid.New(), v.domain)
-	_, _, _, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true})
+	_, _, _, body, err = v.http.Request(ctx, *v.options.URL, libgobuster.RequestOptions{Host: subdomain, ReturnBody: true, Progress: pr})
 	if err != nil {
 		switch {
 		case errors.Is(err, io.EOF):
@@ -304,6 +305,12 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 
 	if o.Username != "" {
 		if _, err := fmt.Fprintf(tw, "[+] Auth User:\t%s\n", o.Username); err != nil {
+			return "", err
+		}
+	}
+
+	if o.RateLimitSleep > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Rate limit sleep:\t%s\n", o.RateLimitSleep); err != nil {
 			return "", err
 		}
 	}

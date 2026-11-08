@@ -220,7 +220,7 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 
 	return opts, nil
 }
-w
+
 // RateLimitOptions returns the flags to handle 429 Too Many Requests responses
 func RateLimitOptions() []cli.Flag {
 	return []cli.Flag{

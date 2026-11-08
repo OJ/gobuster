@@ -32,4 +32,7 @@ type HTTPOptions struct {
 	FollowRedirect        bool
 	Method                string
 	BodyOutputDir         string
+	// RateLimitSleep is the time all requests are paused when a 429 is received.
+	// 0 disables the rate limit handling.
+	RateLimitSleep time.Duration
 }

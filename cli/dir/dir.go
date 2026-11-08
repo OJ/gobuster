@@ -25,6 +25,7 @@ func getFlags() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, internalcli.CommonHTTPOptions()...)
 	flags = append(flags, internalcli.GlobalOptions()...)
+	flags = append(flags, internalcli.RateLimitOptions()...)
 	flags = append(flags, []cli.Flag{
 		&cli.StringFlag{Name: "status-codes", Aliases: []string{"s"}, Usage: "Positive status codes (will be overwritten with status-codes-blacklist if set). Can also handle ranges like 200,300-400,404"},
 		&cli.StringFlag{Name: "status-codes-blacklist", Aliases: []string{"b"}, Usage: "Negative status codes (will override status-codes if set). Can also handle ranges like 200,300-400,404.", Value: "404"},
@@ -57,6 +58,11 @@ func run(c *cli.Context) error {
 		return err
 	}
 	pluginOpts.HTTPOptions = httpOptions
+
+	pluginOpts.RateLimitSleep, err = internalcli.ParseRateLimitOptions(c)
+	if err != nil {
+		return err
+	}
 
 	pluginOpts.Extensions = c.String("extensions")
 	ret, err := libgobuster.ParseExtensions(pluginOpts.Extensions)

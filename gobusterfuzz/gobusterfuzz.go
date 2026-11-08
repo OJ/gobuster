@@ -74,6 +74,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsFuzz, logger *libgobuster
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
 		BodyOutputDir:         opts.BodyOutputDir,
+		RateLimitSleep:        opts.RateLimitSleep,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -113,7 +114,7 @@ func (d *GobusterFuzz) ProcessWord(ctx context.Context, word string, progress *l
 	}
 	url.RawQuery = query.Encode()
 
-	requestOptions := libgobuster.RequestOptions{}
+	requestOptions := libgobuster.RequestOptions{Progress: progress}
 
 	if len(d.options.Headers) > 0 {
 		requestOptions.ModifiedHeaders = make([]libgobuster.HTTPHeader, len(d.options.Headers))
@@ -327,6 +328,12 @@ func (d *GobusterFuzz) GetConfigString() (string, error) {
 
 	if o.FollowRedirect {
 		if _, err := fmt.Fprintf(tw, "[+] Follow Redirect:\ttrue\n"); err != nil {
+			return "", err
+		}
+	}
+
+	if o.RateLimitSleep > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Rate limit sleep:\t%s\n", o.RateLimitSleep); err != nil {
 			return "", err
 		}
 	}

@@ -221,6 +221,22 @@ func ParseCommonHTTPOptions(c *cli.Context) (libgobuster.HTTPOptions, error) {
 	return opts, nil
 }
 
+// RateLimitOptions returns the flags to handle 429 Too Many Requests responses
+func RateLimitOptions() []cli.Flag {
+	return []cli.Flag{
+		&cli.DurationFlag{Name: "rate-limit-sleep", Aliases: []string{"rls"}, Usage: "Pause all threads for this duration when a 429 (Too Many Requests) is received (e.g. 30s). The rate limited request is retried after the pause until the 429 is gone, then all threads continue. Disabled if not set"},
+	}
+}
+
+// ParseRateLimitOptions parses the flags returned by RateLimitOptions
+func ParseRateLimitOptions(c *cli.Context) (time.Duration, error) {
+	sleep := c.Duration("rate-limit-sleep")
+	if sleep < 0 {
+		return 0, errors.New("rate-limit-sleep must be bigger or equal to 0")
+	}
+	return sleep, nil
+}
+
 func GlobalOptions() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{Name: "wordlist", Aliases: []string{"w"}, Usage: "Path to the wordlist. Set to - to use STDIN.", Required: true},

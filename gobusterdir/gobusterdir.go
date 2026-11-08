@@ -88,6 +88,7 @@ func New(globalopts *libgobuster.Options, opts *OptionsDir, logger *libgobuster.
 		Cookies:               opts.Cookies,
 		Method:                opts.Method,
 		BodyOutputDir:         opts.BodyOutputDir,
+		RateLimitSleep:        opts.RateLimitSleep,
 	}
 
 	h, err := libgobuster.NewHTTPClient(&httpOpts, logger)
@@ -123,7 +124,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 		d.options.URL.Path = fmt.Sprintf("%s/", d.options.URL.Path)
 	}
 
-	_, _, _, _, err := d.http.Request(ctx, *d.options.URL, libgobuster.RequestOptions{})
+	_, _, _, _, err := d.http.Request(ctx, *d.options.URL, libgobuster.RequestOptions{Progress: pr})
 	if err != nil {
 		var retErr error
 		switch {
@@ -153,7 +154,7 @@ func (d *GobusterDir) PreRun(ctx context.Context, pr *libgobuster.Progress) erro
 		url.Path = fmt.Sprintf("%s/", url.Path)
 	}
 
-	wildcardResp, wildcardLength, wildcardHeader, wildcardBody, err := d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true})
+	wildcardResp, wildcardLength, wildcardHeader, wildcardBody, err := d.http.Request(ctx, url, libgobuster.RequestOptions{ReturnBody: true, Progress: pr})
 	if err != nil {
 		var retErr error
 		switch {
@@ -274,7 +275,7 @@ func (d *GobusterDir) ProcessWord(ctx context.Context, word string, progress *li
 	var header http.Header
 	var body []byte
 
-	requestOptions := libgobuster.RequestOptions{}
+	requestOptions := libgobuster.RequestOptions{Progress: progress}
 	if d.options.Regex != nil || d.options.BodyOutputDir != "" {
 		requestOptions.ReturnBody = true
 	}
@@ -496,6 +497,12 @@ func (d *GobusterDir) GetConfigString() (string, error) {
 			if _, err := fmt.Fprintf(tw, "[+] Regex:\t%s\n", o.Regex.String()); err != nil {
 				return "", err
 			}
+		}
+	}
+
+	if o.RateLimitSleep > 0 {
+		if _, err := fmt.Fprintf(tw, "[+] Rate limit sleep:\t%s\n", o.RateLimitSleep); err != nil {
+			return "", err
 		}
 	}
 

@@ -1,509 +1,215 @@
 # Gobuster
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/OJ/gobuster/v3)](https://goreportcard.com/report/github.com/OJ/gobuster/v3) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/OJ/gobuster/blob/master/LICENSE) [![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
+[![Go Report Card](https://goreportcard.com/badge/github.com/OJ/gobuster/v3)](https://goreportcard.com/report/github.com/OJ/gobuster/v3)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster)
 
-## 💻 Introduction
+Gobuster is a fast, flexible enumeration tool written in Go. It uses wordlists to
+discover directories and files, DNS names, virtual hosts, cloud storage buckets,
+and TFTP files. It can also fuzz values in URLs, headers, and request bodies.
 
-> A fast and flexible brute-forcing tool written in Go
+> Use Gobuster only against systems you own or have explicit permission to test.
 
-**Gobuster** is a high-performance directory/file, DNS and virtual host brute-forcing tool written in Go. It's designed to be fast, reliable, and easy to use for security professionals and penetration testers.
+## Modes
 
-## ✨ Features
+| Mode    | Purpose                                             |
+| ------- | --------------------------------------------------- |
+| `dir`   | Discover directories and files on web servers       |
+| `dns`   | Discover DNS subdomains                             |
+| `vhost` | Discover virtual hosts on a web server              |
+| `fuzz`  | Replace `FUZZ` in URLs, headers, and request bodies |
+| `s3`    | Enumerate Amazon S3 buckets                         |
+| `gcs`   | Enumerate Google Cloud Storage buckets              |
+| `tftp`  | Discover files on TFTP servers                      |
 
-- 🚀 **High Performance**: Multi-threaded scanning with configurable concurrency
-- 🔍 **Multiple Modes**: Directory, DNS, virtual host, S3, GCS, TFTP, and fuzzing modes
-- 🛡️ **Security Focused**: Built for penetration testing and security assessments
-- 🐳 **Docker Support**: Available as a Docker container
-- 🔧 **Extensible**: Pattern-based scanning and custom wordlists
+## Installation
 
-## 🎯 What Can Gobuster Do?
+### Go
 
-- **Web Directory/File Enumeration**: Discover hidden directories and files on web servers
-- **DNS Subdomain Discovery**: Find subdomains with wildcard support
-- **Virtual Host Detection**: Identify virtual hosts on target web servers
-- **Cloud Storage Enumeration**: Discover open Amazon S3 and Google Cloud Storage buckets
-- **TFTP File Discovery**: Find files on TFTP servers
-- **Custom Fuzzing**: Flexible fuzzing with customizable parameters
+Gobuster requires Go 1.27 or newer.
 
-## 🚀 Quick Start
-
-```bash
-# Install gobuster
-go install github.com/OJ/gobuster/v3@latest
-
-# Basic directory enumeration
-gobuster dir -u https://example.com -w /path/to/wordlist.txt
-
-# DNS subdomain enumeration
-gobuster dns -do example.com -w /path/to/wordlist.txt
-
-# Virtual host discovery
-gobuster vhost -u https://example.com -w /path/to/wordlist.txt
-
-# S3 bucket enumeration
-gobuster s3 -w /path/to/bucket-names.txt
-```
-
-## 📦 Installation
-
-### Quick Install (Recommended)
-
-```bash
+```console
 go install github.com/OJ/gobuster/v3@latest
 ```
 
-**Requirements**: Go 1.24 or higher
+Make sure the Go binary directory is in your `PATH`. You can find it with
+`go env GOBIN`; when that value is empty, Go uses `$(go env GOPATH)/bin`.
 
-### Alternative Installation Methods
+### Prebuilt binaries
 
-#### Using Binary Releases
+Download an archive for your platform from the
+[GitHub releases page](https://github.com/OJ/gobuster/releases).
 
-Download pre-compiled binaries from the [releases page](https://github.com/OJ/gobuster/releases).
+### Docker
 
-#### Using Docker
-
-```bash
-# Pull the latest image
+```console
 docker pull ghcr.io/oj/gobuster:latest
-
-# Run gobuster in Docker
-docker run --rm -it ghcr.io/oj/gobuster:latest dir -u https://example.com -w /usr/share/wordlists/dirb/common.txt
+docker run --rm -it \
+  -v "$PWD/wordlists:/wordlists:ro" \
+  ghcr.io/oj/gobuster:latest \
+  dir -u https://example.com -w /wordlists/common.txt
 ```
 
-#### Building from Source
+## Quick start
 
-```bash
-git clone https://github.com/OJ/gobuster.git
-cd gobuster
-go mod tidy
-go build
+Every mode has its own options. Start with the built-in help when exploring a
+new mode:
+
+```console
+gobuster --help
+gobuster dir --help
 ```
 
-### Troubleshooting Installation
+### Directory and file discovery
 
-If you encounter issues:
-
-- Ensure Go version 1.24+ is installed: `go version`
-- Check your `$GOPATH` and `$GOBIN` environment variables
-- Verify `$GOPATH/bin` is in your `$PATH`
-
-## 🎯 Usage
-
-Gobuster uses a mode-based approach. Each mode is designed for specific enumeration tasks:
-
-```bash
-gobuster [mode] [options]
-```
-
-### Getting Help
-
-```bash
-gobuster help                   # Show general help
-gobuster help [mode]            # Show help for specific mode
-gobuster [mode] --help          # Alternative help syntax
-```
-
-### 📊 Available Modes
-
-#### 🌐 Directory Mode (`dir`)
-
-Enumerate directories and files on web servers.
-
-**Basic Usage:**
-
-```bash
+```console
 gobuster dir -u https://example.com -w wordlist.txt
 ```
 
-**Advanced Options:**
+Add extensions, choose accepted status codes, and write results to a file:
 
-```bash
-# With file extensions
-gobuster dir -u https://example.com -w wordlist.txt -x php,html,js,txt
-
-# With custom headers and cookies
-gobuster dir -u https://example.com -w wordlist.txt -H "Authorization: Bearer token" -c "session=value"
-
-# Show response length
-gobuster dir -u https://example.com -w wordlist.txt -l
-
-# Filter by status codes
-gobuster dir -u https://example.com -w wordlist.txt -s 200,301,302
-
-# Filter using a regex against the response body
-# This can be handy for websites that return status code 200 for everything, but the html contains an error message
-gobuster dir -u https://example.com -w wordlist.txt -re "error\shello"
-
-# Filter using a regex but inverted against the response body
-gobuster dir -u https://example.com -w wordlist.txt -rei "(?i)\berror\b"
+```console
+gobuster dir \
+  -u https://example.com \
+  -w wordlist.txt \
+  -x php,html,js \
+  -s 200,204,301,302,307,401,403 \
+  -b "" \
+  -o results.txt
 ```
 
-#### 🔍 DNS Mode (`dns`)
+The status-code blacklist defaults to `404` and overrides the positive list, so
+explicitly clear it with `-b ""` when using `-s`.
 
-Discover subdomains through DNS resolution.
+Useful directory-mode options include:
 
-**Basic Usage:**
+- `-H 'Name: value'` to add a header; repeat it for multiple headers
+- `-c 'name=value'` to send cookies
+- `-U user -P password` for HTTP Basic authentication
+- `-x php,html` to try file extensions
+- `--exclude-length 123,456-500` to ignore response sizes
+- `--regex PATTERN` or `--regex-invert PATTERN` to filter response bodies
+- `--recursive` to scan discovered directories recursively
+- `--recursion-depth N` to limit recursion depth (`0` for unlimited)
+- `--recursion-max-targets N` to cap discovered recursive targets (`0` for unlimited)
+- `--body-output-dir PATH` to save response bodies
+- `-k` to skip TLS certificate verification
 
-```bash
-gobuster dns -do example.com -w wordlist.txt
+### DNS discovery
+
+```console
+gobuster dns --domain example.com -w subdomains.txt
 ```
 
-**Advanced Options:**
+Use a custom resolver or inspect CNAME records:
 
-```bash
-# Use custom DNS server
-gobuster dns -do example.com -w wordlist.txt -r 8.8.8.8:53
-
-# Increase threads for faster scanning
-gobuster dns -do example.com -w wordlist.txt -t 50
+```console
+gobuster dns --domain example.com -w subdomains.txt --resolver 1.1.1.1
+gobuster dns --domain example.com -w subdomains.txt --check-cname
 ```
 
-#### 🏠 Virtual Host Mode (`vhost`)
+### Virtual-host discovery
 
-Discover virtual hosts on web servers.
-
-**Basic Usage:**
-
-```bash
-gobuster vhost -u https://example.com --append-domain -w wordlist.txt
+```console
+gobuster vhost -u https://example.com -w hosts.txt --append-domain
 ```
 
-#### ☁️ S3 Mode (`s3`)
+Point `-u` at the server you want to test. Use `--append-domain` when the
+wordlist contains prefixes such as `admin` rather than complete hostnames.
 
-Enumerate Amazon S3 buckets.
+### Fuzzing
 
-**Basic Usage:**
+Put the literal marker `FUZZ` wherever Gobuster should substitute each wordlist
+entry:
 
-```bash
+```console
+gobuster fuzz -u 'https://example.com/?page=FUZZ' -w values.txt
+gobuster fuzz -u https://example.com -H 'X-Api-Version: FUZZ' -w versions.txt
+gobuster fuzz -u https://example.com/login -m POST \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -B 'username=admin&password=FUZZ' \
+  -w passwords.txt
+```
+
+### Cloud storage and TFTP
+
+```console
 gobuster s3 -w bucket-names.txt
-```
-
-**With Debug Output:**
-
-```bash
-gobuster s3 -w bucket-names.txt --debug
-```
-
-#### 🖥️ TFTP Mode (`tftp`)
-
-Enumerate files on tftp servers.
-
-**Basic Usage:**
-
-```bash
-gobuster tftp -s 10.0.0.1 -w wordlist.txt
-```
-
-#### ☁️ GCS Mode (`gcs`)
-
-Enumerate Google Cloud Storage Buckets.
-
-**Basic Usage:**
-
-```bash
 gobuster gcs -w bucket-names.txt
+gobuster tftp -s 192.0.2.10 -w filenames.txt
 ```
 
-**With Debug Output:**
+## Controlling a scan
 
-```bash
-gobuster gcs -w bucket-names.txt --debug
+The following options are shared by most modes:
+
+| Option           | Description                                               |
+| ---------------- | --------------------------------------------------------- |
+| `-w, --wordlist` | Wordlist path; use `-` to read from standard input        |
+| `-t, --threads`  | Number of concurrent workers (default: `10`)              |
+| `-d, --delay`    | Delay applied by each worker, such as `250ms`             |
+| `--timeout`      | Network timeout, such as `15s`                            |
+| `-o, --output`   | Write discovered results to a file                        |
+| `-q, --quiet`    | Print results without the banner and informational output |
+| `--no-progress`  | Disable the progress display                              |
+| `--debug`        | Enable diagnostic output                                  |
+
+Start conservatively and increase concurrency only when the target can handle
+it. A delay is often more useful than a very high thread count when testing
+rate-limited services.
+
+## Patterns
+
+`--pattern` expands every wordlist entry through a pattern file. Each occurrence
+of `{GOBUSTER}` is replaced with the current word:
+
+```text
+{GOBUSTER}-dev
+{GOBUSTER}-staging
+api-{GOBUSTER}
 ```
 
-#### 🔧 Fuzz Mode (`fuzz`)
-
-Custom fuzzing with the `FUZZ` keyword.
-
-**Basic Usage:**
-
-```bash
-gobuster fuzz -u https://example.com?FUZZ=test -w wordlist.txt
+```console
+gobuster dns --domain example.com -w words.txt --pattern patterns.txt
 ```
 
-**Advanced Examples:**
+Patterns multiply the number of requests, so review the pattern file before a
+large scan. `--discover-pattern` applies a pattern file only to successful
+guesses.
 
-```bash
-# Fuzz URL parameters
-gobuster fuzz -u https://example.com?param=FUZZ -w wordlist.txt
+## Building from source
 
-# Fuzz headers
-gobuster fuzz -u https://example.com -H "X-Custom-Header: FUZZ" -w wordlist.txt
+Clone the repository and use [Task](https://taskfile.dev/) for the standard
+development workflow:
 
-# Fuzz POST data
-gobuster fuzz -u https://example.com -d "username=admin&password=FUZZ" -w passwords.txt
+```console
+git clone https://github.com/OJ/gobuster.git
+cd gobuster
+task build
 ```
 
-## 💰 Support
+Common development commands:
 
-[![Backers on Open Collective](https://opencollective.com/gobuster/backers/badge.svg)](https://opencollective.com/gobuster) [![Sponsors on Open Collective](https://opencollective.com/gobuster/sponsors/badge.svg)](https://opencollective.com/gobuster)
-
-### Love this tool? Back it!
-
-If you're backing us already, you rock. If you're not, that's cool too! Want to back us? [Become a backer](https://opencollective.com/gobuster#backer)!
-
-[![Backers](https://opencollective.com/gobuster/backers.svg?width=890)](https://opencollective.com/gobuster#backers)
-
-All funds that are donated to this project will be donated to charity. A full log of charity donations will be available in this repository as they are processed.
-
-## 💡 Common Use Cases
-
-### Web Application Security Testing
-
-```bash
-# Comprehensive directory enumeration
-gobuster dir -u https://target.com -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,js,txt,asp,aspx,jsp
-
-# API endpoint discovery
-gobuster dir -u https://api.target.com -w /usr/share/wordlists/dirb/common.txt -x json
-
-# Admin panel discovery
-gobuster dir -u https://target.com -w admin-panels.txt -s 200,301,302,403
+```console
+task test    # format, vet, and run tests with race detection and coverage
+task check   # format, run gofumpt, vet, and apply Go fixes
+task lint    # run golangci-lint and verify module files are tidy
+task linux   # build a Linux AMD64 binary
+task windows # build a Windows AMD64 binary
 ```
 
-### DNS Reconnaissance
+Bug reports should include the Gobuster version, the mode and command used
+(with secrets removed), and relevant debug output. Open an issue before making
+a large behavioral change.
 
-```bash
-# Comprehensive subdomain enumeration
-gobuster dns -do target.com -w /usr/share/wordlists/dnsrecon/subdomains-top1mil-5000.txt -t 50
-```
+## Support
 
-### Cloud Storage Assessment
+Gobuster is maintained by Christian Mehlmauer
+([@firefart](https://github.com/firefart)) and OJ Reeves
+([@TheColonial](https://github.com/TheColonial)). You can support development
+through [Open Collective](https://opencollective.com/gobuster). Project funds
+are donated to charity.
 
-```bash
-# S3 bucket enumeration with patterns
-gobuster s3 -w company-names.txt -v
+## License
 
-# GCS bucket enumeration
-gobuster gcs -w company-names.txt -v
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### "Permission Denied" or "Access Denied"
-
-- Try reducing thread count with `-t` flag
-- Add delays between requests with `--delay`
-- Use different user agent with `-a` flag
-
-#### "Connection Timeout"
-
-- Increase timeout with `--timeout` flag
-- Reduce thread count for slower targets
-- Check your internet connection
-
-#### "No Results Found"
-
-- Verify the target URL is accessible
-- Try different wordlists
-- Check status code filtering with `-s` flag
-
-### Performance Issues
-
-#### Slow Scanning
-
-- Increase thread count with `-t` flag (but be careful not to overwhelm the target)
-- Use smaller, more targeted wordlists
-
-## 🎯 Best Practices
-
-### Security Testing Guidelines
-
-1. **Always get proper authorization** before testing any target
-2. **Start with low thread counts** to avoid overwhelming servers
-3. **Use appropriate wordlists** for the target technology
-4. **Respect rate limits** and implement delays if needed
-5. **Monitor your network traffic** to avoid detection
-
-### Wordlist Selection
-
-- **For web applications**: Use technology-specific wordlists (PHP, ASP.NET, etc.)
-- **For APIs**: Focus on common API endpoints and versioning patterns
-- **For DNS**: Use subdomain-specific wordlists with common patterns
-- **For cloud storage**: Use company/brand-specific patterns
-
-### Output Management
-
-```bash
-# Save results to file
-gobuster dir -u https://example.com -w wordlist.txt -o results.txt
-
-# Use quiet mode for clean output
-gobuster dir -u https://example.com -w wordlist.txt -q
-```
-
-## 📚 Additional Resources
-
-### Recommended Wordlists
-
-- **SecLists**: [https://github.com/danielmiessler/SecLists](https://github.com/danielmiessler/SecLists)
-- **FuzzDB**: [https://github.com/fuzzdb-project/fuzzdb](https://github.com/fuzzdb-project/fuzzdb)
-- **Seclists DNS**: [https://github.com/danielmiessler/SecLists/tree/master/Discovery/DNS](https://github.com/danielmiessler/SecLists/tree/master/Discovery/DNS)
-
----
-
-**Happy hacking! 🚀**
-
-_Remember: Always test responsibly and with proper authorization._
-
-# Changes
-
-<details>
-
-<summary>3.8.3</summary>
-
-## 3.8.3
-
-- Add option to filter body by regex
-- Add option to save response bodies
-- Allow comma in Header values passed via the CLI
-
-</details>
-
-<details>
-
-<summary>3.8.2</summary>
-
-## 3.8.2
-
-- Fix expanded mode to show the full url again
-
-</details>
-
-<details>
-
-<summary>3.8.1</summary>
-
-## 3.8.1
-
-- Fix expanded mode showing the entries twice
-
-</details>
-
-<details>
-
-<summary>3.8</summary>
-
-## 3.8
-
-- Add exclude-hostname-length flag to dynamically adjust exclude-length by @0xyy66
-- Fix Fuzzing query parameters
-- Add `--force` flag in `dir` mode to continue execution if precheck errors occur
-
-</details>
-
-<details>
-
-<summary>3.7</summary>
-
-## 3.7
-
-- use new cli library
-- a lot more short options due to the new cli library
-- more user friendly error messages
-- clean up DNS mode
-- renamed `show-cname` to `check-cname` in dns mode
-- got rid of `verbose` flag and introduced `debug` instead
-- the version command now also shows some build variables for more info
-- switched to another pkcs12 library to support p12s generated with openssl3 that use SHA256 HMAC
-- comments in wordlists (strings starting with #) are no longer ignored
-- warn in vhost mode if the --append-domain switch might have been forgotten
-- allow to exclude status code and length in vhost mode
-- added automaxprocs for use in docker with cpu limits
-- log http requests with debug enabled
-- allow fuzzing of Host header in fuzz mode
-- automatically disable progress output when output is redirected
-- fix extra special characters when run with `--no-progress`
-- warn when using vhost mode with a proxy and http based urls as this might not work as expected
-- add `interface` and `local-ip` parameters to specify the outgoing interface for http requests
-- add support for tls renegotiation
-- fix progress with patterns by @acammack
-- fix backup discovery by @acammack
-- support tcp protocol on dns servers
-- add support for URL query parameters
-
-</details>
-
-<details>
-<summary>3.6</summary>
-
-## 3.6
-
-- Wordlist offset parameter to skip x lines from the wordlist
-- prevent double slashes when building up an url in dir mode
-- allow for multiple values and ranges on `--exclude-length`
-- `no-fqdn` parameter on dns bruteforce to disable the use of the systems search domains. This should speed up the run if you have configured some search domains. [https://github.com/OJ/gobuster/pull/418](https://github.com/OJ/gobuster/pull/418)
-
-</details>
-
-<details>
-<summary>3.5</summary>
-
-## 3.5
-
-- Allow Ranges in status code and status code blacklist. Example: 200,300-305,404
-
-</details>
-
-<details>
-<summary>3.4</summary>
-
-## 3.4
-
-- Enable TLS1.0 and TLS1.1 support
-- Add TFTP mode to search for files on tftp servers
-
-</details>
-
-<details>
-<summary>3.3</summary>
-
-## 3.3
-
-- Support TLS client certificates / mtls
-- support loading extensions from file
-- support fuzzing POST body, HTTP headers and basic auth
-- new option to not canonicalize header names
-
-</details>
-
-<details>
-<summary>3.2</summary>
-
-## 3.2
-
-- Use go 1.19
-- use contexts in the correct way
-- get rid of the wildcard flag (except in DNS mode)
-- color output
-- retry on timeout
-- google cloud bucket enumeration
-- fix nil reference errors
-
-</details>
-
-<details>
-<summary>3.1</summary>
-
-## 3.1
-
-- enumerate public AWS S3 buckets
-- fuzzing mode
-- specify HTTP method
-- added support for patterns. You can now specify a file containing patterns that are applied to every word, one by line. Every occurrence of the term `{GOBUSTER}` in it will be replaced with the current wordlist item. Please use with caution as this can cause increase the number of requests issued a lot.
-- The shorthand `p` flag which was assigned to proxy is now used by the pattern flag
-
-</details>
-
-<details>
-<summary>3.0</summary>
-
-## 3.0
-
-- New CLI options so modes are strictly separated (`-m` is now gone!)
-- Performance Optimizations and better connection handling
-- Ability to enumerate vhost names
-- Option to supply custom HTTP headers
-
-</details>
+Gobuster is available under the [Apache License 2.0](LICENSE).

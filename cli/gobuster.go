@@ -102,7 +102,12 @@ func printProgress(g *libgobuster.Gobuster) {
 	if math.IsNaN(float64(percent)) {
 		percent = 0.0
 	}
-	s := fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TerminalClearLine, requestsIssued, requestsExpected, percent)
+	var s string
+	if g.Pause.IsPaused() {
+		s = fmt.Sprintf("%s[PAUSED] Progress: %d / %d (%3.2f%%) - Press SPACE to resume", TerminalClearLine, requestsIssued, requestsExpected, percent)
+	} else {
+		s = fmt.Sprintf("%sProgress: %d / %d (%3.2f%%)", TerminalClearLine, requestsIssued, requestsExpected, percent)
+	}
 	_, _ = fmt.Fprint(os.Stderr, s)
 }
 
@@ -179,6 +184,16 @@ func Gobuster(ctx context.Context, opts *libgobuster.Options, plugin libgobuster
 	// check if we are not in a terminal. If so, disable output
 	if (fi.Mode() & os.ModeCharDevice) != os.ModeCharDevice {
 		opts.NoProgress = true
+	}
+
+	// Start keyboard listener for pause/resume (only in TTY mode and not reading from stdin)
+	if !opts.NoProgress && opts.Wordlist != "-" {
+		if !opts.Quiet {
+			log.Println("[*] Press SPACE to pause")
+			log.Println(ruler)
+		}
+		cleanup := StartKeyboardListener(ctxCancel, gobuster, cancel)
+		defer cleanup()
 	}
 
 	// our waitgroup for all goroutines

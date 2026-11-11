@@ -3,5 +3,5 @@
 package cli
 
 const (
-	TerminalClearLine = "\r\r"
+	TerminalClearLine = "\r\x1b[2K"
 )

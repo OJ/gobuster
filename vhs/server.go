@@ -41,8 +41,8 @@ func main() {
 	})})
 	x.routes = append(x.routes, &route{regexp.MustCompile(`^/`), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte(r.URL.Path)); err != nil {
-			log.Fatal(err.Error())
+		if _, err := w.Write([]byte(r.URL.Path)); err != nil { // nolint:gosec
+			log.Fatal(err.Error()) // nolint:gosec
 		}
 	})})
 

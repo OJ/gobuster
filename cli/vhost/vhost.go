@@ -25,6 +25,7 @@ func getFlags() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, internalcli.CommonHTTPOptions()...)
 	flags = append(flags, internalcli.GlobalOptions()...)
+	flags = append(flags, internalcli.RateLimitOptions()...)
 	flags = append(flags, []cli.Flag{
 		&cli.BoolFlag{Name: "append-domain", Aliases: []string{"ad"}, Value: false, Usage: "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist."},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths. You can separate multiple lengths by comma and it also supports ranges like 203-206"},
@@ -45,6 +46,11 @@ func run(c *cli.Context) error {
 		return err
 	}
 	pluginOpts.HTTPOptions = httpOptions
+
+	pluginOpts.RateLimitSleep, err = internalcli.ParseRateLimitOptions(c)
+	if err != nil {
+		return err
+	}
 
 	pluginOpts.AppendDomain = c.Bool("append-domain")
 	pluginOpts.ExcludeLength = c.String("exclude-length")

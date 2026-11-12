@@ -54,6 +54,7 @@ func main() {
 			s3.Command(),
 			gcs.Command(),
 		},
+		DisableSliceFlagSeparator: true, // needed so we can specify ',' in slice flags. Otherwise urfave/cli splits on ','
 	}
 
 	err := app.Run(os.Args)

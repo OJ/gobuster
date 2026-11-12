@@ -1,6 +1,7 @@
 package libgobuster
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -12,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 )
+
+const defaultMaxResponseBodySize int64 = 10 * 1024 * 1024
 
 // HTTPHeader holds a single key value pair of a HTTP header
 type HTTPHeader struct {
@@ -32,6 +35,8 @@ type HTTPClient struct {
 	method                string
 	host                  string
 	logger                *Logger
+	maxResponseBodySize   int64
+	rateLimit             *rateLimitGate
 }
 
 // RequestOptions is used to pass options to a single individual request
@@ -42,6 +47,9 @@ type RequestOptions struct {
 	ModifiedHeaders          []HTTPHeader
 	UpdatedBasicAuthUsername string
 	UpdatedBasicAuthPassword string
+	// Progress is used to report rate limit pauses to the user. If nil the
+	// messages are written to the logger instead.
+	Progress *Progress
 }
 
 // NewHTTPClient returns a new HTTPClient
@@ -119,18 +127,102 @@ func NewHTTPClient(opt *HTTPOptions, logger *Logger) (*HTTPClient, error) {
 	}
 	// Host header needs to be set separately
 	for _, h := range opt.Headers {
-		if h.Name == "Host" {
+		if http.CanonicalHeaderKey(h.Name) == "Host" {
 			client.host = h.Value
 			break
 		}
 	}
 	client.logger = logger
+	client.maxResponseBodySize = defaultMaxResponseBodySize
+	if opt.RateLimitSleep > 0 {
+		client.rateLimit = newRateLimitGate(opt.RateLimitSleep)
+	}
 	return &client, nil
 }
 
 // Request makes a http request and returns the status, the content length, the headers, the body and an error
-// if you want the body returned set the corresponding property inside RequestOptions
+// if you want the body returned set the corresponding property inside RequestOptions.
+// If a rate limit sleep is configured, 429 responses pause all requests made with this client
+// and the request is retried once the rate limit is gone.
 func (client *HTTPClient) Request(ctx context.Context, fullURL url.URL, opts RequestOptions) (int, int64, http.Header, []byte, error) {
+	if client.rateLimit == nil {
+		return client.request(ctx, fullURL, opts)
+	}
+	return client.requestWithRateLimit(ctx, fullURL, opts)
+}
+
+func (client *HTTPClient) requestWithRateLimit(ctx context.Context, fullURL url.URL, opts RequestOptions) (int, int64, http.Header, []byte, error) {
+	gate := client.rateLimit
+
+	// the body needs to be sent again on every retry so buffer it
+	var reqBody []byte
+	if opts.Body != nil {
+		var err error
+		reqBody, err = io.ReadAll(opts.Body)
+		if err != nil {
+			return 0, 0, nil, nil, fmt.Errorf("could not read request body: %w", err)
+		}
+	}
+
+	leader := false
+	defer func() {
+		if leader {
+			gate.resume()
+		}
+	}()
+
+	var gen uint64
+	for attempt := 1; ; attempt++ {
+		if !leader {
+			var err error
+			gen, err = gate.wait(ctx)
+			if err != nil {
+				// context canceled while waiting
+				return 0, 0, nil, nil, nil
+			}
+		}
+
+		if opts.Body != nil {
+			opts.Body = bytes.NewReader(reqBody)
+		}
+
+		statusCode, length, header, body, err := client.request(ctx, fullURL, opts)
+		if err != nil || statusCode != http.StatusTooManyRequests {
+			if leader && err == nil {
+				client.rateLimitMessage(opts.Progress, LevelInfo, fmt.Sprintf("rate limit is gone (status %d on %s), resuming requests", statusCode, fullURL.String()))
+			}
+			// the deferred resume releases all other workers if we are the leader
+			return statusCode, length, header, body, err
+		}
+
+		if !leader {
+			leader = gate.tryPause(gen)
+			if !leader {
+				// another worker is handling the pause (or already did), wait and retry
+				continue
+			}
+		}
+
+		client.rateLimitMessage(opts.Progress, LevelWarn, fmt.Sprintf("received status %d on %s (attempt %d), pausing all requests for %s", statusCode, fullURL.String(), attempt, gate.sleep))
+		if err := gate.sleepFor(ctx); err != nil {
+			return 0, 0, nil, nil, nil
+		}
+	}
+}
+
+func (client *HTTPClient) rateLimitMessage(progress *Progress, level MessageLevel, msg string) {
+	if progress != nil {
+		progress.MessageChan <- Message{Level: level, Message: msg}
+		return
+	}
+	if level == LevelWarn {
+		client.logger.Warn(msg)
+	} else {
+		client.logger.Info(msg)
+	}
+}
+
+func (client *HTTPClient) request(ctx context.Context, fullURL url.URL, opts RequestOptions) (int, int64, http.Header, []byte, error) {
 	resp, err := client.makeRequest(ctx, fullURL, opts)
 	if err != nil {
 		// ignore context canceled errors
@@ -144,9 +236,12 @@ func (client *HTTPClient) Request(ctx context.Context, fullURL url.URL, opts Req
 	var body []byte
 	var length int64
 	if opts.ReturnBody {
-		body, err = io.ReadAll(resp.Body)
+		body, err = io.ReadAll(io.LimitReader(resp.Body, client.maxResponseBodySize+1))
 		if err != nil {
 			return 0, 0, nil, nil, fmt.Errorf("could not read body %w", err)
+		}
+		if int64(len(body)) > client.maxResponseBodySize {
+			return 0, 0, nil, nil, fmt.Errorf("response body exceeds maximum size of %d bytes", client.maxResponseBodySize)
 		}
 		length = int64(len(body))
 	} else {
@@ -203,6 +298,11 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts
 		}
 	} else {
 		for _, h := range client.headers {
+			// the Host header is already set via req.Host
+			if http.CanonicalHeaderKey(h.Name) == "Host" {
+				continue
+			}
+
 			if client.noCanonicalizeHeaders {
 				// https://stackoverflow.com/questions/26351716/how-to-keep-key-case-sensitive-in-request-header-using-golang
 				req.Header[h.Name] = []string{h.Value}
@@ -226,10 +326,9 @@ func (client *HTTPClient) makeRequest(ctx context.Context, fullURL url.URL, opts
 		client.logger.Debugf("%s", dump)
 	}
 
-	resp, err := client.client.Do(req)
+	resp, err := client.client.Do(req) // nolint:gosec
 	if err != nil {
-		var ue *url.Error
-		if errors.As(err, &ue) {
+		if ue, ok := errors.AsType[*url.Error](err); ok {
 			if strings.HasPrefix(ue.Err.Error(), "x509") {
 				return nil, fmt.Errorf("invalid certificate: %w", ue.Err)
 			}

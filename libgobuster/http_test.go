@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -76,6 +77,76 @@ func TestRequest(t *testing.T) {
 	}
 	if body == nil || !bytes.Equal(body, []byte(ret)) {
 		t.Fatalf("Invalid body returned: %d", body)
+	}
+}
+
+func TestRequestRejectsOversizedBody(t *testing.T) {
+	t.Parallel()
+	h := httpServerT(t, strings.Repeat("x", 11*1024*1024))
+	defer h.Close()
+
+	c, err := NewHTTPClient(&HTTPOptions{}, NewLogger(false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u, err := url.Parse(h.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, _, _, err = c.Request(t.Context(), *u, RequestOptions{ReturnBody: true})
+	if err == nil || !strings.Contains(err.Error(), "response body exceeds maximum size") {
+		t.Fatalf("expected response size error, got %v", err)
+	}
+}
+
+func TestRequestHostHeader(t *testing.T) {
+	t.Parallel()
+	tt := []struct {
+		testName              string
+		headerName            string
+		noCanonicalizeHeaders bool
+	}{
+		{"Canonical", "Host", false},
+		{"Lowercase", "host", false},
+		{"Uppercase", "HOST", false},
+		{"Canonical no canonicalize", "Host", true},
+		{"Lowercase no canonicalize", "host", true},
+	}
+
+	for _, x := range tt {
+		t.Run(x.testName, func(t *testing.T) {
+			t.Parallel()
+			var host string
+			h := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+				host = r.Host
+			}))
+			defer h.Close()
+
+			o := HTTPOptions{
+				Headers:               []HTTPHeader{{Name: x.headerName, Value: "example.com"}},
+				NoCanonicalizeHeaders: x.noCanonicalizeHeaders,
+			}
+			c, err := NewHTTPClient(&o, NewLogger(false))
+			if err != nil {
+				t.Fatal(err)
+			}
+			u, err := url.Parse(h.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			status, _, _, _, err := c.Request(t.Context(), *u, RequestOptions{})
+			if err != nil {
+				t.Fatalf("Got Error: %v", err)
+			}
+			if status != http.StatusOK {
+				t.Fatalf("Invalid status returned: %d", status)
+			}
+			if host != "example.com" {
+				t.Fatalf("Invalid host header received: %q", host)
+			}
+		})
 	}
 }
 

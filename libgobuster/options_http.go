@@ -23,7 +23,7 @@ type BasicHTTPOptions struct {
 // HTTPOptions is the struct to pass in all http options to Gobuster
 type HTTPOptions struct {
 	BasicHTTPOptions
-	Password              string
+	Password              string // nolint:gosec
 	URL                   *url.URL
 	Username              string
 	Cookies               string
@@ -31,4 +31,8 @@ type HTTPOptions struct {
 	NoCanonicalizeHeaders bool
 	FollowRedirect        bool
 	Method                string
+	BodyOutputDir         string
+	// RateLimitSleep is the time all requests are paused when a 429 is received.
+	// 0 disables the rate limit handling.
+	RateLimitSleep time.Duration
 }

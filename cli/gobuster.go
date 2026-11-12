@@ -25,33 +25,79 @@ func resultWorker(g *libgobuster.Gobuster, filename string, wg *sync.WaitGroup) 
 
 	var f *os.File
 	var err error
+	var firstResult = true
+
 	if filename != "" {
 		f, err = os.Create(filename)
 		if err != nil {
 			g.Logger.Fatalf("error on creating output file: %v", err)
 		}
 		defer f.Close()
+
+		// Write opening bracket for JSON array if outputting JSON to file
+		if g.Opts.OutputAsJSON {
+			if _, err := f.WriteString("[\n"); err != nil {
+				g.Logger.Fatalf("error writing to output file: %v", err)
+			}
+		}
 	}
 
 	for r := range g.Progress.ResultChan {
-		s, err := r.ResultToString()
-		if err != nil {
-			g.Logger.Fatal(err)
-		}
-		if s != "" {
-			s = strings.TrimSpace(s)
-			if g.Opts.NoProgress || g.Opts.Quiet {
-				_, _ = fmt.Printf("%s\n", s) // nolint forbidigo
-			} else {
-				// only print the clear line when progress output is enabled
-				_, _ = fmt.Printf("%s%s\n", TerminalClearLine, s) // nolint forbidigo
+		var output string
+		
+		if g.Opts.OutputAsJSON {
+			// JSON output
+			jsonBytes, err := r.ResultToJSON()
+			if err != nil {
+				g.Logger.Fatal(err)
 			}
-			if f != nil {
-				err = writeToFile(f, s)
-				if err != nil {
-					g.Logger.Fatalf("error on writing output file: %v", err)
+			output = string(jsonBytes)
+		} else {
+			// String output
+			s, err := r.ResultToString()
+			if err != nil {
+				g.Logger.Fatal(err)
+			}
+			output = strings.TrimSpace(s)
+		}
+		
+		if output != "" {
+			// Don't print to console if we're outputting JSON to a file
+			if !g.Opts.OutputAsJSON {
+				if g.Opts.NoProgress || g.Opts.Quiet {
+					_, _ = fmt.Printf("%s\n", output) // nolint forbidigo
+				} else {
+					// only print the clear line when progress output is enabled
+					_, _ = fmt.Printf("%s%s\n", TerminalClearLine, output) // nolint forbidigo
 				}
 			}
+			if f != nil {
+				// For JSON output to file, add commas between objects and indent
+				if g.Opts.OutputAsJSON {
+					if !firstResult {
+						if _, err := f.WriteString(",\n"); err != nil {
+							g.Logger.Fatalf("error writing to output file: %v", err)
+						}
+					}
+					firstResult = false
+					// Indent the JSON object
+					if _, err := f.WriteString("  " + output); err != nil {
+						g.Logger.Fatalf("error writing to output file: %v", err)
+					}
+				} else {
+					err = writeToFile(f, output)
+					if err != nil {
+						g.Logger.Fatalf("error on writing output file: %v", err)
+					}
+				}
+			}
+		}
+	}
+
+	// Write closing bracket for JSON array if outputting JSON to file
+	if f != nil && g.Opts.OutputAsJSON {
+		if _, err := f.WriteString("\n]\n"); err != nil {
+			g.Logger.Fatalf("error writing to output file: %v", err)
 		}
 	}
 }

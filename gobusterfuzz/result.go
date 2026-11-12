@@ -2,6 +2,7 @@ package gobusterfuzz
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -38,4 +39,27 @@ func (r Result) ResultToString() (string, error) {
 	}
 	s := buf.String()
 	return s, nil
+}
+
+// ResultToJSON converts the Result to JSON
+func (r Result) ResultToJSON() ([]byte, error) {
+	type JSONResult struct {
+		Word       string      `json:"word"`
+		Path       string      `json:"path"`
+		StatusCode int         `json:"status_code"`
+		Size       int64       `json:"size"`
+		Location   string      `json:"location,omitempty"`
+		Header     http.Header `json:"header,omitempty"`
+	}
+
+	jr := JSONResult{
+		Word:       r.Word,
+		Path:       r.Path,
+		StatusCode: r.StatusCode,
+		Size:       r.Size,
+		Location:   r.Header.Get("Location"),
+		Header:     r.Header,
+	}
+
+	return json.Marshal(jr)
 }

@@ -264,8 +264,14 @@ func (g *Gobuster) Run(ctx context.Context) error {
 		go g.worker(workerCtx, guessChan, successChan, &workerGroup)
 	}
 
+	wordlistErrors := make(chan error, 1)
 	feederGroup.Add(1)
-	go g.feedWordlist(feederCtx, guessChan, wordlist, &feederGroup)
+	go func() {
+		g.feedWordlist(feederCtx, guessChan, wordlist, &feederGroup)
+		if err := wordlist.scanner.Err(); err != nil {
+			wordlistErrors <- err
+		}
+	}()
 
 ListenForMore:
 	for {
@@ -278,6 +284,10 @@ ListenForMore:
 
 		select {
 		case <-ctx.Done():
+			break ListenForMore
+		case <-wordlistErrors:
+			// Unread lines remain in the expected total, so request counts may
+			// never match. Stop the workers and return the scanner error below.
 			break ListenForMore
 		case successGuess := <-successChan:
 			// Add more guesses based on the results of previous attempts

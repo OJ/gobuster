@@ -24,6 +24,7 @@ func getFlags() []cli.Flag {
 	var flags []cli.Flag
 	flags = append(flags, internalcli.CommonHTTPOptions()...)
 	flags = append(flags, internalcli.GlobalOptions()...)
+	flags = append(flags, internalcli.RateLimitOptions()...)
 	flags = append(flags, []cli.Flag{
 		&cli.StringFlag{Name: "exclude-statuscodes", Aliases: []string{"b"}, Usage: "Excluded status codes. Can also handle ranges like 200,300-400,404."},
 		&cli.StringFlag{Name: "exclude-length", Aliases: []string{"xl"}, Usage: "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206"},
@@ -41,6 +42,11 @@ func run(c *cli.Context) error {
 		return err
 	}
 	pluginOpts.HTTPOptions = httpOptions
+
+	pluginOpts.RateLimitSleep, err = internalcli.ParseRateLimitOptions(c)
+	if err != nil {
+		return err
+	}
 
 	pluginOpts.ExcludedStatusCodes = c.String("exclude-statuscodes")
 	ret, err := libgobuster.ParseCommaSeparatedInt(pluginOpts.ExcludedStatusCodes)

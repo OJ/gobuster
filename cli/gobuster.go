@@ -112,6 +112,7 @@ func progressWorker(ctx context.Context, g *libgobuster.Gobuster, wg *sync.WaitG
 	defer wg.Done()
 
 	tick := time.NewTicker(cliProgressUpdate)
+	defer tick.Stop()
 
 	for {
 		select {

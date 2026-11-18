@@ -15,6 +15,8 @@ import (
 // PATTERN is the pattern for wordlist replacements in pattern file
 const PATTERN = "{GOBUSTER}"
 
+const maxWordlistLineSize = 10 * 1024 * 1024
+
 // SetupFunc is the "setup" function prototype for implementations
 type SetupFunc func(*Gobuster) error
 
@@ -120,8 +122,9 @@ func (g *Gobuster) feeder(ctx context.Context, guessChan chan<- *Guess, words []
 	feed(ctx, guessChan, words, discoverOnSuccess)
 }
 
-func (g *Gobuster) feedWordlist(ctx context.Context, guessChan chan<- *Guess, wordlist *Wordlist, wg *sync.WaitGroup) {
+func (g *Gobuster) feedWordlist(ctx context.Context, guessChan chan<- *Guess, wordlist *Wordlist, scanDone chan<- error, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer func() { scanDone <- wordlist.scanner.Err() }()
 
 	for wordlist.scanner.Scan() {
 		// Prioritize stopping when the context is done
@@ -183,7 +186,9 @@ func (g *Gobuster) getWordlist(wordlist io.ReadSeeker) (*Wordlist, error) {
 
 	if g.Opts.Wordlist == "-" {
 		// Read directly from stdin
-		return &Wordlist{scanner: bufio.NewScanner(os.Stdin), guessesPerLine: guessesPerLine, isStream: true}, nil
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Buffer(make([]byte, 64*1024), maxWordlistLineSize)
+		return &Wordlist{scanner: scanner, guessesPerLine: guessesPerLine, isStream: true}, nil
 	}
 
 	lines, err := lineCounter(wordlist)
@@ -207,6 +212,7 @@ func (g *Gobuster) getWordlist(wordlist io.ReadSeeker) (*Wordlist, error) {
 	}
 
 	wordlistScanner := bufio.NewScanner(wordlist)
+	wordlistScanner.Buffer(make([]byte, 64*1024), maxWordlistLineSize)
 
 	// skip lines
 	for range g.Opts.WordlistOffset {
@@ -242,6 +248,7 @@ func (g *Gobuster) Run(ctx context.Context) error {
 
 	guessChan := make(chan *Guess, g.Opts.Threads*3)
 	successChan := make(chan *Guess)
+	scanDone := make(chan error, 1)
 
 	var f io.ReadSeekCloser
 	if g.Opts.Wordlist != "-" { // stdin case is handled inside getWordlist
@@ -265,8 +272,10 @@ func (g *Gobuster) Run(ctx context.Context) error {
 	}
 
 	feederGroup.Add(1)
-	go g.feedWordlist(feederCtx, guessChan, wordlist, &feederGroup)
+	go g.feedWordlist(feederCtx, guessChan, wordlist, scanDone, &feederGroup)
 
+	wordlistFinished := false
+	var scanErr error
 ListenForMore:
 	for {
 		// Prioritize stopping when the context is done
@@ -279,6 +288,11 @@ ListenForMore:
 		select {
 		case <-ctx.Done():
 			break ListenForMore
+		case scanErr = <-scanDone:
+			wordlistFinished = true
+			if scanErr != nil {
+				break ListenForMore
+			}
 		case successGuess := <-successChan:
 			// Add more guesses based on the results of previous attempts
 			if successGuess.discoverOnSuccess {
@@ -301,7 +315,7 @@ ListenForMore:
 			// reported, this is well ordered without the timeout, however it would
 			// exert a lot of lock pressure during the run to keep doing this in a
 			// hot loop
-			if g.Progress.RequestsExpected() == g.Progress.RequestsIssued() {
+			if wordlistFinished && g.Progress.RequestsExpected() == g.Progress.RequestsIssued() {
 				// All the expected requests have completed, there is no pending or
 				// in-progress work. If moreWordsChan was buffered we would need to
 				// check it again here to ensure no pending work was added while we
@@ -316,8 +330,8 @@ ListenForMore:
 	feederGroup.Wait()
 	workerGroup.Wait()
 
-	if err := wordlist.scanner.Err(); err != nil {
-		return err
+	if scanErr != nil {
+		return scanErr
 	}
 
 	return nil

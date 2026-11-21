@@ -241,6 +241,12 @@ func ParseGlobalOptions(c *cli.Context) (libgobuster.Options, error) {
 
 	opts.Delay = c.Duration("delay")
 	opts.Threads = c.Int("threads")
+	// A scan needs at least one worker: zero threads never consume the guess
+	// channel and the run hangs forever, while a negative count panics when the
+	// worker WaitGroup is set up.
+	if opts.Threads < 1 {
+		return opts, errors.New("threads must be bigger or equal to 1")
+	}
 	opts.WordlistOffset = c.Int("wordlist-offset")
 	if opts.Wordlist == "-" && opts.WordlistOffset > 0 {
 		return opts, errors.New("wordlist-offset is not supported when reading from STDIN")
